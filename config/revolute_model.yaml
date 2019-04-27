@@ -92,7 +92,7 @@ JOINT body-left_thigh:
   enable motor: 1
   joint limits: {high: 0.5235987755982988, low: -1.9198621771937625}
   max motor impulse: 0.05
-  name: body-left_thigh
+  name: left_hip
   parent: BODY body
   parent axis: {x: 1.0, y: 0.0, z: 0.0}
   parent pivot: {x: 0.15072000000000002, y: 0.0, z: -0.2983}
@@ -104,7 +104,7 @@ JOINT body-right_thigh:
   enable motor: 1
   joint limits: {high: 3.14, low: -3.14 }
   max motor impulse: 0.05
-  name: body-right_thigh
+  name: right_hip
   parent: BODY body
   parent axis: {x: 1.0, y: -0.0, z: 0.0}
   parent pivot: {x: -0.15072000000000002, y: 0.0, z: -0.2983}
@@ -116,7 +116,7 @@ JOINT left_shank-left_foot:
   enable motor: 1
   joint limits: {high: 0.8726646259971648, low: -0.3490658503988659}
   max motor impulse: 0.05
-  name: left_shank-left_foot
+  name: left_knee
   parent: BODY left_shank
   parent axis: {x: -0.0, y: 0.0, z: 1.0}
   parent pivot: {x: 0.38622, y: 0.0, z: -0.0}
@@ -128,8 +128,20 @@ JOINT left_thigh-left_shank:
   enable motor: 1
   joint limits: {high: 2.0943951023931953, low: 0}
   max motor impulse: 0.05
-  name: left_thigh-left_shank
+  name: left_ankle
   parent: BODY left_thigh
+  parent axis: {x: 0.0, y: -0.0, z: 1.0}
+  parent pivot: {x: 0.38465, y: -0.0, z: -0.0}
+  type: revolute
+JOINT right_thigh-right_shank:
+  child: BODY right_shank
+  child axis: {x: 0.0, y: 0.0, z: 1.0}
+  child pivot: {x: 0.0, y: 0.0, z: 0.0}
+  enable motor: 1
+  joint limits: {high: 2.0943951023931953, low: 0}
+  max motor impulse: 0.000005
+  name: right_knee
+  parent: BODY right_thigh
   parent axis: {x: 0.0, y: -0.0, z: 1.0}
   parent pivot: {x: 0.38465, y: -0.0, z: -0.0}
   type: revolute
@@ -140,27 +152,15 @@ JOINT right_shank-right_foot:
   enable motor: 1
   joint limits: {high: 0.8726646259971648, low: -0.3490658503988659}
   max motor impulse: 0.000005
-  name: right_shank-right_foot
+  name: right_ankle
   parent: BODY right_shank
   parent axis: {x: -0.0, y: 0.0, z: 1.0}
   parent pivot: {x: 0.38622, y: 0.0, z: -0.0}
-  type: revolute
-JOINT right_thigh-right_shank:
-  child: BODY right_shank
-  child axis: {x: 0.0, y: 0.0, z: 1.0}
-  child pivot: {x: 0.0, y: 0.0, z: 0.0}
-  enable motor: 1
-  joint limits: {high: 2.0943951023931953, low: 0}
-  max motor impulse: 0.000005
-  name: right_thigh-right_shank
-  parent: BODY right_thigh
-  parent axis: {x: 0.0, y: -0.0, z: 1.0}
-  parent pivot: {x: 0.38465, y: -0.0, z: -0.0}
   type: revolute
 bodies: [BODY body, BODY left_foot, BODY left_shank, BODY left_thigh,
   BODY right_foot, BODY right_shank, BODY right_thigh]
 high resolution path: ../meshes/high_res/
 ignore inter-collision: 'True'
-joints: [JOINT left_shank-left_foot, JOINT left_thigh-left_shank, JOINT body-left_thigh,
-  JOINT right_shank-right_foot, JOINT right_thigh-right_shank, JOINT body-right_thigh]
+joints: [JOINT body-left_thigh, JOINT left_shank-left_foot, JOINT left_thigh-left_shank,
+  JOINT body-right_thigh, JOINT right_thigh-right_shank,  JOINT right_shank-right_foot]
 low resolution path: ../meshes/low_res/

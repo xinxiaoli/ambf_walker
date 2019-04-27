@@ -9,12 +9,14 @@ import rbdl
 
 class Exoskeleton(object):
 
-
     def __init__(self, mass, height):
-
-        self.dynamics = self.make_model(mass, height)
-        self._q = {}
-        self._qd = {}
+        self._mass = mass
+        self._height = height
+        self._model = self.dynamic_model(mass, height)
+        self.joint_order = ["left_hip", "left_knee", "left_ankle", "right_hip", "right_knee", "right_ankle"]
+        self._q = np.asarray([0]*7)
+        self._qd = np.asarray([0]*7)
+        self._state = (self._q, self._qd)
     
     @property
     def q(self):
@@ -22,8 +24,7 @@ class Exoskeleton(object):
 
     @q.setter
     def q(self, value):
-
-        self._q = value
+        self._q = np.asarray(value)
 
     @property
     def qd(self):
@@ -31,9 +32,17 @@ class Exoskeleton(object):
 
     @qd.setter
     def qd(self, value):
-        self._qd = value
+        self._qd = np.asarray(value)
 
-    def make_model(self, total_mass, height):
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, value):
+        self._state = np.concatenate(value)
+
+    def dynamic_model(self, total_mass, height):
 
         mass_percentage = {}
         com_location = {}
@@ -148,17 +157,56 @@ class Exoskeleton(object):
         constraint_set_left.AddContactConstraint(id_l, heel_point, np.array([1., 0., 0.]), "left_heel_x")
         constraint_set_left.AddContactConstraint(id_l, heel_point, np.array([0., 1., 0.]), "left_heel_y")
 
-        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([1., 0., 0.]), "right_heel_x");
-        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([0., 1., 0.]), "right_heel_y");
-        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([0., 0., 1.]), "right_heel_z");
+        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([1., 0., 0.]), "right_heel_x")
+        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([0., 1., 0.]), "right_heel_y")
+        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([0., 0., 1.]), "right_heel_z")
 
-        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([1., 0., 0.]), "left_heel_x");
-        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([0., 1., 0.]), "left_heel_y");
-        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([0., 0., 1.]), "left_heel_z");
+        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([1., 0., 0.]), "left_heel_x")
+        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([0., 1., 0.]), "left_heel_y")
+        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([0., 0., 1.]), "left_heel_z")
 
         constraint_set_right.Bind(model)
         constraint_set_left.Bind(model)
         constraint_set_both.Bind(model)
 
         return model
+
+    def update_joints(self, q, qd):
+        self._q = q
+        self._qd = qd
+        self._state = (q, qd)
+        qdd = np.zeros(self._model.qdot_size)
+        rbdl.UpdateKinematics(self._model, self._q, self._qd, qdd)
+
+    def make_foot(self, points):
+        # TODO put the real nums in
+        l = [[points["x"][4] + 0.8 * (4.25 / 100.0) * self._height * np.cos(-self.state[6]),
+              points["y"][4] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self.state[6])],
+             [points["x"][4] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self.state[6]),
+              points["y"][4] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self.state[6])]
+             ]
+
+        r = [[points["x"][7] + 0.8 * (4.25 / 100.0) * 1.57 * np.cos(-self.state[6]),
+              points["y"][7] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self.state[6])],
+             [points["x"][7] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self.state[6]),
+              points["y"][7] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self.state[6])]
+             ]
+
+        return l, r
+
+    def fk(self):
+
+        fk = {}
+        for index in xrange(1, len(self._model.X_base)):
+            joint = self.joint_order[index]
+            r = self._model.X_base[index].r
+            point = {}
+            point["x"].append(r[0])
+            point["y"].append(r[1])
+            point["z"].append(r[2])
+            fk[joint] = point
+
+        #l_foot, r_foot = self.make_foot(points)
+
+        return fk
 
