@@ -161,6 +161,6 @@ bodies: [BODY body, BODY left_foot, BODY left_shank, BODY left_thigh,
   BODY right_foot, BODY right_shank, BODY right_thigh]
 high resolution path: ../meshes/high_res/
 ignore inter-collision: 'True'
-joints: [JOINT body-left_thigh, JOINT left_shank-left_foot, JOINT left_thigh-left_shank,
+joints: [JOINT body-left_thigh,  JOINT left_thigh-left_shank,JOINT left_shank-left_foot,
   JOINT body-right_thigh, JOINT right_thigh-right_shank,  JOINT right_shank-right_foot]
 low resolution path: ../meshes/low_res/

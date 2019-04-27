@@ -41,44 +41,16 @@ class AMBF(Exoskeleton.Exoskeleton):
             self.tau_pub.publish(msg)
             return None
 
-        joint_names = msg.joint_names
-        joint_angles = msg.joint_positions
+        q = np.array([0.0] * 6)
+        qd = np.array([0.0] * 6)
 
-        q_raw = {}
-        q_mean = {}
-        qd_mean = {}
+        q = msg.joint_positions
+        q = np.round(q, 3)
 
         if self.time == 0:
             self.time = msg.sim_time
 
-        for name, angle in zip(joint_names, joint_angles):
-            q_raw[name] = round(angle,2)
+        qd = (q - self.q) / (msg.sim_time - self.time + 0.0000001)
 
-        qd_raw = self.calculate_qd(q_raw, msg.sim_time)
-
-        for name in joint_names:
-            q_mean[name] = q_raw[name]
-            qd_mean[name] = qd_raw[name]
-
-        self.q = q_raw
-        self.qd = qd_raw
-        
-    def calculate_qd(self, q, current_time):
-        """
-        Calculate the joint velocity
-        :type current_time: float
-        :param current_time: time
-        :type q: dict
-        """
-        qd = {}
-
-        # check is the dict is empty
-        if not self._q:
-            self._q = q
-
-        for key, angle in q.iteritems():
-            qd[key] = (angle - self._q[key] ) / (current_time - self.time + 0.0000001)
-
-        return qd
-
+        self.update_joints(q, qd)
 

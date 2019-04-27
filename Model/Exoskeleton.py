@@ -14,8 +14,8 @@ class Exoskeleton(object):
         self._height = height
         self._model = self.dynamic_model(mass, height)
         self.joint_order = ["left_hip", "left_knee", "left_ankle", "right_hip", "right_knee", "right_ankle"]
-        self._q = np.asarray([0]*7)
-        self._qd = np.asarray([0]*7)
+        self._q = np.asarray([0]*6)
+        self._qd = np.asarray([0]*6)
         self._state = (self._q, self._qd)
     
     @property
@@ -126,6 +126,7 @@ class Exoskeleton(object):
 
         for segs in segments:
             xtrans.r = joint_location[segs]
+            print segs
             id_l = model.AddBody(id_l,
                                  xtrans,
                                  joint_rot_z,

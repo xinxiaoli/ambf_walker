@@ -1,10 +1,17 @@
 from Simulation import AMBF
-
+import numpy as np
 
 
 sim = AMBF.AMBF("revolute", 52,1.57)
 
+cmd = np.asarray([0]*7)
+
 while 1:
-   print sim.q
+
+   cmd[4] = 100
+   sim.send_command(cmd)
+
+
+
 
 
