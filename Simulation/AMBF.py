@@ -21,8 +21,10 @@ class AMBF(Exoskeleton.Exoskeleton):
     def send_command(self, tau):
         cmd = ambf.ObjectCmd()
         cmd.joint_cmds = tau
-        self.tau_pub.publish(cmd)
+        cmd.publish_joint_names = True
+        cmd.publish_joint_positions = True
 
+        self.tau_pub.publish(cmd)
 
     def joint_callback(self, msg):
         """
@@ -41,16 +43,22 @@ class AMBF(Exoskeleton.Exoskeleton):
             self.tau_pub.publish(msg)
             return None
 
-        q = np.array([0.0] * 6)
-        qd = np.array([0.0] * 6)
-
-        q = msg.joint_positions
+        q = np.array([0.0] * 7)
+        qd = np.array([0.0] * 7)
+        q[1:] = np.asarray(msg.joint_positions)
         q = np.round(q, 3)
 
         if self.time == 0:
             self.time = msg.sim_time
 
+        # correct the joint angles
+        q[1] *= -1
+        q[2] *= -1
+        q[4] *= -1
+        q[5] *= -1
+
         qd = (q - self.q) / (msg.sim_time - self.time + 0.0000001)
+
 
         self.update_joints(q, qd)
 

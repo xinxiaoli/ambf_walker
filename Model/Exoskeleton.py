@@ -177,7 +177,7 @@ class Exoskeleton(object):
         self._qd = qd
         self._state = (q, qd)
         qdd = np.zeros(self._model.qdot_size)
-        rbdl.UpdateKinematics(self._model, self._q, self._qd, qdd)
+        rbdl.UpdateKinematics(self._model,q, qd, qdd)
 
     def make_foot(self, left_ankle, right_ankle):
 
@@ -189,36 +189,57 @@ class Exoskeleton(object):
         foot["right_toe"] = {}
         foot["right_heel"] = {}
 
-        foot["left_toe"]["x"] = left_ankle["x"] + 0.8 * (4.25 / 100.0) * self._height * np.cos(-self._q[2])
-        foot["left_toe"]["y"] = left_ankle["y"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[2])
+        foot["left_toe"]["x"] = left_ankle["x"] + 0.8 * (4.25 / 100.0) * self._height * np.cos(-self._q[3])
+        foot["left_toe"]["y"] = left_ankle["y"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[3])
 
-        foot["left_heel"]["x"] = left_ankle["x"] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self._q[2])
-        foot["left_heel"]["y"] = left_ankle["y"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[2])
+        foot["left_heel"]["x"] = left_ankle["x"] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self._q[3])
+        foot["left_heel"]["y"] = left_ankle["y"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[3])
 
-        foot["right_toe"]["x"] = right_ankle["x"] + 0.8 * (4.25 / 100.0) * 1.57 * np.cos(-self._q[5])
-        foot["right_toe"]["y"] = right_ankle["y"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[5])
+        foot["right_toe"]["x"] = right_ankle["x"] + 0.8 * (4.25 / 100.0) * 1.57 * np.cos(-self._q[6])
+        foot["right_toe"]["y"] = right_ankle["y"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[6])
 
-        foot["right_heel"]["x"] = right_ankle["x"] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self._q[5])
+        foot["right_heel"]["x"] = right_ankle["x"] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self._q[6])
 
-        foot["right_heel"]["y"] = right_ankle["y"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[5])
+        foot["right_heel"]["y"] = right_ankle["y"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[6])
 
         return foot
 
     def fk(self):
 
         fk = {}
-        for index in xrange(1, len(self._model.X_base)):
-            joint = self.joint_order[index]
-            r = self._model.X_base[index].r
+        for joint in self.joint_order:
+
+            #joint = self.joint_order[index-2]
+            #
+            # r = self._model.X_base[index].r
             point = {}
-            point["x"].append(r[0])
-            point["y"].append(r[1])
-            point["z"].append(r[2])
+            point["x"] = None
+            point["y"] = None
+            point["z"] = None
             fk[joint] = point
 
-        foot = self.make_foot(fk["left_ankle"], fk)
+        fk["left_hip"]["x"] = self._model.X_base[2].r[0]
+        fk["left_hip"]["y"] = self._model.X_base[2].r[1]
 
-        return fk.update(foot)
+        fk["left_knee"]["x"] = self._model.X_base[3].r[0]
+        fk["left_knee"]["y"] = self._model.X_base[3].r[1]
+
+        fk["left_ankle"]["x"] = self._model.X_base[4].r[0]
+        fk["left_ankle"]["y"] = self._model.X_base[4].r[1]
+
+        fk["right_hip"]["x"] = self._model.X_base[5].r[0]
+        fk["right_hip"]["y"] = self._model.X_base[5].r[1]
+
+        fk["right_knee"]["x"] = self._model.X_base[6].r[0]
+        fk["right_knee"]["y"] = self._model.X_base[6].r[1]
+
+        fk["right_ankle"]["x"] = self._model.X_base[7].r[0]
+        fk["right_ankle"]["y"] = self._model.X_base[7].r[1]
+
+        foot = self.make_foot(fk["left_ankle"], fk["right_ankle"])
+        fk.update(foot)
+
+        return fk
 
     def calculate_dynamics(self, q_d, qd_d, qdd_d):
 
