@@ -14,8 +14,8 @@ class Exoskeleton(object):
         self._height = height
         self._model = self.dynamic_model(mass, height)
         self.joint_order = ["left_hip", "left_knee", "left_ankle", "right_hip", "right_knee", "right_ankle"]
-        self._q = np.asarray([0]*6)
-        self._qd = np.asarray([0]*6)
+        self._q = np.asarray([0]*7)
+        self._qd = np.asarray([0]*7)
         self._state = (self._q, self._qd)
     
     @property
@@ -206,35 +206,43 @@ class Exoskeleton(object):
 
     def fk(self):
 
-        fk = {}
-        for joint in self.joint_order:
 
-            #joint = self.joint_order[index-2]
-            #
-            # r = self._model.X_base[index].r
+
+        fk = {}
+        for index, joint in enumerate(self.joint_order):
             point = {}
-            point["x"] = None
-            point["y"] = None
-            point["z"] = None
+            point["x"] = self._model.X_base[2 + index].r[0]
+            point["y"] = self._model.X_base[2 + index].r[1]
+            point["z"] = self._model.X_base[2 + index].r[2]
             fk[joint] = point
 
-        fk["left_hip"]["x"] = self._model.X_base[2].r[0]
-        fk["left_hip"]["y"] = self._model.X_base[2].r[1]
 
-        fk["left_knee"]["x"] = self._model.X_base[3].r[0]
-        fk["left_knee"]["y"] = self._model.X_base[3].r[1]
-
-        fk["left_ankle"]["x"] = self._model.X_base[4].r[0]
-        fk["left_ankle"]["y"] = self._model.X_base[4].r[1]
-
-        fk["right_hip"]["x"] = self._model.X_base[5].r[0]
-        fk["right_hip"]["y"] = self._model.X_base[5].r[1]
-
-        fk["right_knee"]["x"] = self._model.X_base[6].r[0]
-        fk["right_knee"]["y"] = self._model.X_base[6].r[1]
-
-        fk["right_ankle"]["x"] = self._model.X_base[7].r[0]
-        fk["right_ankle"]["y"] = self._model.X_base[7].r[1]
+        # fk = {}
+        # for joint in self.joint_order:
+        #
+        #     point = {}
+        #     point["x"] = None
+        #     point["y"] = None
+        #     point["z"] = None
+        #     fk[joint] = point
+        #
+        # fk["left_hip"]["x"] = self._model.X_base[2].r[0]
+        # fk["left_hip"]["y"] = self._model.X_base[2].r[1]
+        #
+        # fk["left_knee"]["x"] = self._model.X_base[3].r[0]
+        # fk["left_knee"]["y"] = self._model.X_base[3].r[1]
+        #
+        # fk["left_ankle"]["x"] = self._model.X_base[4].r[0]
+        # fk["left_ankle"]["y"] = self._model.X_base[4].r[1]
+        #
+        # fk["right_hip"]["x"] = self._model.X_base[5].r[0]
+        # fk["right_hip"]["y"] = self._model.X_base[5].r[1]
+        #
+        # fk["right_knee"]["x"] = self._model.X_base[6].r[0]
+        # fk["right_knee"]["y"] = self._model.X_base[6].r[1]
+        #
+        # fk["right_ankle"]["x"] = self._model.X_base[7].r[0]
+        # fk["right_ankle"]["y"] = self._model.X_base[7].r[1]
 
         foot = self.make_foot(fk["left_ankle"], fk["right_ankle"])
         fk.update(foot)

@@ -10,6 +10,7 @@ while 1:
 
 
    cmd[3] = 2
+   cmd[0] = 2
    sim.send_command(cmd)
    #sim.fk()
    plot.update()

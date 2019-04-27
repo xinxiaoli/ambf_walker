@@ -48,17 +48,16 @@ class AMBF(Exoskeleton.Exoskeleton):
         q[1:] = np.asarray(msg.joint_positions)
         q = np.round(q, 3)
 
-        if self.time == 0:
-            self.time = msg.sim_time
-
-        # correct the joint angles
+        # Correct the joint angles
         q[1] *= -1
         q[2] *= -1
         q[4] *= -1
         q[5] *= -1
 
-        qd = (q - self.q) / (msg.sim_time - self.time + 0.0000001)
+        if self.time == 0:
+            self.time = msg.sim_time
 
+        qd = (q - self.q) / (msg.sim_time - self.time + 0.0000001)
 
         self.update_joints(q, qd)
 
