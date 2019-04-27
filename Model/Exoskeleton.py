@@ -179,21 +179,30 @@ class Exoskeleton(object):
         qdd = np.zeros(self._model.qdot_size)
         rbdl.UpdateKinematics(self._model, self._q, self._qd, qdd)
 
-    def make_foot(self, points):
+    def make_foot(self, left_ankle, right_ankle):
+
+        foot = {}
         # TODO put the real nums in
-        l = [[points["x"][4] + 0.8 * (4.25 / 100.0) * self._height * np.cos(-self.state[6]),
-              points["y"][4] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self.state[6])],
-             [points["x"][4] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self.state[6]),
-              points["y"][4] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self.state[6])]
-             ]
 
-        r = [[points["x"][7] + 0.8 * (4.25 / 100.0) * 1.57 * np.cos(-self.state[6]),
-              points["y"][7] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self.state[6])],
-             [points["x"][7] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self.state[6]),
-              points["y"][7] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self.state[6])]
-             ]
+        foot["left_toe"] = {}
+        foot["left_heel"] = {}
+        foot["right_toe"] = {}
+        foot["right_heel"] = {}
 
-        return l, r
+        foot["left_toe"]["x"] = left_ankle["x"] + 0.8 * (4.25 / 100.0) * self._height * np.cos(-self._q[2])
+        foot["left_toe"]["y"] = left_ankle["y"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[2])
+
+        foot["left_heel"]["x"] = left_ankle["x"] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self._q[2])
+        foot["left_heel"]["y"] = left_ankle["y"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[2])
+
+        foot["right_toe"]["x"] = right_ankle["x"] + 0.8 * (4.25 / 100.0) * 1.57 * np.cos(-self._q[5])
+        foot["right_toe"]["y"] = right_ankle["y"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[5])
+
+        foot["right_heel"]["x"] = right_ankle["x"] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self._q[5])
+
+        foot["right_heel"]["y"] = right_ankle["y"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[5])
+
+        return foot
 
     def fk(self):
 
@@ -207,7 +216,17 @@ class Exoskeleton(object):
             point["z"].append(r[2])
             fk[joint] = point
 
-        #l_foot, r_foot = self.make_foot(points)
+        foot = self.make_foot(fk["left_ankle"], fk)
 
-        return fk
+        return fk.update(foot)
+
+    def calculate_dynamics(self, q_d, qd_d, qdd_d):
+
+        tau = np.asarray([0]*7)
+        rbdl.InverseDynamics(self._model, q_d, qd_d, qdd_d, tau)
+        return tau
+
+
+
+
 

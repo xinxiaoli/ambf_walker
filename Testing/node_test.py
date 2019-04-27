@@ -8,7 +8,7 @@ cmd = np.asarray([0]*7)
 
 while 1:
 
-   cmd[4] = 100
+   cmd[5] = -100
    sim.send_command(cmd)
 
 
