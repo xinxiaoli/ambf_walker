@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
-
-import rbdl
-
+import threading
+import time
 plt.ion()
 
 
@@ -16,10 +15,9 @@ class Plotter(object):
         self.right_leg, = self.ax.plot([], [], 'ro-', lw=2)
         self.trunk, = self.ax.plot([], [], 'go-', lw=2)
 
-
     def update(self):
 
-        points = self.model.fk()
+        points = self.model.fk
 
         #self.trunk.set_xdata( [legs_x[1],legs_x[2]] )
         #self.trunk.set_ydata([legs_y[1], legs_y[2]])

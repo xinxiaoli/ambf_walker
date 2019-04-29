@@ -64,7 +64,10 @@ class Exoskeleton(object):
         com_location["shank"] = 0.2529
         com_location["foot"] = 0.0182
         segments = segments = ["thigh", "shank", "foot"]
-        joint_rot_z = rbdl.Joint.fromJointType("JointTypeRevoluteZ")
+        #joint_rot_z = rbdl.Joint.fromJointType("JointTypeRevoluteZ")
+        a = np.array([0., 0., -1., 0., 0., 0.])
+        joint_rot_z = rbdl.Joint.fromJointAxes([a])
+
         floating_base = rbdl.Joint.fromJointType("JointTypeFloatingBase")
         ztrans = rbdl.SpatialTransform()
         ztrans.r = np.array([0., 0, -1.])
@@ -204,9 +207,8 @@ class Exoskeleton(object):
 
         return foot
 
+    @property
     def fk(self):
-
-
 
         fk = {}
         for index, joint in enumerate(self.joint_order):
@@ -216,42 +218,13 @@ class Exoskeleton(object):
             point["z"] = self._model.X_base[2 + index].r[2]
             fk[joint] = point
 
-
-        # fk = {}
-        # for joint in self.joint_order:
-        #
-        #     point = {}
-        #     point["x"] = None
-        #     point["y"] = None
-        #     point["z"] = None
-        #     fk[joint] = point
-        #
-        # fk["left_hip"]["x"] = self._model.X_base[2].r[0]
-        # fk["left_hip"]["y"] = self._model.X_base[2].r[1]
-        #
-        # fk["left_knee"]["x"] = self._model.X_base[3].r[0]
-        # fk["left_knee"]["y"] = self._model.X_base[3].r[1]
-        #
-        # fk["left_ankle"]["x"] = self._model.X_base[4].r[0]
-        # fk["left_ankle"]["y"] = self._model.X_base[4].r[1]
-        #
-        # fk["right_hip"]["x"] = self._model.X_base[5].r[0]
-        # fk["right_hip"]["y"] = self._model.X_base[5].r[1]
-        #
-        # fk["right_knee"]["x"] = self._model.X_base[6].r[0]
-        # fk["right_knee"]["y"] = self._model.X_base[6].r[1]
-        #
-        # fk["right_ankle"]["x"] = self._model.X_base[7].r[0]
-        # fk["right_ankle"]["y"] = self._model.X_base[7].r[1]
-
         foot = self.make_foot(fk["left_ankle"], fk["right_ankle"])
         fk.update(foot)
 
         return fk
 
     def calculate_dynamics(self, q_d, qd_d, qdd_d):
-
-        tau = np.asarray([0]*7)
+        tau = np.asarray([0.0] * 7)
         rbdl.InverseDynamics(self._model, q_d, qd_d, qdd_d, tau)
         return tau
 
