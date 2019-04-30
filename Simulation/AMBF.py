@@ -60,9 +60,9 @@ class AMBF(Exoskeleton.Exoskeleton):
             self.tau_pub.publish(msg)
             return None
 
-        q = np.array([0.0] * 7)
-        qd = np.array([0.0] * 7)
-        q[1:] = np.asarray(msg.joint_positions)
+        q = np.array([0.0] * 6)
+        qd = np.array([0.0] * 6)
+        q = np.asarray(msg.joint_positions)
         q = np.round(q, 3)
 
         # Correct the joint angles
