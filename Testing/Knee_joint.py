@@ -19,25 +19,29 @@ def get_coef( start, end, dt):
 
 
 if __name__ == "__main__":
-    joint = 2
+    traj = Float64()
+    error = Float64()
+    joint = 1
     sim = AMBF.AMBF("revolute", 52, 1.57)
     # plot = Plotter.Plotter(sim)
     pub = rospy.Publisher("traj",Float64, queue_size=1)
+    err = rospy.Publisher("error", Float64, queue_size=1)
     cmd = np.asarray([0.0] * 6)
+
     q_d = np.asarray([0.0] * 6)
     qd_d = np.asarray([0.0] * 6)
     qdd_d = np.asarray([0.0] * 6)
-    Ku = 1.0
-    Tu = 0
+    Ku = 0.285
+    Tu = 2.25
     Td = Tu/8.0
-    Kp = 0.8*Ku
+    Kp = Ku
     Kd = (Ku*Tu)/10.0
     kp = np.array([Kp])
     kd = np.array([Kd])
     controller = PD_Controller.PDController(kp, kd)
 
     start = 0
-    end = -0.3
+    end = -0.20
     total_time = 3.0
     coef = get_coef(start, end, total_time)
     time = 0
@@ -51,18 +55,22 @@ if __name__ == "__main__":
         q_goal = (coef[0] + coef[1] * time + coef[2] * time ** 2 + coef[3] * time ** 3)[0]
         qd_goal = (coef[1] + 2 * coef[2] * time + 3 * coef[3] * time ** 2)[0]
         qdd_goal = (2 * coef[2] + 6 * coef[3] * time)[0]
-        qdd = controller.calc(q_goal - q[joint], qd_goal - qd[joint])
-        traj = Float64()
+        qdd = qdd_goal + controller.calc(q_goal - q[joint], qd_goal - qd[joint])
+
         traj.data = q_goal
         q_d[joint] = q_goal
         qd_d[joint] = qd_goal
         qdd_d[joint] = qdd[0]
         tau = sim.calculate_dynamics(q_d, qd_d, qdd_d)
-        cmd = tau
+
+        cmd[joint] = -tau[joint]
         sim.send_command(cmd)
         time += dt
         #plot.update()
         pub.publish(traj)
+        error.data = 100*abs(q[joint] - q_goal)/(q[joint]+0.00000000001)
+        err.publish(error)
+        print(qd[joint])
         clock.sleep(dt)
 
     while 1:
