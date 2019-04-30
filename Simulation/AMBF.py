@@ -41,7 +41,6 @@ class AMBF(Exoskeleton.Exoskeleton):
         cmd.joint_cmds = tau
         cmd.publish_joint_names = True
         cmd.publish_joint_positions = True
-
         self.tau_pub.publish(cmd)
 
     def joint_callback(self, msg):

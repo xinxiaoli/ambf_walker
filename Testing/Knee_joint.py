@@ -19,7 +19,7 @@ def get_coef( start, end, dt):
 
 
 if __name__ == "__main__":
-
+    joint = 2
     sim = AMBF.AMBF("revolute", 52, 1.57)
     # plot = Plotter.Plotter(sim)
     pub = rospy.Publisher("traj",Float64, queue_size=1)
@@ -27,11 +27,11 @@ if __name__ == "__main__":
     q_d = np.asarray([0.0] * 7)
     qd_d = np.asarray([0.0] * 7)
     qdd_d = np.asarray([0.0] * 7)
-    Ku = 51.0
-    Tu = 1.825
+    Ku = 1.0
+    Tu = 0
     Td = Tu/8.0
     Kp = 0.8*Ku
-    Kd = (Ku*Tu)/9.9
+    Kd = (Ku*Tu)/10.0
     kp = np.array([Kp])
     kd = np.array([Kd])
     controller = PD_Controller.PDController(kp, kd)
@@ -51,12 +51,12 @@ if __name__ == "__main__":
         q_goal = (coef[0] + coef[1] * time + coef[2] * time ** 2 + coef[3] * time ** 3)[0]
         qd_goal = (coef[1] + 2 * coef[2] * time + 3 * coef[3] * time ** 2)[0]
         qdd_goal = (2 * coef[2] + 6 * coef[3] * time)[0]
-        qdd = controller.calc(q_goal - q[1], qd_goal - qd[1])
+        qdd = controller.calc(q_goal - q[joint], qd_goal - qd[joint])
         traj = Float64()
         traj.data = q_goal
-        q_d[1] = q_goal
-        qd_d[1] = qd_goal
-        qdd_d[1] = qdd[0]
+        q_d[joint] = q_goal
+        qd_d[joint] = qd_goal
+        qdd_d[joint] = qdd[0]
         tau = sim.calculate_dynamics(q_d, qd_d, qdd_d)
         cmd = tau
         sim.send_command(cmd)
