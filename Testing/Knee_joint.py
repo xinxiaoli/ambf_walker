@@ -24,24 +24,24 @@ if __name__ == "__main__":
     joint = 1
     sim = AMBF.AMBF("revolute", 52, 1.57)
     # plot = Plotter.Plotter(sim)
-    pub = rospy.Publisher("traj",Float64, queue_size=1)
+    pub = rospy.Publisher("traj_knee",Float64, queue_size=1)
     err = rospy.Publisher("error", Float64, queue_size=1)
     cmd = np.asarray([0.0] * 6)
 
     q_d = np.asarray([0.0] * 6)
     qd_d = np.asarray([0.0] * 6)
     qdd_d = np.asarray([0.0] * 6)
-    Ku = 0.285
-    Tu = 2.25
+    Ku = 280.0
+    Tu = 0.3
     Td = Tu/8.0
-    Kp = Ku
+    Kp = 0.8*Ku
     Kd = (Ku*Tu)/10.0
     kp = np.array([Kp])
     kd = np.array([Kd])
     controller = PD_Controller.PDController(kp, kd)
 
     start = 0
-    end = -0.20
+    end = 1.0
     total_time = 3.0
     coef = get_coef(start, end, total_time)
     time = 0
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         qdd_d[joint] = qdd[0]
         tau = sim.calculate_dynamics(q_d, qd_d, qdd_d)
 
-        cmd[joint] = -tau[joint]
+        cmd[joint] = tau[joint]
         sim.send_command(cmd)
         time += dt
         #plot.update()
@@ -75,6 +75,5 @@ if __name__ == "__main__":
 
     while 1:
         sim.send_command(cmd)
-
 
 

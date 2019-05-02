@@ -31,8 +31,8 @@ if __name__ == "__main__":
     q_d = np.asarray([0.0] * 6)
     qd_d = np.asarray([0.0] * 6)
     qdd_d = np.asarray([0.0] * 6)
-    Ku = 50.0
-    Tu = 5.0
+    Ku = 53.0
+    Tu = 5.5
     Td = Tu/8.0
     Kp = Ku
     Kd = (Ku*Tu)/10.0
@@ -73,10 +73,10 @@ if __name__ == "__main__":
         print(qd[joint])
         clock.sleep(dt)
 
-    while 1:
-        sim.send_command(cmd)
-        pub.publish(traj)
-        err.publish(error)
+    # while 1:
+    #     sim.send_command(cmd)
+    #     pub.publish(traj)
+    #     err.publish(error)
 
 
 

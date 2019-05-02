@@ -22,25 +22,25 @@ if __name__ == "__main__":
     joint = 0
     sim = AMBF.AMBF("revolute", 52, 1.57)
     # plot = Plotter.Plotter(sim)
-    pub = rospy.Publisher("traj",Float64, queue_size=1)
+    pub = rospy.Publisher("traj_hip",Float64, queue_size=1)
     err = rospy.Publisher("error", Float64, queue_size=1)
     cmd = np.asarray([0.0] * 6)
 
     q_d = np.asarray([0.0] * 6)
     qd_d = np.asarray([0.0] * 6)
     qdd_d = np.asarray([0.0] * 6)
-    Ku = 58.0
-    Tu = 1.2
+    Ku = 180.0
+    Tu = 0.3
     Td = Tu/8.0
-    Kp = Ku
+    Kp = 0.8*Ku
     Kd = (Ku*Tu)/10.0
     kp = np.array([Kp])
     kd = np.array([Kd])
     controller = PD_Controller.PDController(kp, kd)
 
     start = 0
-    end = -0.3
     total_time = 3.0
+    end = -0.3
     coef = get_coef(start, end, total_time)
     time = 0
 
