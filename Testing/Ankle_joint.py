@@ -24,17 +24,18 @@ if __name__ == "__main__":
     joint = 2
     sim = AMBF.AMBF("revolute", 52, 1.57)
     # plot = Plotter.Plotter(sim)
-    pub = rospy.Publisher("traj",Float64, queue_size=1)
+    pub = rospy.Publisher("traj_ankle",Float64, queue_size=1)
+
     err = rospy.Publisher("error", Float64, queue_size=1)
     cmd = np.asarray([0.0] * 6)
 
     q_d = np.asarray([0.0] * 6)
     qd_d = np.asarray([0.0] * 6)
     qdd_d = np.asarray([0.0] * 6)
-    Ku = 53.0
-    Tu = 5.5
+    Ku = 275.0
+    Tu = 0.5
     Td = Tu/8.0
-    Kp = Ku
+    Kp = 0.8*Ku
     Kd = (Ku*Tu)/10.0
     kp = np.array([Kp])
     kd = np.array([Kd])
@@ -73,10 +74,9 @@ if __name__ == "__main__":
         print(qd[joint])
         clock.sleep(dt)
 
-    # while 1:
-    #     sim.send_command(cmd)
-    #     pub.publish(traj)
-    #     err.publish(error)
+    while 1:
+        sim.send_command(cmd)
+        pub.publish(traj)
 
 
 
