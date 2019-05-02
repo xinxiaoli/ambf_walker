@@ -176,6 +176,13 @@ class Exoskeleton(object):
         return model
 
     def update_joints(self, q, qd):
+        """
+
+        :param q:
+        :param qd:
+        :return:
+        """
+
         self._q = q
         self._qd = qd
         self._state = (q, qd)
@@ -205,7 +212,6 @@ class Exoskeleton(object):
 
     @property
     def fk(self):
-
         fk = {}
         for index, joint in enumerate(self.joint_order):
             point = {}

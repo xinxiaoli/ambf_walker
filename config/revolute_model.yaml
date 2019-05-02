@@ -116,7 +116,8 @@ JOINT left_shank-left_foot:
   enable motor: 1
   joint limits: {high: 0.8726646259971648, low: -0.3490658503988659}
   max motor impulse: 0.05
-  name: left_knee
+  damping: 80.0
+  name: left_ankle
   parent: BODY left_shank
   parent axis: {x: -0.0, y: 0.0, z: 1.0}
   parent pivot: {x: 0.38622, y: 0.0, z: -0.0}
@@ -128,7 +129,8 @@ JOINT left_thigh-left_shank:
   enable motor: 1
   joint limits: {high: 2.0943951023931953, low: 0}
   max motor impulse: 0.05
-  name: left_ankle
+  damping: 0.0
+  name: left_knee
   parent: BODY left_thigh
   parent axis: {x: 0.0, y: -0.0, z: 1.0}
   parent pivot: {x: 0.38465, y: -0.0, z: -0.0}

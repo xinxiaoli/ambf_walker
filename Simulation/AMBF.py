@@ -22,7 +22,7 @@ class AMBF(Exoskeleton.Exoskeleton):
 
     @property
     def time(self):
-        return self._time
+     return self._time
 
     @time.setter
     def time(self, value):
@@ -65,17 +65,11 @@ class AMBF(Exoskeleton.Exoskeleton):
         q = np.asarray(msg.joint_positions)
         q = np.round(q, 3)
 
-        # Correct the joint angles
-        # q[1] *= -1
-        # q[2] *= -1
-        # q[4] *= -1
-        # q[5] *= -1
-
         if self.time == 0:
             self.time = msg.sim_time
 
         qd = (q - self.q) / (msg.sim_time - self.time + 0.0000001)
-
+        qd = np.clip(qd, -1.0, 1.0)
         self.dt = msg.wall_time - self.time
         self.time = msg.wall_time
         self.update_joints(q, qd)
