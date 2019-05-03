@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     time = 0
     while time <= total_time:
-        side = 0
+        side = 3
         offset = 1
         traj_h = Float64()
         traj_k = Float64()
