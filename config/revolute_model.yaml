@@ -103,8 +103,9 @@ JOINT body-right_thigh:
   child axis: {x: 0.0, y: 0.0, z: 1.0}
   child pivot: {x: 0.0, y: 0.0, z: 0.0}
   enable motor: 1
-  joint limits: {high: 3.14, low: -3.14 }
+  joint limits: {high: 0.5235987755982988, low: -1.9198621771937625}
   max motor impulse: 0.05
+  damping: 80.0
   name: right_hip
   parent: BODY body
   parent axis: {x: 1.0, y: -0.0, z: 0.0}

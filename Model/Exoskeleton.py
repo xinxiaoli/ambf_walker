@@ -110,7 +110,6 @@ class Exoskeleton(object):
         joint_location["foot"] = np.array([0., -length["shank"], 0.0])  # ankle
 
         hip_body = rbdl.Body.fromMassComInertia(mass["hip"], com["hip"], rgyration["hip"])
-        body_body = rbdl.Body.fromMassComInertia(mass["body"], com["body"], rgyration["body"])
         for segs in segments:
             bodies["right"][segs] = rbdl.Body.fromMassComInertia(mass[segs], com[segs], rgyration[segs])
             bodies["left"][segs] = rbdl.Body.fromMassComInertia(mass[segs], com[segs], rgyration[segs])
@@ -124,12 +123,11 @@ class Exoskeleton(object):
                                   "hip"
                                   )
 
-        id_r = hip_id
         id_l = hip_id
+        id_r = hip_id
 
         for segs in segments:
             xtrans.r = joint_location[segs]
-            print segs
             id_l = model.AddBody(id_l,
                                  xtrans,
                                  joint_rot_z,
@@ -226,6 +224,6 @@ class Exoskeleton(object):
         return fk
 
     def calculate_dynamics(self, q_d, qd_d, qdd_d):
-        tau = np.asarray([0.0] * 7)
+        tau = np.asarray([0.0] * 6)
         rbdl.InverseDynamics(self._model, q_d, qd_d, qdd_d, tau)
         return tau

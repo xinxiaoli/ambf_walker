@@ -54,25 +54,28 @@ if __name__ == "__main__":
         qd_goal = (coef[1] + 2 * coef[2] * time + 3 * coef[3] * time ** 2)[0]
         qdd_goal = (2 * coef[2] + 6 * coef[3] * time)[0]
         qdd = qdd_goal + controller.calc(q_goal - q[joint], qd_goal - qd[joint])
-        traj = Float64()
-        error = Float64()
-        traj.data = q_goal
+
+        q_goal = (coef[0] + coef[1] * time + coef[2] * time ** 2 + coef[3] * time ** 3)[0]
+        qd_goal = (coef[1] + 2 * coef[2] * time + 3 * coef[3] * time ** 2)[0]
+        qdd_goal = (2 * coef[2] + 6 * coef[3] * time)[0]
+        qdd = qdd_goal + controller.calc(q_goal - q[3], qd_goal - qd[3])
+
+
+
         q_d[joint] = q_goal
         qd_d[joint] = qd_goal
         qdd_d[joint] = qdd[0]
         tau = sim.calculate_dynamics(q_d, qd_d, qdd_d)
-
-        cmd[joint] = tau[joint]
+        print tau
+        cmd[0] = tau[joint]
         sim.send_command(cmd)
         time += dt
         #plot.update()
-        pub.publish(traj)
-        error.data = 100*abs(q[joint] - q_goal)/(q[joint]+.00000000001)
-        err.publish(error)
+        #pub.publish(traj)
         clock.sleep(dt)
 
-    while 1:
-        sim.send_command(cmd)
+    # while 1:
+    #     sim.send_command(cmd)
 
 
 

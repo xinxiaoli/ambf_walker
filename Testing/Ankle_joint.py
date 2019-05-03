@@ -32,8 +32,8 @@ if __name__ == "__main__":
     q_d = np.asarray([0.0] * 6)
     qd_d = np.asarray([0.0] * 6)
     qdd_d = np.asarray([0.0] * 6)
-    Ku = 275.0
-    Tu = 0.5
+    Ku = 249.0
+    Tu = 0.475
     Td = Tu/8.0
     Kp = 0.8*Ku
     Kd = (Ku*Tu)/10.0

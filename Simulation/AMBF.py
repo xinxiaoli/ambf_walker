@@ -53,6 +53,7 @@ class AMBF(Exoskeleton.Exoskeleton):
 
         # this checks if we have the joint states enable and if they are
         # not then they are are enables
+
         if not msg.joint_positions:
             msg = ambf.ObjectCmd()
             msg.publish_joint_names = True
