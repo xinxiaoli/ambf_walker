@@ -21,7 +21,7 @@ def get_coef( start, end, dt):
 if __name__ == "__main__":
     joint = 0
     sim = AMBF.AMBF("revolute", 52, 1.57)
-    # plot = Plotter.Plotter(sim)
+    plot = Plotter.Plotter(sim)
     pub = rospy.Publisher("traj_hip",Float64, queue_size=1)
     err = rospy.Publisher("error", Float64, queue_size=1)
     cmd = np.asarray([0.0] * 6)
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     coef = get_coef(start, end, total_time)
     time = 0
 
-    while time <= total_time:
+    while 1:
         joint = 0
         dt = sim.dt
         q = sim.q
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         cmd[0] = tau[joint]
         sim.send_command(cmd)
         time += dt
-        #plot.update()
+        plot.update()
         #pub.publish(traj)
         clock.sleep(dt)
 

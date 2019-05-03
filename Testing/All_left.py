@@ -29,9 +29,9 @@ if __name__ == "__main__":
     err = rospy.Publisher("error", Float64, queue_size=1)
     cmd = np.asarray([0.0] * 6)
 
-    q_d = np.asarray([0.0] * 6)
-    qd_d = np.asarray([0.0] * 6)
-    qdd_d = np.asarray([0.0] * 6)
+    q_d = np.asarray([0.0] * 7)
+    qd_d = np.asarray([0.0] * 7)
+    qdd_d = np.asarray([0.0] * 7)
 
     Ku = 180.0
     Tu = 0.3
@@ -72,6 +72,7 @@ if __name__ == "__main__":
     time = 0
     while time <= total_time:
         side = 0
+        offset = 1
         traj_h = Float64()
         traj_k = Float64()
         traj_a = Float64()
@@ -82,33 +83,37 @@ if __name__ == "__main__":
         q_goal = (coef_hip[0] + coef_hip[1] * time + coef_hip[2] * time ** 2 + coef_hip[3] * time ** 3)[0]
         qd_goal = (coef_hip[1] + 2 * coef_hip[2] * time + 3 * coef_hip[3] * time ** 2)[0]
         qdd_goal = (2 * coef_hip[2] + 6 * coef_hip[3] * time)[0]
-        qdd_hip = qdd_goal + controller_hip.calc(q_goal - q[0+side], qd_goal - qd[0+side])
-        q_d[0+side] = q_goal
-        qd_d[0+side] = qd_goal
-        qdd_d[0+side] = qdd_hip[0]
+        qdd_hip = qdd_goal + controller_hip.calc(q_goal - q[0+offset+side], qd_goal - qd[0+offset+side])
+        q_d[0+offset+side] = q_goal
+        qd_d[0+offset+side] = qd_goal
+        qdd_d[0+offset+side] = qdd_hip[0]
         traj_h.data = q_goal
 
         q_goal = (coef_knee[0] + coef_knee[1] * time + coef_knee[2] * time ** 2 + coef_knee[3] * time ** 3)[0]
         qd_goal = (coef_knee[1] + 2 * coef_knee[2] * time + 3 * coef_knee[3] * time ** 2)[0]
         qdd_goal = (2 * coef_knee[2] + 6 * coef_knee[3] * time)[0]
-        qdd_knee = qdd_goal + controller_knee.calc(q_goal - q[1+side], qd_goal - qd[1+side])
-        q_d[1+side] = q_goal
-        qd_d[1+side] = qd_goal
-        qdd_d[1+side] = qdd_knee[0]
+        qdd_knee = qdd_goal + controller_knee.calc(q_goal - q[1+offset+side], qd_goal - qd[1+offset+side])
+        q_d[1+offset+side] = q_goal
+        qd_d[1+offset+side] = qd_goal
+        qdd_d[1+offset+side] = qdd_knee[0]
         traj_k.data = q_goal
 
         q_goal = (coef_ankle[0] + coef_ankle[1] * time + coef_ankle[2] * time ** 2 + coef_ankle[3] * time ** 3)[0]
         qd_goal = (coef_ankle[1] + 2 * coef_ankle[2] * time + 3 * coef_ankle[3] * time ** 2)[0]
         qdd_goal = (2 * coef_ankle[2] + 6 * coef_ankle[3] * time)[0]
-        qdd_ankle = qdd_goal + controller_ankle.calc(q_goal - q[2+side], qd_goal - qd[2+side])
-        q_d[2+side] = q_goal
-        qd_d[2+side] = qd_goal
-        qdd_d[2+side] = qdd_ankle[0]
+        qdd_ankle = qdd_goal + controller_ankle.calc(q_goal - q[2+offset+side], qd_goal - qd[2+offset+side])
+        q_d[2+offset+side] = q_goal
+        qd_d[2+offset+side] = qd_goal
+        qdd_d[2+offset+side] = qdd_ankle[0]
         traj_a.data = q_goal
+        print "q", q_d
+        print "qd", qd_d
+        print "qdd", qdd_d
         tau = sim.calculate_dynamics(q_d, qd_d, qdd_d)
-        cmd[0+side] = tau[0+side]
-        cmd[1+side] = tau[1]
-        cmd[2+side] = tau[2]
+        print "tau", tau
+        cmd[0+side] = tau[0+offset+side]
+        cmd[1+side] = tau[1+offset+side]
+        cmd[2+side] = tau[2+offset+side]
         sim.send_command(cmd)
         time += dt
 

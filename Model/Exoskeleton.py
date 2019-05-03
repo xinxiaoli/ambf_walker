@@ -14,8 +14,8 @@ class Exoskeleton(object):
         self._height = height
         self._model = self.dynamic_model(mass, height)
         self.joint_order = ["left_hip", "left_knee", "left_ankle", "right_hip", "right_knee", "right_ankle"]
-        self._q = np.asarray([0]*6)
-        self._qd = np.asarray([0]*6)
+        self._q = np.asarray([0]*7)
+        self._qd = np.asarray([0]*7)
         self._state = (self._q, self._qd)
     
     @property
@@ -224,6 +224,6 @@ class Exoskeleton(object):
         return fk
 
     def calculate_dynamics(self, q_d, qd_d, qdd_d):
-        tau = np.asarray([0.0] * 6)
+        tau = np.asarray([0.0] * 7)
         rbdl.InverseDynamics(self._model, q_d, qd_d, qdd_d, tau)
         return tau
