@@ -18,8 +18,9 @@ def calculate_gain(Ku, Tu):
 if __name__ == "__main__":
 
     sim = AMBF.AMBF("revolute", 52, 1.57)
-    runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip.yaml")
-    Kp_hip, Kd_hip = calculate_gain(180.0, 0.3)
+    hip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip.yaml")
+    knee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee.yaml")
+    Kp_hip, Kd_hip = calculate_gain(350.0, 0.95)
     Kp_knee, Kd_knee = calculate_gain(280.0, 0.3)
     Kp_ankle, Kd_ankle = calculate_gain(249.0, 0.475)
     Kp = np.array([0,Kp_hip, Kp_knee, Kp_ankle, Kp_hip, Kp_knee, Kp_ankle])
@@ -46,11 +47,15 @@ if __name__ == "__main__":
         q = sim.q
         qd = sim.qd
 
-        hip, hipd, hipdd = runner.step()
+        hip, hipd, hipdd = hip_runner.step(1.0)
+        knee, kneed, kneedd = hip_runner.step()
         q_goal[1] = hip
         qd_goal[1] = hipd
         qdd_goal[1] = hipdd
-        aq = Controller.calc(q_goal - q, qd_goal - qd)
+        # q_goal[2] = knee
+        # qd_goal[2] = kneed
+        # qdd_goal[2] = kneedd
+        aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
         tau = sim.calculate_dynamics(q_d, qd_d, aq)
 
         for i in xrange(0,6):
