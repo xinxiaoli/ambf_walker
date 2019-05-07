@@ -19,7 +19,7 @@ if __name__ == "__main__":
     sim = AMBF.AMBF("revolute", 52, 1.57)
     file_path = "/home/nathaniel/git/AMBF_Walker/config/joint_data.csv"
     Kp_hip, Kd_hip = calculate_gain(180.0, 0.3)
-    Kp_knee, Kd_knee = calculate_gain(280.0, 0.3)
+    Kp_knee, Kd_knee = calculate_gain(1000.0, .0)
     Kp_ankle, Kd_ankle = calculate_gain(249.0, 0.475)
     Kp = np.array([0,Kp_hip, Kp_knee, Kp_ankle, Kp_hip, Kp_knee, Kp_ankle])
     Kd = np.array([0,Kd_hip, Kp_knee, Kd_ankle, Kd_hip, Kd_knee, Kd_ankle])
@@ -35,7 +35,11 @@ if __name__ == "__main__":
     qdd_d = np.asarray([0.0] * 7)
     cmd = np.asarray([0.0] * 6)
     dt = 0
+    from Tkinter import *
 
+
+
+    mainloop()
     while 1:
         traj_h = Float64()
         traj_k = Float64()
