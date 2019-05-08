@@ -89,16 +89,16 @@ root = Tk()
 Kp_hip, Kd_hip = calculate_gain(150.0, 0.6)
 Kp_knee, Kd_knee = calculate_gain(75.0, 1.05)
 Kp_ankle, Kd_ankle = calculate_gain(260.0, 0.55)
-gains = ( [ 437, 11 ],[440, 12],[Kp_ankle, Kd_ankle])
+gains = ( [ 437, 11 ],[440, 12],[1028, 94.5])
 
-Kp = np.array([0, 437, 440, Kp_ankle, Kp_hip, Kp_knee, Kp_ankle])
-Kd = np.array([0, 11, 12, Kd_ankle, Kd_hip, Kd_knee, Kd_ankle])
+Kp = np.array([0, 437, 440, 1028, Kp_hip, Kp_knee, Kp_ankle])
+Kd = np.array([0, 11, 12, 94.2, Kd_hip, Kd_knee, Kd_ankle])
 Controller = PD_Controller.PDController(Kp, Kd)
 sliders = []
 for i in xrange(0,3):
     joint_gains = gains[i]
-    P = Scale(root, from_=0, to=2500,length=1200, resolution=1, orient=HORIZONTAL)
-    D = Scale(root, from_=0, to=200,length=1200, resolution=0.1, orient=HORIZONTAL)
+    P = Scale(root, from_=0, to=2000,length=1200, resolution=1, orient=HORIZONTAL)
+    D = Scale(root, from_=0, to=1000,length=1200, resolution=0.1, orient=HORIZONTAL)
     P.set(joint_gains[0])
     D.set(joint_gains[1])
     P.pack()
