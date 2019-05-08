@@ -20,8 +20,8 @@ def calculate_gain(Ku, Tu):
 
 def go():
 
-    Kp = np.array([0, sliders[0][0].get(),  sliders[1][0].get(),  sliders[2][0].get(), 0, 0, 0])
-    Kd = np.array([0, sliders[0][1].get(),  sliders[1][1].get(),  sliders[2][1].get(), 0, 0, 0])
+    # Kp = np.array([0, 0, 0, 0, sliders[0][0].get(),  sliders[1][0].get(),  sliders[2][0].get()])
+    # Kd = np.array([0, 0, 0, 0, sliders[0][1].get(),  sliders[1][1].get(),  sliders[2][1].get()])
 
     Controller.Kd = Kd
     Controller.Kp = Kp
@@ -31,20 +31,37 @@ def go():
     q = sim.q
     qd = sim.qd
 
-    hip, hipd, hipdd = hip_runner.step(1.0)
-    knee, kneed, kneedd = knee_runner.step(1.0)
-    ankle, ankled, ankledd = ankle_runner.step(1.0)
-    q_goal[1] = hip
-    qd_goal[1] = hipd
-    qdd_goal[1] = hipdd
+    Lhip, Lhipd, Lhipdd = Lhip_runner.step(1.0)
+    Lknee, Lkneed, Lkneedd = Lknee_runner.step(1.0)
+    Lankle, Lankled, Lankledd = Lankle_runner.step(1.0)
+    #
+    # Rhip, Rhipd, Rhipdd = Rhip_runner.step(1.0)
+    # Rknee, Rkneed, Rkneedd = Rknee_runner.step(1.0)
+    # Rankle, Rankled, Rankledd = Rankle_runner.step(1.0)
 
-    q_goal[2] = knee
-    qd_goal[2] = kneed
-    qdd_goal[2] = kneedd
+    q_goal[1] = Lhip
+    qd_goal[1] = Lhipd
+    qdd_goal[1] = Lhipdd
 
-    q_goal[3] = ankle
-    qd_goal[3] = ankled
-    qdd_goal[3] = ankledd
+    q_goal[2] = Lknee
+    qd_goal[2] = Lkneed
+    qdd_goal[2] = Lkneedd
+
+    q_goal[3] = Lankle
+    qd_goal[3] = Lankled
+    qdd_goal[3] = Lankledd
+
+    # q_goal[4] = Rhip
+    # qd_goal[4] = Rhipd
+    # qdd_goal[4] = Rhipdd
+    #
+    # q_goal[5] = Rknee
+    # qd_goal[5] = Rkneed
+    # qdd_goal[5] = Rkneedd
+    #
+    # q_goal[6] = Rankle
+    # qd_goal[6] = Rankled
+    # qdd_goal[6] = Rankledd
 
     aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
     tau = sim.calculate_dynamics(q_d, qd_d, aq)
@@ -66,10 +83,13 @@ def go():
 
 
 sim = AMBF.AMBF("revolute", 52, 1.57)
-hip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip.xml")
-knee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee.xml")
-ankle_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/ankle.xml")
+Lhip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip_left.xml")
+Lknee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee_left.xml")
+Lankle_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/ankle_left.xml")
 
+# Rhip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip_right.xml")
+# Rknee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee_right.xml")
+# Rankle_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/ankle_right.xml")
 
 traj_hip = rospy.Publisher("traj_hip", Float64, queue_size=1)
 traj_knee = rospy.Publisher("traj_knee", Float64, queue_size=1)
@@ -89,10 +109,10 @@ root = Tk()
 Kp_hip, Kd_hip = calculate_gain(150.0, 0.6)
 Kp_knee, Kd_knee = calculate_gain(75.0, 1.05)
 Kp_ankle, Kd_ankle = calculate_gain(260.0, 0.55)
-gains = ( [ 437, 11 ],[440, 12],[1028, 94.5])
+gains = ( [437, 11 ], [440, 12], [1028, 94.5],[ 0,0],[0,0],[0,0])
 
-Kp = np.array([0, 437, 440, 1028, Kp_hip, Kp_knee, Kp_ankle])
-Kd = np.array([0, 11, 12, 94.2, Kd_hip, Kd_knee, Kd_ankle])
+Kp = np.array([0, 437, 440, 1028, 0,0,0])
+Kd = np.array([0, 11, 12, 94.2, 0,0,0])
 Controller = PD_Controller.PDController(Kp, Kd)
 sliders = []
 for i in xrange(0,3):

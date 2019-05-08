@@ -19,9 +19,14 @@ def calculate_gain(Ku, Tu):
 if __name__ == "__main__":
 
     sim = AMBF.AMBF("revolute", 52, 1.57)
-    hip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip.xml")
-    knee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee.xml")
-    ankle_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/ankle.xml")
+    Lhip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip_left.xml")
+    Lknee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee_left.xml")
+    Lankle_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/ankle_left.xml")
+
+    Rhip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip_right.xml")
+    Rknee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee_right.xml")
+    Rankle_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/ankle_right.xml")
+
     Kp_hip, Kd_hip = calculate_gain(150.0, 0.6)
     Kp_knee, Kd_knee = calculate_gain(75.0, 1.05)
     Kp_ankle, Kd_ankle = calculate_gain(260.0, 0.55)
@@ -53,9 +58,9 @@ if __name__ == "__main__":
         q = sim.q
         qd = sim.qd
 
-        hip, hipd, hipdd = hip_runner.step(1.0)
-        knee, kneed, kneedd = knee_runner.step(1.0)
-        ankle, ankled, ankledd = ankle_runner.step(1.0)
+        hip, hipd, hipdd = Lhip_runner.step(1.0)
+        knee, kneed, kneedd = Lknee_runner.step(1.0)
+        ankle, ankled, ankledd = Lankle_runner.step(1.0)
         q_goal[1] = hip
         qd_goal[1] = hipd
         qdd_goal[1] = hipdd
