@@ -21,13 +21,13 @@ def calculate_gain(Ku, Tu):
 def go():
 
 
-    Kp = np.array(
-        [0, sliders[0][0].get(), sliders[1][0].get(), sliders[2][0].get(), sliders[3][0].get(), sliders[4][0].get(),
-         sliders[5][0].get()])
-
-    Kd = np.array(
-        [0, sliders[0][1].get(), sliders[1][1].get(), sliders[2][1].get(), sliders[3][1].get(), sliders[4][1].get(),
-         sliders[5][1].get()])
+    # Kp = np.array(
+    #     [0, sliders[0][0].get(), sliders[1][0].get(), sliders[2][0].get(), sliders[3][0].get(), sliders[4][0].get(),
+    #      sliders[5][0].get()])
+    #
+    # Kd = np.array(
+    #     [0, sliders[0][1].get(), sliders[1][1].get(), sliders[2][1].get(), sliders[3][1].get(), sliders[4][1].get(),
+    #      sliders[5][1].get()])
 
     Controller.Kd = Kd
     Controller.Kp = Kp
@@ -88,8 +88,9 @@ def go():
     traj_ankle.publish(traj_a)
 
     dt = sim.dt
-    print dt*1000
-    root.after(10,go)
+    clock.sleep(0.01)
+    #print dt*1000
+    #root.after(10,go)
 
 
 sim = AMBF.AMBF("revolute", 52, 1.57)
@@ -114,32 +115,33 @@ qdd_goal = np.asarray([0.0] * 7)
 cmd = np.asarray([0.0] * 6)
 dt = 0
 
-root = Tk()
+#root = Tk()
 
-Kp_hip, Kd_hip = calculate_gain(150.0, 0.6)
-Kp_knee, Kd_knee = calculate_gain(75.0, 1.05)
-Kp_ankle, Kd_ankle = calculate_gain(260.0, 0.55)
-gains = ( [ 510,36.8],[565,42.89],[858,82.2],[ 510,36.8],[565,42.89],[354,45.2])
+
+gains = ( [ 510,36.8],[565,42.89],[354,45.2],[ 510,36.8],[565,42.89],[354,45.2])
 
 Kp = np.array([0,gains[0][0],gains[1][0],gains[2][0],gains[3][0],gains[4][0],gains[5][0] ])
 Kd = np.array([0,gains[0][1],gains[1][1],gains[2][1],gains[3][1],gains[4][1],gains[5][1] ])
 
 Controller = PD_Controller.PDController(Kp, Kd)
-sliders = []
-for i in xrange(0, 6):
-    joint_gains = gains[i]
-    P = Scale(root, from_=0, to=2000,length=1200, resolution=1, orient=HORIZONTAL)
-    D = Scale(root, from_=0, to=1000,length=1200, resolution=0.1, orient=HORIZONTAL)
-    P.set(joint_gains[0])
-    D.set(joint_gains[1])
-    P.pack()
-    D.pack()
-    sliders.append((P,D))
+# sliders = []
+# for i in xrange(0, 6):
+#     joint_gains = gains[i]
+#     P = Scale(root, from_=0, to=2000, length=1200, resolution=1, orient=HORIZONTAL)
+#     D = Scale(root, from_=0, to=1000, length=1200, resolution=0.1, orient=HORIZONTAL)
+#     P.set(joint_gains[0])
+#     D.set(joint_gains[1])
+#     P.pack()
+#     D.pack()
+#     sliders.append((P,D))
 
 
 if __name__ == "__main__":
-    root.after(1, go)
-    root.mainloop()
+
+    while 1:
+        go()
+    #root.after(1, go)
+    #root.mainloop()
 
 
 
