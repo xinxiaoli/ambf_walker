@@ -6,8 +6,9 @@ BODY body:
     position: {x: 0.0, y: 0.0, z: 0.0}
   location:
     orientation: {p: -0.0, r: 0.0, y: 0.0}
-    position: {x: 0.0, y: 0.0, z: 1.1304}
-  mass: 0
+#   position: {x: 0.0, y: 0.0, z: 1.1304}
+    position: {x: 0.0, y: 0.0, z: 0.28}
+  mass: 10.4
   mesh: body.STL
   name: body
   publish joint positions: True
@@ -25,6 +26,7 @@ BODY left_foot:
   mesh: left_foot.STL
   name: left_foot
   scale: 1.57
+  friction: {rolling: 1.0, static: 0.5}
 BODY left_shank:
   color: random
   inertial offset:
@@ -61,6 +63,7 @@ BODY right_foot:
   mesh: right_foot.STL
   name: right_foot
   scale: 1.57
+  friction: {rolling: 1.00, static: .5}
 BODY right_shank:
   color: random
   inertial offset:
@@ -168,3 +171,4 @@ ignore inter-collision: 'True'
 joints: [JOINT body-left_thigh,  JOINT left_thigh-left_shank,JOINT left_shank-left_foot,
   JOINT body-right_thigh, JOINT right_thigh-right_shank,  JOINT right_shank-right_foot]
 low resolution path: ../meshes/low_res/
+gravity:

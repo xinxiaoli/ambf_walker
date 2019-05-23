@@ -36,12 +36,18 @@ class AMBF(Exoskeleton.Exoskeleton):
     def dt(self, value):
         self._dt = value
 
-    def send_command(self, tau):
+    def send_command(self, tau,force):
         cmd = ambf.ObjectCmd()
+        cmd.pose.orientation.w = 1
+        cmd.wrench.force.z = force
         cmd.joint_cmds = tau
         cmd.publish_joint_names = True
         cmd.publish_joint_positions = True
         self.tau_pub.publish(cmd)
+
+    def send_msg(self, msg):
+
+        self.tau_pub.publish(msg)
 
     def joint_callback(self, msg):
         """

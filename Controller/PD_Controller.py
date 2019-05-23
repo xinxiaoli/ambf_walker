@@ -8,8 +8,8 @@ class PDController():
         self._Kd = Kd
 
     def calc(self, e, ed):
-        tau = np.multiply(self.Kp, e) + np.multiply(self.Kd, ed)
-        return tau
+        force= np.multiply(self.Kp, e) + np.multiply(self.Kd, ed)
+        return force
 
     @property
     def Kp(self):
