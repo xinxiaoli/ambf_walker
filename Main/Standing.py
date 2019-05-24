@@ -56,13 +56,8 @@ def go(count):
 
     for i in xrange(0, 6):
         cmd[i] = tau[i + 1]
-    if count < 2000:
-        force = 31.5*9.81
-    else:
-        force = 0
-    print count
-    print force
-    sim.send_command(cmd,force)
+
+    sim.send_command(cmd)
 
     traj_h.data.append(q_goal[1])
     traj_k.data.append(q_goal[2])
@@ -81,15 +76,15 @@ def go(count):
     #print dt*1000
     #root.after(10,go)
 
-
+path = "/home/nathaniel/catkin_ws/src/AMBF_Walker/config/"
 sim = AMBF.AMBF("revolute", 52, 1.57)
-Lhip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip_left.xml")
-Lknee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee_left.xml")
-Lankle_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/ankle_left.xml")
+Lhip_runner = RMP_runner.RMP_runner(path + "hip_left.xml")
+Lknee_runner = RMP_runner.RMP_runner(path + "knee_left.xml")
+Lankle_runner = RMP_runner.RMP_runner(path + "ankle_left.xml")
 
-Rhip_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/hip_right.xml")
-Rknee_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/knee_right.xml")
-Rankle_runner = RMP_runner.RMP_runner("/home/nathaniel/git/AMBF_Walker/config/ankle_right.xml")
+Rhip_runner = RMP_runner.RMP_runner(path + "hip_right.xml")
+Rknee_runner = RMP_runner.RMP_runner(path + "knee_right.xml")
+Rankle_runner = RMP_runner.RMP_runner(path + "ankle_right.xml")
 
 traj_hip = rospy.Publisher("traj_hip", Float64MultiArray, queue_size=1)
 traj_knee = rospy.Publisher("traj_knee", Float64MultiArray, queue_size=1)

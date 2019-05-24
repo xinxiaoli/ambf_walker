@@ -7,8 +7,8 @@ BODY body:
   location:
     orientation: {p: -0.0, r: 0.0, y: 0.0}
 #   position: {x: 0.0, y: 0.0, z: 1.1304}
-    position: {x: 0.0, y: 0.0, z: 0.28}
-  mass: 10.4
+    position: {x: 0.0, y: 0.0, z: 0.25}
+  mass: 10.40
   mesh: body.STL
   name: body
   publish joint positions: True

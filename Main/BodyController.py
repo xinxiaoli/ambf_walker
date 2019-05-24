@@ -10,7 +10,7 @@ class PlaneController(object):
     def __init__(self):
 
         rospy.init_node("plane_controller")
-        rospy.Subscriber("plane_callback", ambf.ObjectCmd, self.position_cb)
+        rospy.Subscriber("joint_cmd", ambf.ObjectCmd, self.controller_cb)
         rospy.Subscriber("revolute/body/State", ambf.ObjectState, self.state_callback)
         self.pub = rospy.Publisher("revolute/body/Command", ambf.ObjectCmd, queue_size=1)
         self.position = np.asarray([0, 0, 0])
@@ -18,50 +18,44 @@ class PlaneController(object):
         self.prevous_position = np.asarray([0, 0, 0])
         self.have_state = False
         self.prevous_time = 0
-        kp = np.array()
-        self.controller = PD_Controller.PDController()
-        rospy.spin()
+        kp = np.array([500, 500, 0])
+        kd = np.array([0.25, 0.25, 0])
+        self.controller = PD_Controller.PDController(kp, kd)
+        self.time = 0
 
 
+    def controller_cb(self, msg):
+        """
 
-    def position_cb(self, msg):
+        :type msg: ambf.ObjectCmd
+        """
 
-        if not self.have_state: return
-        pos_ref = np.asarray([0,0,0])
-        vel_ref = np.asarray([0,0,0])
-
-        x = self.position[0]
-        y = self.position[1]
-        z = self.position[2]
-
-        xd = self.velocity[0]
-        yd = self.velocity[1]
-        zd = self.velocity[2]
-
-
-
-
-
-
-
-
+        pos_ref = np.asarray([0, 0, 0])
+        vel_ref = np.asarray([0, 0, 0])
+        e = pos_ref - self.position
+        ed = vel_ref - self.velocity
+        force = self.controller.calc(e,ed)
+        cmd = msg
+        cmd.wrench.force.x = force[0]
+        cmd.wrench.force.y = force[1]
+        cmd.wrench.force.z = 0#force[2]
+        print cmd
+        self.pub.publish(cmd)
 
     def state_callback(self, msg):
-        have_state = True
 
-        self.position = np.asarray([msg.position.x,msg.position.y, msg.position.z] )
+        self.position = np.asarray([msg.pose.position.x,msg.pose.position.y, msg.pose.position.z] )
 
-        dt = msg.wall_time - self.time
+        if self.time == 0:
+            self.time = msg.wall_time
+        dt = (msg.wall_time - self.time) + 0.0000000001
         self.time = msg.wall_time
 
-        qd = (self.position - self.prevous_position) / dt
-        self.velocity = np.clip(qd, -2.0, 2.0)
+        self.velocity = (self.position - self.prevous_position) / dt
+        self.velocity = np.clip(self.velocity, -2.0, 2.0)
         self.prevous_position = self.position
 
 
 if __name__ == "__main__":
-    rospy.init_node("plane_controller")
-    rospy.Subscriber("plane_callback", ambf.ObjectCmd, position_cb)
-    rospy.Subscriber("revolute/body/State", ambf.ObjectState, state_callback)
-    pub = rospy.Publisher("revolute/body/Command", ambf.ObjectCmd, queue_size=1)
+    PlaneController()
     rospy.spin()

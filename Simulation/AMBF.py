@@ -16,7 +16,7 @@ class AMBF(Exoskeleton.Exoskeleton):
         rospy.init_node("AMBF_Walker")
         self.time = 0
         self.sub = rospy.Subscriber(name_space + "/body/State", ambf.ObjectState, self.joint_callback)
-        self.tau_pub = rospy.Publisher(name_space + "/body/Command", ambf.ObjectCmd, queue_size=1)
+        self.tau_pub = rospy.Publisher("joint_cmd", ambf.ObjectCmd, queue_size=1)
         self._time = 0
         self._dt = 0
 
@@ -36,13 +36,11 @@ class AMBF(Exoskeleton.Exoskeleton):
     def dt(self, value):
         self._dt = value
 
-    def send_command(self, tau,force):
+    def send_command(self, tau):
         cmd = ambf.ObjectCmd()
-        cmd.pose.orientation.w = 1
-        cmd.wrench.force.z = force
-        cmd.joint_cmds = tau
         cmd.publish_joint_names = True
         cmd.publish_joint_positions = True
+        cmd.joint_cmds = tau
         self.tau_pub.publish(cmd)
 
     def send_msg(self, msg):
