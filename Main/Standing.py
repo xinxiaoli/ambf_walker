@@ -17,39 +17,15 @@ def calculate_gain(Ku, Tu):
     Kd = (Ku * Tu) / 10.0
     return Kp, Kd
 
-
-#
-
 def go(count):
 
-
-    # Kp = np.array(
-    #     [0, sliders[0][0].get(), sliders[1][0].get(), sliders[2][0].get(), sliders[3][0].get(), sliders[4][0].get(),
-    #      sliders[5][0].get()])
-    #
-    # Kd = np.array(
-    #     [0, sliders[0][1].get(), sliders[1][1].get(), sliders[2][1].get(), sliders[3][1].get(), sliders[4][1].get(),
-    #      sliders[5][1].get()])
-
-    Controller.Kd = Kd
-    Controller.Kp = Kp
-    traj_h = Float64MultiArray()
-    traj_k = Float64MultiArray()
-    traj_a = Float64MultiArray()
     q = sim.q
     qd = sim.qd
-
 
     for ii in xrange(6):
         q_goal[ii] = 0
         qd_goal[ii] = 0
         qdd_goal[ii] = 0
-
-    # q_goal[1] = -0.2
-    # q_goal[4] = -0.2
-    #
-    # q_goal[2] = 0.2
-    # q_goal[5] = 0.2
 
     aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
     tau = sim.calculate_dynamics(q_d, qd_d, aq)
@@ -59,17 +35,6 @@ def go(count):
 
     sim.send_command(cmd)
 
-    traj_h.data.append(q_goal[1])
-    traj_k.data.append(q_goal[2])
-    traj_a.data.append(q_goal[3])
-    traj_h.data.append(q_goal[4])
-    traj_k.data.append(q_goal[5])
-    traj_a.data.append(q_goal[6])
-
-    traj_hip.publish(traj_h)
-    traj_knee.publish(traj_k)
-    traj_ankle.publish(traj_a)
-
     dt = sim.dt
 
     clock.sleep(0.01)
@@ -77,7 +42,7 @@ def go(count):
     #root.after(10,go)
 
 path = "/home/nathaniel/catkin_ws/src/AMBF_Walker/config/"
-sim = AMBF.AMBF("revolute", 52, 1.57)
+sim = AMBF.AMBF("/ambf/env", 52, 1.57)
 Lhip_runner = RMP_runner.RMP_runner(path + "hip_left.xml")
 Lknee_runner = RMP_runner.RMP_runner(path + "knee_left.xml")
 Lankle_runner = RMP_runner.RMP_runner(path + "ankle_left.xml")
@@ -108,16 +73,6 @@ Kp = np.array([0,gains[0][0],gains[1][0],gains[2][0],gains[3][0],gains[4][0],gai
 Kd = np.array([0,gains[0][1],gains[1][1],gains[2][1],gains[3][1],gains[4][1],gains[5][1] ])
 
 Controller = PD_Controller.PDController(Kp, Kd)
-# sliders = []
-# for i in xrange(0, 6):
-#     joint_gains = gains[i]
-#     P = Scale(root, from_=0, to=2000, length=1200, resolution=1, orient=HORIZONTAL)
-#     D = Scale(root, from_=0, to=1000, length=1200, resolution=0.1, orient=HORIZONTAL)
-#     P.set(joint_gains[0])
-#     D.set(joint_gains[1])
-#     P.pack()
-#     D.pack()
-#     sliders.append((P,D))
 
 
 if __name__ == "__main__":

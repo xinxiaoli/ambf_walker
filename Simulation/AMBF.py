@@ -40,6 +40,7 @@ class AMBF(Exoskeleton.Exoskeleton):
         cmd = ambf.ObjectCmd()
         cmd.publish_joint_names = True
         cmd.publish_joint_positions = True
+        cmd.enable_position_controller = False
         cmd.joint_cmds = tau
         self.tau_pub.publish(cmd)
 

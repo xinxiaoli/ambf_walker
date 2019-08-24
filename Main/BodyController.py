@@ -5,23 +5,32 @@ import numpy as np
 from geometry_msgs.msg import Pose, Wrench
 from Controller import PD_Controller
 
+
+class LowerBody(object):
+
+    def __init__(self,start, end):
+        self.starting_height = start
+        self.ending_height = end
 class PlaneController(object):
 
-    def __init__(self):
-
+    def __init__(self, name_space):
+        self.h = 1.40
         rospy.init_node("plane_controller")
         rospy.Subscriber("joint_cmd", ambf.ObjectCmd, self.controller_cb)
-        rospy.Subscriber("revolute/body/State", ambf.ObjectState, self.state_callback)
-        self.pub = rospy.Publisher("revolute/body/Command", ambf.ObjectCmd, queue_size=1)
+        rospy.Subscriber(name_space + "/body/State", ambf.ObjectState, self.state_callback)
+        self.pub = rospy.Publisher( name_space + "/body/Command", ambf.ObjectCmd, queue_size=1)
         self.position = np.asarray([0, 0, 0])
         self.velocity = np.asarray([0, 0, 0])
         self.prevous_position = np.asarray([0, 0, 0])
         self.have_state = False
         self.prevous_time = 0
-        kp = np.array([500, 500, 0])
-        kd = np.array([0.25, 0.25, 0])
+        kp = np.array([100, 200, 200])
+        kd = np.array([15.0, 15.0, 15.0])
         self.controller = PD_Controller.PDController(kp, kd)
         self.time = 0
+        self.got_cmd = False
+        self.count = 0
+
 
 
     def controller_cb(self, msg):
@@ -29,18 +38,21 @@ class PlaneController(object):
 
         :type msg: ambf.ObjectCmd
         """
-
-        pos_ref = np.asarray([0, 0, 0])
-        vel_ref = np.asarray([0, 0, 0])
-        e = pos_ref - self.position
-        ed = vel_ref - self.velocity
-        force = self.controller.calc(e,ed)
-        cmd = msg
-        cmd.wrench.force.x = force[0]
-        cmd.wrench.force.y = force[1]
-        cmd.wrench.force.z = 0#force[2]
-        print cmd
-        self.pub.publish(cmd)
+        self.count+=1
+        print self.count
+        if self.count>500:
+            self.got_cmd = True
+            pos_ref = np.asarray([0.0, 0, self.h])
+            vel_ref = np.asarray([0, 0, 0])
+            e = pos_ref - self.position
+            ed = vel_ref - self.velocity
+            force = self.controller.calc(e,ed)
+            cmd = msg
+            cmd.wrench.force.x = force[0]
+            cmd.wrench.force.y = force[1]
+            cmd.wrench.force.z = 0
+            print cmd
+            self.pub.publish(cmd)
 
     def state_callback(self, msg):
 
@@ -54,8 +66,19 @@ class PlaneController(object):
         self.velocity = (self.position - self.prevous_position) / dt
         self.velocity = np.clip(self.velocity, -2.0, 2.0)
         self.prevous_position = self.position
+        if not self.got_cmd:
+            pos_ref = np.asarray([0.0, 0, self.h])
+            vel_ref = np.asarray([0, 0, 0])
+            e = pos_ref - self.position
+            ed = vel_ref - self.velocity
+            force = self.controller.calc(e, ed)
+            cmd =  cmd = ambf.ObjectCmd()
+            cmd.wrench.force.x = force[0]
+            cmd.wrench.force.y = force[1]
+            cmd.wrench.force.z = force[2]
+            self.pub.publish(cmd)
 
 
 if __name__ == "__main__":
-    PlaneController()
+    PlaneController("/ambf/env")
     rospy.spin()
