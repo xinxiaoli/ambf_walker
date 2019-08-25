@@ -1,10 +1,10 @@
 import rospy
 import numpy as np
 import ambf_msgs.msg as ambf
-from Model import Exoskeleton
+from Model import Human
 
 
-class AMBF(Exoskeleton.Exoskeleton):
+class AMBF(Human.Exoskeleton):
 
     def __init__(self, name_space, mass, height):
         """

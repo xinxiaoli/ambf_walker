@@ -7,8 +7,7 @@ plot = Plotter.Plotter(sim)
 cmd = np.asarray([0]*7)
 
 while 1:
-   cmd[0] = 100
-   sim.send_command(cmd)
+
    #sim.fk()
    plot.update()
 

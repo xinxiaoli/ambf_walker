@@ -9,7 +9,7 @@ class Plotter(object):
     def __init__(self, model):
         self.model = model
         self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, autoscale_on=False, xlim=(-1, 1), ylim=(-2, 2))
+        self.ax = self.fig.add_subplot(111, autoscale_on=False, xlim=(-1.0, 1.0), ylim=(-1.0, 1.0))
         self.ax.grid()
         self.left_leg, = self.ax.plot([], [], 'bo-', lw=2)
         self.right_leg, = self.ax.plot([], [], 'ro-', lw=2)

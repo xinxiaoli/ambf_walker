@@ -7,7 +7,7 @@ import abc
 import numpy as np
 import rbdl
 
-class Exoskeleton(object):
+class Human(object):
 
     def __init__(self, mass, height):
         self._mass = mass
@@ -17,7 +17,7 @@ class Exoskeleton(object):
         self._q = np.asarray([0]*7)
         self._qd = np.asarray([0]*7)
         self._state = (self._q, self._qd)
-
+    
     @property
     def q(self):
         return self._q
