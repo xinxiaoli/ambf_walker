@@ -52,18 +52,13 @@ class Exoskeleton(object):
         joint_location = {}
         rgyration = {}
 
-        mass_percentage["body"] = 0.2010
-        mass_percentage["hip"] = 0.4346
-        mass_percentage["thigh"] = 0.1416
-        mass_percentage["shank"] = 0.0433
-        mass_percentage["foot"] = 0.0137
 
         com_location["body"] = 0.1185
         com_location["hip"] = 0.3469
         com_location["thigh"] = 0.2425
         com_location["shank"] = 0.2529
         com_location["foot"] = 0.0182
-        segments = segments = ["thigh", "shank", "foot"]
+        segments = ["thigh", "shank", "foot"]
         #joint_rot_z = rbdl.Joint.fromJointType("JointTypeRevoluteZ")
         a = np.array([0., 0., -1., 0., 0., 0.])
         joint_rot_z = rbdl.Joint.fromJointAxes([a])
@@ -80,11 +75,11 @@ class Exoskeleton(object):
         bodies["right"] = {}
         bodies["left"] = {}
 
-        mass["body"] = mass_percentage["body"] * total_mass
-        mass["hip"] = mass_percentage["hip"] * total_mass
-        mass["thigh"] = mass_percentage["thigh"] * total_mass
-        mass["shank"] = mass_percentage["body"] * total_mass
-        mass["foot"] = mass_percentage["foot"] * total_mass
+        mass["body"] = 10
+        mass["hip"] = 2.3677
+        mass["thigh"] = 2.1138
+        mass["shank"] = 1.2804
+        mass["foot"] = 0.85523
 
         length["body"] = 0.72 * height
         length["hip"] = (30.0 / 100.0) * height
@@ -92,11 +87,11 @@ class Exoskeleton(object):
         length["shank"] = 0.246 * height
         length["foot"] = 0.152 * height
 
-        com["body"] = 0.1185 * length["hip"] * np.array([0.0, 1.0, 0])
-        com["hip"] = 0.3469 * length["hip"] * np.array([0.0, 1.0, 0])
-        com["thigh"] = 0.2425 * length["thigh"] * np.array([0.0, 1.0, 0])
-        com["shank"] = 0.2529 * length["shank"] * np.array([0.0, 1.0, 0])
-        com["foot"] = 0.0182 * length["foot"] * np.array([1.0, 0.0, 0])
+        com["body"] = np.array([0.0, 1.0, 0])
+        com["hip"] = np.array([0.000011338, 0.093937, -0.12619])
+        com["thigh"] = np.array([0.0034745, 0.097979,0.1712 ])
+        com["shank"] = np.array([0.002761, 0.097563, 0.15581])
+        com["foot"] = np.array([0.14092, 0.2267, -0.31138])
 
         rgyration["body"] = np.diag([0.0970, 0.1009, 0.00825])
         rgyration["hip"] = np.diag([0.1981, 0.1021, 0.1848])
@@ -181,11 +176,19 @@ class Exoskeleton(object):
         :return:
         """
 
-        self._q = q
-        self._qd = qd
-        self._state = (q, qd)
+
+
+
+        # 0   1  2  3  4  5  6
+        # -  LH RH LK RK LA RA
+        # --->
+        # -  LH LK LA RH RK RA
+
+        self._q = np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
+        self._qd = np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
+        self._state = (self._q, self._qd)
         qdd = np.zeros(self._model.qdot_size)
-        rbdl.UpdateKinematics(self._model,q, qd, qdd)
+        rbdl.UpdateKinematics(self._model, self._q, self._qd, qdd)
 
     def make_foot(self, left_ankle, right_ankle):
 
