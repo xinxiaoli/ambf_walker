@@ -10,15 +10,20 @@ client.connect()
 
 h = client.get_obj_handle("hex/Hip")
 
+
+h.set_pos(0,0,1.8)
+h.set_rpy(0.0,0.0,0.0)
 time.sleep(5)
-h.set_pos(0,0,2.3)
-h.set_rpy(0,0,0)
 q = [0.0]*6
 while 1:
-    h.set_joint_pos(0,0)
-    h.set_joint_pos(3, 0)
-    h.set_joint_pos(2, 0)
-    h.set_joint_pos(5,0)
+    # h.set_joint_pos(0,0)
+    h.set_joint_effort(1, -0.1)
+    h.set_joint_effort(4, -0.1)
+    #h.set_rffort(0,  0,0)
+    # h.set_joint_pos(3, 0)
+    # h.set_joint_pos(2, 0)
+    # h.set_joint_effort(5,0)
+    # h.set_joint_pos(6, 0)
     q = [0.0] * 6
     print h.get_joint_names()
     q = h.get_all_joint_pos()

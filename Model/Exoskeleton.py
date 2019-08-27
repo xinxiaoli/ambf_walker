@@ -94,10 +94,10 @@ class Exoskeleton(object):
         com["foot"] = np.array([0.14092, 0.2267, -0.31138])
 
         rgyration["body"] = np.diag([0.0970, 0.1009, 0.00825])
-        rgyration["hip"] = np.diag([0.1981, 0.1021, 0.1848])
-        rgyration["thigh"] = np.diag([0.1389, 0.0629, 0.1389])
-        rgyration["shank"] = np.diag([0.1123, 0.0454, 0.1096])
-        rgyration["foot"] = np.diag([0.0081, 0.0039, 0.0078])
+        rgyration["hip"] = np.diag([0.019816, 0.0034356, 0.020855])
+        rgyration["thigh"] = np.diag([0.0028396, 0.001835, 0.0013028])
+        rgyration["shank"] = np.diag([0.0009514, 0.00074962, 0.00050829])
+        rgyration["foot"] = np.diag([0.0044892, 0.0059035, 0.0016128])
 
         joint_location["body"] = np.array([0., length["body"], 0.0])
         joint_location["thigh"] = np.array([0., -length["hip"], 0.0])  # hip
@@ -176,20 +176,19 @@ class Exoskeleton(object):
         :return:
         """
 
-
-
-
         # 0   1  2  3  4  5  6
         # -  LH RH LK RK LA RA
         # --->
         # -  LH LK LA RH RK RA
 
-        self._q = np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
-        self._qd = np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
+        self._q = self.correct_joint_angle(q) #np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
+        self._qd = self.correct_joint_angle(qd) #np.asarray( [qd[0], qd[1], qd[3], qd[2], qd[4], qd[6], qd[5]])
         self._state = (self._q, self._qd)
         qdd = np.zeros(self._model.qdot_size)
         rbdl.UpdateKinematics(self._model, self._q, self._qd, qdd)
 
+    def correct_joint_angle(self, q):
+        return  np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
     def make_foot(self, left_ankle, right_ankle):
 
         foot = {}
@@ -227,6 +226,9 @@ class Exoskeleton(object):
         return fk
 
     def calculate_dynamics(self, q_d, qd_d, qdd_d):
+        q = self.correct_joint_angle(q_d)
+        qd = self.correct_joint_angle(qd_d)
+        qdd = self.correct_joint_angle(qdd_d)
         tau = np.asarray([0.0] * 7)
-        rbdl.InverseDynamics(self._model, q_d, qd_d, qdd_d, tau)
+        rbdl.InverseDynamics(self._model, q, qd, qdd, tau)
         return tau
