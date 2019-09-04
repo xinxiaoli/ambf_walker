@@ -181,14 +181,18 @@ class Exoskeleton(object):
         # --->
         # -  LH LK LA RH RK RA
 
-        self._q = self.correct_joint_angle(q) #np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
-        self._qd = self.correct_joint_angle(qd) #np.asarray( [qd[0], qd[1], qd[3], qd[2], qd[4], qd[6], qd[5]])
+        self._q = self.ambf_to_dyn(q) #np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
+        self._qd = self.ambf_to_dyn(qd) #np.asarray( [qd[0], qd[1], qd[3], qd[2], qd[4], qd[6], qd[5]])
         self._state = (self._q, self._qd)
         qdd = np.zeros(self._model.qdot_size)
         rbdl.UpdateKinematics(self._model, self._q, self._qd, qdd)
 
-    def correct_joint_angle(self, q):
+    def ambf_to_dyn(self, q):
         return  np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
+
+    def dyn_to_ambf(self, q):
+        return  np.asarray( [q[0], q[1], q[2], q[3], q[4], q[5], q[6]])
+
     def make_foot(self, left_ankle, right_ankle):
 
         foot = {}
@@ -226,9 +230,9 @@ class Exoskeleton(object):
         return fk
 
     def calculate_dynamics(self, q_d, qd_d, qdd_d):
-        q = self.correct_joint_angle(q_d)
-        qd = self.correct_joint_angle(qd_d)
-        qdd = self.correct_joint_angle(qdd_d)
+        q = self.ambf_to_dyn(q_d)
+        qd = self.ambf_to_dyn(qd_d)
+        qdd = self.ambf_to_dyn(qdd_d)
         tau = np.asarray([0.0] * 7)
         rbdl.InverseDynamics(self._model, q, qd, qdd, tau)
-        return tau
+        return self.dyn_to_ambf(tau)

@@ -11,7 +11,7 @@ client.connect()
 h = client.get_obj_handle("hex/Hip")
 
 
-h.set_pos(0,0,1.8)
+h.set_pos(0,0,2.0)
 h.set_rpy(0.0,0.0,0.0)
 time.sleep(5)
 q = [0.0]*6

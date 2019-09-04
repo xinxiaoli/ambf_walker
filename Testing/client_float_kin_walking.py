@@ -4,6 +4,8 @@ from ambf_client import Client
 from lib.Python import RMP_runner
 import numpy as np
 import time
+import rospy
+from std_msgs.msg import Float32MultiArray
 
 exo = Exoskeleton.Exoskeleton(65,1.57)
 plotter = Plotter.Plotter(exo)
@@ -23,6 +25,7 @@ Rhip_runner = RMP_runner.RMP_runner("../config/hip_right.xml")
 Rknee_runner = RMP_runner.RMP_runner("../config/knee_right.xml")
 Rankle_runner = RMP_runner.RMP_runner("../config/ankle_right.xml")
 
+pub_vel = rospy.Publisher("vel", Float32MultiArray, queue_size=10)
 
 while 1:
 
@@ -42,7 +45,12 @@ while 1:
     h.set_joint_pos(5, Rknee)
 
     q = h.get_all_joint_pos()
-    #print q
+    msg = Float32MultiArray()
+
+    q = h.get_all_joint_pos()
+    qd = h.get_all_joint_vel()
+    msg.data = qd
+    pub_vel.publish(msg)
     q.insert(0,0.0)
     exo.update_joints(np.asarray(q), np.asarray([0.0]*7))
     plotter.update()

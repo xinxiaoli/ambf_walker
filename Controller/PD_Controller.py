@@ -8,7 +8,7 @@ class PDController():
         self._Kd = Kd
 
     def calc(self, e, ed):
-        force= np.multiply(self.Kp, e) + np.multiply(self.Kd, ed)
+        force= np.multiply(self.Kp, e) # + np.multiply(self.Kd, ed)
         return force
 
     @property

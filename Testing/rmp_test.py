@@ -74,7 +74,7 @@ if __name__ == "__main__":
         qdd_goal[3] = ankledd
 
         aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
-        tau = sim.calculate_dynamics(q_d, qd_d, aq)
+        tau = sim.calculate_dynamics(q_goal, qd_goal, aq)
 
         for i in xrange(0, 6):
             cmd[i] = tau[i + 1]
