@@ -88,16 +88,16 @@ class Exoskeleton(object):
         length["foot"] = 0.152 * height
 
         com["body"] = np.array([0.0, 1.0, 0])
-        com["hip"] = np.array([0.000011338, 0.093937, -0.12619])
-        com["thigh"] = np.array([0.0034745, 0.097979,0.1712 ])
-        com["shank"] = np.array([0.002761, 0.097563, 0.15581])
-        com["foot"] = np.array([0.14092, 0.2267, -0.31138])
+        com["hip"] = np.array([0, -0.023, 0.184])
+        com["thigh"] = np.array([0.022, 0.015, -0.086 ])
+        com["shank"] = np.array([0.024, -0.007, 0.057])
+        com["foot"] = np.array([0.077, -0.06, -0.04])
 
-        rgyration["body"] = np.diag([0.0970, 0.1009, 0.00825])
-        rgyration["hip"] = np.diag([0.019816, 0.0034356, 0.020855])
-        rgyration["thigh"] = np.diag([0.0028396, 0.001835, 0.0013028])
-        rgyration["shank"] = np.diag([0.0009514, 0.00074962, 0.00050829])
-        rgyration["foot"] = np.diag([0.0044892, 0.0059035, 0.0016128])
+        rgyration["body"] = np.diag([0.0, 1.0, 0.0])
+        rgyration["hip"] = np.diag([0.0, -0.023, 0.184])
+        rgyration["thigh"] = np.diag([0.0226, 0.015, -0.086])
+        rgyration["shank"] = np.diag([0.024, -0.0007, 0.057])
+        rgyration["foot"] = np.diag([0.077, 0.06, -0.04])
 
         joint_location["body"] = np.array([0., length["body"], 0.0])
         joint_location["thigh"] = np.array([0., -length["hip"], 0.0])  # hip
@@ -187,11 +187,8 @@ class Exoskeleton(object):
         qdd = np.zeros(self._model.qdot_size)
         rbdl.UpdateKinematics(self._model, self._q, self._qd, qdd)
 
-    def ambf_to_dyn(self, q):
+    def  ambf_to_dyn(self, q):
         return  np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
-
-    def dyn_to_ambf(self, q):
-        return  np.asarray( [q[0], q[1], q[2], q[3], q[4], q[5], q[6]])
 
     def make_foot(self, left_ankle, right_ankle):
 
@@ -235,4 +232,4 @@ class Exoskeleton(object):
         qdd = self.ambf_to_dyn(qdd_d)
         tau = np.asarray([0.0] * 7)
         rbdl.InverseDynamics(self._model, q, qd, qdd, tau)
-        return self.dyn_to_ambf(tau)
+        return self.ambf_to_dyn(tau)

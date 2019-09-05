@@ -31,24 +31,24 @@ while 1:
     h.set_joint_effort(0, P*(-0.5-q) + D*(0-qd) )
     # Knee
 
-    P = 550.0
-    D = 5.0
-    q = h.get_joint_pos(2)
-    qd = h.get_joint_vel(2)
-    msg = Float32()
-    msg.data = qd
-    pub.publish(msg)
-    h.set_joint_effort(2, P*(0.25-q) + D*(0-qd) )
-    # Ankle
-    joint = 1
-    P = 550.0
-    D = 5.0
-    q = h.get_joint_pos(1)
-    qd = h.get_joint_vel(1)
-    msg = Float32()
-    msg.data = qd
-    pub.publish(msg)
-    h.set_joint_effort(1, P*(0.6-q) + D*(0-qd) )
+    # P = 550.0
+    # D = 5.0
+    # q = h.get_joint_pos(2)
+    # qd = h.get_joint_vel(2)
+    # msg = Float32()
+    # msg.data = qd
+    # pub.publish(msg)
+    # h.set_joint_effort(2, P*(0.25-q) + D*(0-qd) )
+    # # Ankle
+    # joint = 1
+    # P = 550.0
+    # D = 5.0
+    # q = h.get_joint_pos(1)
+    # qd = h.get_joint_vel(1)
+    # msg = Float32()
+    # msg.data = qd
+    # pub.publish(msg)
+    # h.set_joint_effort(1, P*(0.6-q) + D*(0-qd) )
 
 
 
