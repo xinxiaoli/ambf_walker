@@ -8,7 +8,7 @@ from std_msgs.msg import Float32MultiArray,Float32
 from Controller import PD_Controller
 from Model import Exoskeleton
 from Utlities import Plotter
-
+from ambf_msgs.msg import O
 
 from ambf_client import Client
 
