@@ -81,17 +81,25 @@ class Exoskeleton(object):
         mass["shank"] = 1.2804
         mass["foot"] = 0.85523
 
-        length["body"] = 0.72 * height
-        length["hip"] = (30.0 / 100.0) * height
-        length["thigh"] = 0.245 * height
-        length["shank"] = 0.246 * height
-        length["foot"] = 0.152 * height
+        parent_dist = [[0.0, 0.0, 0.0], #base
+                       [0.22, -0.125, -0.141], # hip -> left Thigh
+                       [0.22, 0.125, 0.141], # hip -> right Thigh
+                       [0.0, -0.04, -0.3], # right thigh -> right shank
+                       [0.0, -0.04, 0.3], # Left thigh -> Left shank:
+                       [0.017, 0.021, -0.137], # Right shank -> Right foot
+                       [0.017, 0.021, -0.137]] # Left shank -> Left foot:
 
-        com["body"] = np.array([0.0, 1.0, 0])
-        com["hip"] = np.array([0, -0.023, 0.184])
-        com["thigh"] = np.array([0.022, 0.015, -0.086 ])
-        com["shank"] = np.array([0.024, -0.007, 0.057])
-        com["foot"] = np.array([0.077, -0.06, -0.04])
+        parent_dist = np.array(parent_dist)
+
+        com["hip"] = np.array([0.235, .372, 1.474])
+        com["left_thigh"] = np.array([ 0.473, 0.248, 1.2 ])
+        com["left_shank"] = np.array([0.497, 0.254,  0.641])
+        com["left_foot"] = np.array([ 0.475, 0.26,  0.432])
+
+        com["right_thigh"] = np.array([ 0.473, 0.248, 1.2 ])
+        com["right_shank"] = np.array([0.497, 0.254,  0.641])
+        com["right_foot"] = np.array([ 0.0, 0.254,  0.432])
+
 
         rgyration["body"] = np.diag([0.0, 1.0, 0.0])
         rgyration["hip"] = np.diag([0.0, -0.023, 0.184])
@@ -142,7 +150,7 @@ class Exoskeleton(object):
         heel_point = np.array([-0.05, -0.2 * length["foot"], 0.])
         medial_point = np.array([-0.05, 0.8 * length["foot"], 0.])
 
-        model.gravity = np.array([0, -9.81, 0])
+        model.gravity = np.array([0, 0, -9.81])
 
         constraint_set_right = rbdl.ConstraintSet()
         constraint_set_left = rbdl.ConstraintSet()
