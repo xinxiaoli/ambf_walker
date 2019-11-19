@@ -44,84 +44,65 @@ class Exoskeleton(object):
 
     def dynamic_model(self, total_mass, height):
 
-        mass_percentage = {}
-        com_location = {}
-        mass = {}
-        com = {}
-        length = {}
-        joint_location = {}
-        rgyration = {}
-
-
-        com_location["body"] = 0.1185
-        com_location["hip"] = 0.3469
-        com_location["thigh"] = 0.2425
-        com_location["shank"] = 0.2529
-        com_location["foot"] = 0.0182
-        segments = ["thigh", "shank", "foot"]
-        #joint_rot_z = rbdl.Joint.fromJointType("JointTypeRevoluteZ")
-        a = np.array([0., 0., -1., 0., 0., 0.])
-        joint_rot_z = rbdl.Joint.fromJointAxes([a])
-
-        floating_base = rbdl.Joint.fromJointType("JointTypeFloatingBase")
-        ztrans = rbdl.SpatialTransform()
-        ztrans.r = np.array([0., 0, -1.])
-
-        xtrans = rbdl.SpatialTransform()
-        xtrans.r = np.array([0., 1., 0.])
-
         model = rbdl.Model()
         bodies = {}
+        mass = {}
+        com = {}
+        inertia = {}
         bodies["right"] = {}
         bodies["left"] = {}
+        segments = ["thigh", "shank", "foot"]
 
-        mass["body"] = 10
         mass["hip"] = 2.3677
-        mass["thigh"] = 2.1138
-        mass["shank"] = 1.2804
-        mass["foot"] = 0.85523
+        mass["right_thigh"] = 2.1138
+        mass["left_thigh"] = 2.1138
+        mass["right_shank"] = 1.2804
+        mass["left_shank"] = 1.2804
+        mass["right_foot"] = 0.85523
+        mass["left_foot"] = 0.85523
+        parent_dist = {}
 
-        parent_dist = [[0.0, 0.0, 0.0], #base
-                       [0.22, -0.125, -0.141], # hip -> left Thigh
-                       [0.22, 0.125, 0.141], # hip -> right Thigh
-                       [0.0, -0.04, -0.3], # right thigh -> right shank
-                       [0.0, -0.04, 0.3], # Left thigh -> Left shank:
-                       [0.017, 0.021, -0.137], # Right shank -> Right foot
-                       [0.017, 0.021, -0.137]] # Left shank -> Left foot:
+        parent_dist["hip"] = np.array([0.0, 0.0, 0.0])
 
-        parent_dist = np.array(parent_dist)
+        parent_dist["right_thigh"] = np.array([-0.237, -0.139, -0.144])
+        parent_dist["right_shank"] = np.array([-0.001, 0.039, -0.301])
+        parent_dist["right_foot"] = np.array([0.024, 0.031, -0.138])
 
-        com["hip"] = np.array([0.235, .372, 1.474])
-        com["left_thigh"] = np.array([ 0.473, 0.248, 1.2 ])
-        com["left_shank"] = np.array([0.497, 0.254,  0.641])
-        com["left_foot"] = np.array([ 0.475, 0.26,  0.432])
+        parent_dist["left_thigh"] = np.array([00.237, -0.139, -0.144])
+        parent_dist["left_shank"] = np.array([-0.003, 0.039, -0.301])
+        parent_dist["left_foot"] = np.array([-0.027, 0.02, -0.138])
 
-        com["right_thigh"] = np.array([ 0.473, 0.248, 1.2 ])
-        com["right_shank"] = np.array([0.497, 0.254,  0.641])
-        com["right_foot"] = np.array([ 0.0, 0.254,  0.432])
+        com["hip"] = np.array([0.0, 0.0, 0.0])
+        com["left_thigh"] = np.array([0.24,  -0.126,  -0.277])
+        com["left_shank"] = np.array([0.264, -0.123,  -0.835])
+        com["left_foot"] = np.array([0.242,  -0.119,  -1.051])
 
+        com["right_thigh"] = np.array([-0.236,  -0.126,  -0.277])
+        com["right_shank"] = np.array([-0.26,  -0.13,  -0.834])
+        com["right_foot"] = np.array([-0.238,  -0.128, -1.044])
 
-        rgyration["body"] = np.diag([0.0, 1.0, 0.0])
-        rgyration["hip"] = np.diag([0.0, -0.023, 0.184])
-        rgyration["thigh"] = np.diag([0.0226, 0.015, -0.086])
-        rgyration["shank"] = np.diag([0.024, -0.0007, 0.057])
-        rgyration["foot"] = np.diag([0.077, 0.06, -0.04])
+        inertia["hip"] = np.diag([0.108509850667, 0.137304730667, 0.0606271146667])
 
-        joint_location["body"] = np.array([0., length["body"], 0.0])
-        joint_location["thigh"] = np.array([0., -length["hip"], 0.0])  # hip
-        joint_location["shank"] = np.array([0., -length["thigh"], 0.0])  # knee
-        joint_location["foot"] = np.array([0., -length["shank"], 0.0])  # ankle
+        inertia["right_thigh"] = np.diag([0.0588879339778, 0.0588879339778, 0.00846480799474])
+        inertia["right_shank"] = np.diag([0.0229893324138, 0.0229893324138, 0.00297045321452])
+        inertia["right_foot"] = np.diag([0.0100261277105, 0.00688495114232, 0.0106987071027])
 
-        hip_body = rbdl.Body.fromMassComInertia(mass["hip"], com["hip"], rgyration["hip"])
+        inertia["left_thigh"] = np.diag([0.0588879339778, 0.0588879339778, 0.00846480799474])
+        inertia["left_shank"] = np.diag([0.0229893324138, 0.0229893324138, 0.00297045321452])
+        inertia["left_foot"] = np.diag([0.0100261277105, 0.00688495114232, 0.0106987071027])
+
+        hip_body = rbdl.Body.fromMassComInertia(mass["hip"], com["hip"], inertia["hip"])
         for segs in segments:
-            bodies["right"][segs] = rbdl.Body.fromMassComInertia(mass[segs], com[segs], rgyration[segs])
-            bodies["left"][segs] = rbdl.Body.fromMassComInertia(mass[segs], com[segs], rgyration[segs])
+            bodies["right_" + segs] = rbdl.Body.fromMassComInertia(mass["right_" + segs], com["right_" + segs],
+                                                                   inertia["right_" + segs])
+            bodies["left_" + segs] = rbdl.Body.fromMassComInertia(mass["left_" + segs], com["left_" + segs],
+                                                                  inertia["left_" + segs])
 
         xtrans = rbdl.SpatialTransform()
-        xtrans.r = joint_location["body"]
+        xtrans.r = np.array([0.0, 0.0, 0.0])
 
         hip_id = model.AppendBody(xtrans,
-                                  joint_rot_z,
+                                  rbdl.Joint.fromJointType("JointTypeFloatingBase"),
                                   hip_body,
                                   "hip"
                                   )
@@ -129,50 +110,82 @@ class Exoskeleton(object):
         id_l = hip_id
         id_r = hip_id
 
-        for segs in segments:
-            xtrans.r = joint_location[segs]
-            id_l = model.AddBody(id_l,
-                                 xtrans,
-                                 joint_rot_z,
-                                 bodies["left"][segs],
-                                 "left_" + segs
-                                 )
+        joint_rot_z =  rbdl.Joint.fromJointType("JointTypeRevoluteZ")
 
-        for segs in segments:
-            xtrans.r = joint_location[segs]
+
+        xtrans.E = np.array([[1.0, 0.0, 0.0],
+                             [0.0, 0.9945123195648193, 0.10461365431547165],
+                             [0.0, -0.10461365431547165, 0.9945123195648193]])
+
+        index = "right_" + "thigh"
+        xtrans.r = parent_dist[index]
+        id_l = model.AddBody(id_l,
+                             xtrans,
+                             joint_rot_z,
+                             bodies[index],
+                             index
+                             )
+
+        xtrans.E = np.array([[1.0, 0.0, 0.0],
+                             [0.0, 0.9945123195648193, -0.10461365431547165],
+                             [0.0, 0.10461365431547165, 0.9945123195648193]])
+
+        index = "left_" + "thigh"
+        xtrans.r = parent_dist[index]
+        id_l = model.AddBody(id_l,
+                             xtrans,
+                             joint_rot_z,
+                             bodies[index],
+                             index
+                             )
+
+
+
+        xtrans.E = np.eye(3)
+
+        for segs in ["shank", "foot"]:
+            index = "right_" + segs
+            xtrans.r = parent_dist[index]
             id_r = model.AddBody(id_r,
                                  xtrans,
                                  joint_rot_z,
-                                 bodies["right"][segs],
-                                 "right_" + segs
+                                 bodies[index],
+                                 index
                                  )
 
-        heel_point = np.array([-0.05, -0.2 * length["foot"], 0.])
-        medial_point = np.array([-0.05, 0.8 * length["foot"], 0.])
+            index = "left_" + segs
+            xtrans.r = parent_dist[index]
+            id_l = model.AddBody(id_l,
+                                 xtrans,
+                                 joint_rot_z,
+                                 bodies[index],
+                                 index
+                                 )
+
 
         model.gravity = np.array([0, 0, -9.81])
 
-        constraint_set_right = rbdl.ConstraintSet()
-        constraint_set_left = rbdl.ConstraintSet()
-        constraint_set_both = rbdl.ConstraintSet()
-
-        constraint_set_right.AddContactConstraint(id_r, heel_point, np.array([1., 0., 0.]), "right_heel_x")
-        constraint_set_right.AddContactConstraint(id_r, heel_point, np.array([0., 1., 0.]), "right_heel_y")
-
-        constraint_set_left.AddContactConstraint(id_l, heel_point, np.array([1., 0., 0.]), "left_heel_x")
-        constraint_set_left.AddContactConstraint(id_l, heel_point, np.array([0., 1., 0.]), "left_heel_y")
-
-        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([1., 0., 0.]), "right_heel_x")
-        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([0., 1., 0.]), "right_heel_y")
-        constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([0., 0., 1.]), "right_heel_z")
-
-        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([1., 0., 0.]), "left_heel_x")
-        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([0., 1., 0.]), "left_heel_y")
-        constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([0., 0., 1.]), "left_heel_z")
-
-        constraint_set_right.Bind(model)
-        constraint_set_left.Bind(model)
-        constraint_set_both.Bind(model)
+        # constraint_set_right = rbdl.ConstraintSet()
+        # constraint_set_left = rbdl.ConstraintSet()
+        # constraint_set_both = rbdl.ConstraintSet()
+        #
+        # constraint_set_right.AddContactConstraint(id_r, heel_point, np.array([1., 0., 0.]), "right_heel_x")
+        # constraint_set_right.AddContactConstraint(id_r, heel_point, np.array([0., 1., 0.]), "right_heel_y")
+        #
+        # constraint_set_left.AddContactConstraint(id_l, heel_point, np.array([1., 0., 0.]), "left_heel_x")
+        # constraint_set_left.AddContactConstraint(id_l, heel_point, np.array([0., 1., 0.]), "left_heel_y")
+        #
+        # constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([1., 0., 0.]), "right_heel_x")
+        # constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([0., 1., 0.]), "right_heel_y")
+        # constraint_set_both.AddContactConstraint(id_r, heel_point, np.array([0., 0., 1.]), "right_heel_z")
+        #
+        # constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([1., 0., 0.]), "left_heel_x")
+        # constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([0., 1., 0.]), "left_heel_y")
+        # constraint_set_both.AddContactConstraint(id_l, heel_point, np.array([0., 0., 1.]), "left_heel_z")
+        #
+        # constraint_set_right.Bind(model)
+        # constraint_set_left.Bind(model)
+        # constraint_set_both.Bind(model)
 
         return model
 
