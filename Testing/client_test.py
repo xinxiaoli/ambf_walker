@@ -1,14 +1,17 @@
 # Import the Client from ambf_client package
 from ambf_client import Client
 import time
-
+from Utlities import Plotter
+from Model import Exoskeleton
 _client = Client()
 # Create a instance of the client
 _client.connect()
+LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
+print "jf"
+leg_plot = Plotter.Plotter(LARRE)
+while 1:
+    leg_plot.update()
 
-h = _client.get_obj_handle("hex/Hip")
-print h.get_joint_names()
-h.set_joint_effort("Hip-Leftthigh", 100)
-time.sleep(5)
+
 _client.clean_up()
 
