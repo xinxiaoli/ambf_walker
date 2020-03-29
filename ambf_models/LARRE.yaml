@@ -14,7 +14,7 @@ namespace: /ambf/env/
 BODY Hip:
   name: Hip
   mesh: Hip.STL
-  mass: 2.368
+  mass: 0 # 2.368
   collision margin: 0.001
   scale: 1.0
   location:

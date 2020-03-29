@@ -8,6 +8,7 @@ import numpy as np
 import rbdl
 import Model
 import time
+from lib.GaitCore.Core import Point
 from threading import Thread
 class Exoskeleton(Model.Model):
 
@@ -15,28 +16,9 @@ class Exoskeleton(Model.Model):
         super(Exoskeleton, self).__init__(client, mass, height)
         self._handle = self._client.get_obj_handle('Hip')
         time.sleep(2)
-        self.joint_order = ["left_hip", "left_knee", "left_ankle", "right_hip", "right_knee", "right_ankle"]
-        self._q = np.asarray([0]*7)
-        self._qd = np.asarray([0]*7)
         self._state = (self._q, self._qd)
         self._updater.start()
 
-
-    @property
-    def q(self):
-        return self._q
-
-    @q.setter
-    def q(self, value):
-        self._q = np.asarray(value)
-
-    @property
-    def qd(self):
-        return self._qd
-
-    @qd.setter
-    def qd(self, value):
-        self._qd = np.asarray(value)
 
     @property
     def state(self):
@@ -65,28 +47,43 @@ class Exoskeleton(Model.Model):
         mass["right_foot"] = 0.85523
         mass["left_foot"] = 0.85523
         parent_dist = {}
-
         parent_dist["hip"] = np.array([0.0, 0.0, 0.0])
 
+        # parent_dist["left_thigh"] = np.array([0.237, -0.124, -0.144])
+        # parent_dist["left_shank"] = np.array([-0.03, 0.033, -0.436])
+        # parent_dist["left_foot"] = np.array([-0.027, 0.02, -0.39])
+        #
+        # parent_dist["right_thigh"] = np.array([-0.237, -0.124, -0.144])
+        # parent_dist["right_shank"] = np.array([-0.03, 0.033, -0.436])
+        # parent_dist["right_foot"] = np.array([-0.027, 0.02, -0.39])
 
-        parent_dist["right_thigh"] = np.array([-0.237, -0.124, -0.144])
-        parent_dist["right_shank"] = np.array([-0.028, 0.06, -0.55])
-        parent_dist["right_foot"] = np.array([0.022,0.043,-0.0213])
+        parent_dist["left_thigh"] = np.array([-0.124, 0.237, -0.144])
+        parent_dist["left_shank"] = np.array([0.033, -0.03,  -0.436])
+        parent_dist["left_foot"] = np.array([ 0.02, -0.027, -0.39])
 
-        parent_dist["left_thigh"] = np.array([0.237, -0.124, -0.144])
-        parent_dist["left_shank"] = np.array([-0.028, 0.06, -0.55])
-        parent_dist["left_foot"] = np.array([0.022,0.043,-0.0213])
+        parent_dist["right_thigh"] = np.array([-0.124, -0.237,  -0.144])
+        parent_dist["right_shank"] = np.array([0.033, -0.03,  -0.436])
+        parent_dist["right_foot"] = np.array([ 0.02, -0.027, -0.39])
 
-        com["hip"] = np.array([0.0, -0.02, 0.18])
-        com["left_thigh"] = np.array([0.02,  0.01,  -0.09])
-        com["left_shank"] = np.array([-0.02,  -0.01,  -0.06])
-        com["left_foot"] = np.array([-0.08,  -0.06,  0.04])
 
-        com["right_thigh"] = np.array([-0.02,  0.01,  -0.09])
-        com["right_shank"] = np.array([0.02,  -0.01,  0.06])
-        com["right_foot"] = np.array([0.08,  -0.06, 0.04])
+        # parent_dist["right_thigh"] = np.array([-0.237, -0.139, -0.144])
+        # parent_dist["right_shank"] = np.array([-0.001, 0.039, -0.301])
+        # parent_dist["right_foot"] = np.array([0.024, 0.031, -0.138])
+        #
+        # parent_dist["left_thigh"] = np.array([00.237, -0.139, -0.144])
+        # parent_dist["left_shank"] = np.array([-0.003, 0.039, -0.301])
+        # parent_dist["left_foot"] = np.array([-0.027, 0.02, -0.138])
 
-        inertia["hip"] = np.diag([0.0, -0.02, 0.18])
+        com["hip"] = np.array([-0.02, 0.0, 0.18])
+        com["left_thigh"] = np.array([0.01, 0.02,  -0.09])
+        com["left_shank"] = np.array([-0.01, -0.02,  -0.06])
+        com["left_foot"] = np.array([ -0.06, -0.08,  0.04])
+
+        com["right_thigh"] = np.array([0.01, -0.02, -0.09])
+        com["right_shank"] = np.array([-0.01, 0.02,  0.06])
+        com["right_foot"] = np.array([-0.06, 0.08, 0.04])
+
+        inertia["hip"] = np.diag([ -0.02, 0.0, 0.18])
 
         inertia["left_thigh"] = np.diag([0.0, 0.01, 0.07])
         inertia["left_shank"] = np.diag([0.19, 0.19, 0.0])
@@ -103,38 +100,11 @@ class Exoskeleton(Model.Model):
 
         xtrans = rbdl.SpatialTransform()
         xtrans.r = np.array([0.0, 0.0, 0.0])
-        xtrans.E= np.eye(3)
+        xtrans.E = np.eye(3)
 
         self.hip = model.AddBody(0, xtrans, rbdl.Joint.fromJointType("JointTypeFixed"), hip_body,"hip")
-
-
         joint_rot_z =  rbdl.Joint.fromJointType("JointTypeRevoluteY")
 
-        xtrans.E =np.array( [ [0, 0, -1.0],
-                              [-0.10480714589357376, 0.9944925904273987,  0],
-                              [0.9944925904273987, -0.10480714589357376, 0]])
-
-        # xtrans.E = np.array([[1.0, 0.0, 0.0],
-        #                      [0.0, 0.9945123195648193, -0.10461365431547165],
-        #                      [0.0, 0.10461365431547165, 0.9945123195648193]])
-
-        #xtrans.r = parent_dist["right_thigh"]
-
-
-        self.right_thigh = model.AddBody(self.hip, xtrans, joint_rot_z, bodies["right_thigh"], "right_thigh")
-        xtrans.E = np.eye(3)
-        xtrans.r = parent_dist["right_shank"]
-        self.right_shank = model.AddBody(self.right_thigh, xtrans, joint_rot_z, bodies["right_shank"], "right_shank")
-        xtrans.r = parent_dist["right_foot"]
-        self.right_foot = model.AddBody(self.right_shank, xtrans, joint_rot_z, bodies["right_foot"], "right_foot")
-
-
-        # xtrans.E = np.array([[1.0, 0.0, 0.0],
-        #                      [0.0, 0.9945123195648193, -0.10461365431547165],
-        #                      [0.0, 0.10461365431547165, 0.9945123195648193]])
-        xtrans.E = np.array( [ [0, 0, -1.0], [-0.10480714589357376, 0.9944925904273987,  0], [-0.9944925904273987, -0.10480714589357376, 0]])
-
-        index = "left_" + "thigh"
         xtrans.r = parent_dist["left_thigh"]
         self.left_thigh = model.AddBody(self.hip, xtrans, joint_rot_z, bodies["left_thigh"], "left_thigh")
         xtrans.E = np.eye(3)
@@ -142,6 +112,14 @@ class Exoskeleton(Model.Model):
         self.left_shank = model.AddBody(self.left_thigh, xtrans, joint_rot_z, bodies["left_shank"], "left_shank")
         xtrans.r = parent_dist["left_foot"]
         self.left_foot = model.AddBody(self.left_shank, xtrans, joint_rot_z, bodies["left_foot"], "left_foot")
+
+        xtrans.r = parent_dist["right_thigh"]
+        self.right_thigh = model.AddBody(self.hip, xtrans, joint_rot_z, bodies["right_thigh"], "right_thigh")
+        xtrans.E = np.eye(3)
+        xtrans.r = parent_dist["right_shank"]
+        self.right_shank = model.AddBody(self.right_thigh, xtrans, joint_rot_z, bodies["right_shank"], "right_shank")
+        xtrans.r = parent_dist["right_foot"]
+        self.right_foot = model.AddBody(self.right_shank, xtrans, joint_rot_z, bodies["right_foot"], "right_foot")
 
 
         model.gravity = np.array([0, 0, -9.81])
@@ -170,73 +148,51 @@ class Exoskeleton(Model.Model):
 
         return model
 
-
-    def  ambf_to_dyn(self, q):
-        return np.asarray( [q[0], q[1], q[3], q[2], q[4], q[6], q[5]])
-
-    def make_foot(self, left_ankle, right_ankle):
-
-        foot = {}
-        # TODO put the real nums in
-
-        foot["left_toe"] = {}
-        foot["left_heel"] = {}
-        foot["right_toe"] = {}
-        foot["right_heel"] = {}
-
-        foot["left_toe"]["x"] = left_ankle["x"] + 0.8 * (4.25 / 100.0) * self._height * np.cos(-self._q[3])
-        foot["left_toe"]["y"] = left_ankle["y"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[3])
-        foot["left_toe"]["z"] = left_ankle["z"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[3])
-        foot["left_heel"]["x"] = left_ankle["x"] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self._q[3])
-        foot["left_heel"]["y"] = left_ankle["y"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[3])
-        foot["left_heel"]["z"] = left_ankle["z"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[3])
-        foot["right_toe"]["x"] = right_ankle["x"] + 0.8 * (4.25 / 100.0) * 1.57 * np.cos(-self._q[6])
-        foot["right_toe"]["y"] = right_ankle["y"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[6])
-        foot["right_toe"]["z"] = right_ankle["z"] - 0.05 + 0.8 * (4.25 / 100.0) * self._height * np.sin(-self._q[6])
-        foot["right_heel"]["x"] = right_ankle["x"] - 0.2 * (4.25 / 100.0) * self._height * np.cos(-self._q[6])
-        foot["right_heel"]["y"] = right_ankle["y"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[6])
-        foot["right_heel"]["z"] = right_ankle["z"] - 0.05 + 0.2 * (4.25 / 100.0) * self._height * np.sin(-self._q[6])
-
-        return foot
-
     def fk(self):
 
         fk = {}
 
-        # for index, joint in enumerate(self.joint_order):
-        #     point = {grant }
-        #     point["x"] = self._model.X_base[2 + index].r[0]
-        #     point["y"] = self._model.X_base[2 + index].r[1]
-        #     point["z"] = self._model.X_base[2 + index].r[2]
-        #     fk[joint] = point
-        #
-        # feet = self.make_foot(fk["left_ankle"], fk["right_ankle"])
-
-        # data = []
-        # for index in xrange(len(self._model.X_base)):
-        #     point = []
-        #     point.append(self._model.X_base[index].r[0])
-        #     point.append(self._model.X_base[index].r[1])
-        #     point.append(self._model.X_base[index].r[2])
-        #     data.append(point)
-        #
-        # #
-        # # for key, p in feet.iteritems():
-        # #     data.append( [ p["x"], p["y"],p["z"] ]  )
-
-        data = []
         point_local = np.array([0.0, 0.0, 0.0])
 
-        data.append(rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_thigh, point_local))
-        data.append(rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_shank, point_local))
-        data.append(rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_foot, point_local))
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_thigh, point_local)
+        fk["left_hip"] = Point.Point(data[0], data[1], data[2])
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_shank, point_local)
+        fk["left_knee"] = Point.Point(data[0], data[1], data[2])
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_foot, point_local)
+        fk["left_ankle"] = Point.Point(data[0], data[1], data[2])
 
-        data.append(rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.hip, point_local))
-        data.append(rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_thigh, point_local))
-        data.append(rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_shank, point_local))
-        data.append(rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_foot, point_local))
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_thigh, point_local)
+        fk["right_hip"] = Point.Point(data[0], data[1], data[2])
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_shank, point_local)
+        fk["right_knee"] = Point.Point(data[0], data[1], data[2])
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_foot, point_local)
+        fk["right_ankle"] = Point.Point(data[0], data[1], data[2])
 
-        fk = data
+
+        q_left = self.get_left_leg().ankle.angle.z
+        q_right = self.get_right_leg().ankle.angle.z
+
+        fk["left_toe"] = Point.Point(0, 0, 0)
+        fk["left_toe"].x = fk["left_ankle"].x - 0.8 * (8.0 / 100.0) * self._height * np.cos(-q_left)
+        fk["left_toe"].y = fk["left_ankle"].y - 0.05 + 0.8 * (8.0 / 100.0) * self._height * np.sin(-q_left)
+        fk["left_toe"].z = fk["left_ankle"].z - 0.05 + 0.8 * (8.0 / 100.0) * self._height * np.sin(-q_left)
+
+
+        fk["left_heel"] = Point.Point(0,0,0)
+        fk["left_heel"].x = fk["left_ankle"].x + 0.2 * (8.0 / 100.0) * self._height * np.cos(-q_left)
+        fk["left_heel"].y = fk["left_ankle"].y - 0.05 + 0.2 * (8.0 / 100.0) * self._height * np.sin(-q_left)
+        fk["left_heel"].z = fk["left_ankle"].z - 0.05 + 0.2 * (8.0 / 100.0) * self._height * np.sin(-q_left)
+
+        fk["right_toe"] = Point.Point(0, 0, 0)
+        fk["right_toe"].x = fk["right_ankle"].x - 0.8 * (8.0 / 100.0) * 1.57 * np.cos(-q_right)
+        fk["right_toe"].y = fk["right_ankle"].y - 0.05 + 0.8 * (8.0 / 100.0) * self._height * np.sin(-q_right)
+        fk["right_toe"].z = fk["right_ankle"].z - 0.05 + 0.8 * (8.0 / 100.0) * self._height * np.sin(-q_right)
+
+        fk["right_heel"] = Point.Point(0, 0, 0)
+        fk["right_heel"].x = fk["right_ankle"].x + 0.2 * (8.0 / 100.0) * self._height * np.cos(-q_right)
+        fk["right_heel"].y = fk["right_ankle"].y - 0.05 + 0.2 * (8.0 / 100.0) * self._height * np.sin(-q_right)
+        fk["right_heel"].z = fk["right_ankle"].z - 0.05 + 0.2 * (8.0 / 100.0) * self._height * np.sin(-q_right)
+
         return fk
 
 
@@ -246,4 +202,14 @@ class Exoskeleton(Model.Model):
         qdd = self.ambf_to_dyn(qdd_d)
         tau = np.asarray([0.0] * 7)
         rbdl.InverseDynamics(self._model, q, qd, qdd, tau)
-        return self.ambf_to_dyn(tau)
+        return tau
+
+    def update_state(self, q, qd):
+        self.get_left_leg().hip.angle.z = q[0]
+        self.get_left_leg().knee.angle.z = q[1]
+        self.get_left_leg().ankle.angle.z = q[2]
+
+        self.get_right_leg().hip.angle.z = q[3]
+        self.get_right_leg().knee.angle.z = q[4]
+        self.get_right_leg().ankle.angle.z = q[5]
+
