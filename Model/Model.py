@@ -3,9 +3,11 @@ import abc
 import numpy as np
 import rbdl
 import time
+import rospy
 from threading import Thread
 from lib.GaitCore.Bio import Joint, Leg
 from lib.GaitCore.Core import Point
+from std_msgs.msg import Float32MultiArray
 
 class Model(object):
 
@@ -35,7 +37,8 @@ class Model(object):
         self._left_leg = Leg.Leg(left_joints["Hip"], left_joints["Knee"], left_joints["Ankle"])
         self._right_leg = Leg.Leg(right_joints["Hip"], right_joints["Knee"], right_joints["Ankle"])
 
-
+    def send_torque(self, tau):
+        self.handle.set_all_joint_effort(tau)
 
     @property
     def handle(self):
@@ -51,7 +54,9 @@ class Model(object):
 
     @q.setter
     def q(self, value):
-        self._q = -np.asarray(value)
+        value[2] *= -1
+        value[5] *= -1
+        self._q = np.asarray(value) #  -np.array([-0.4, -0.157, 0.349, 0.0,0,0 ])
 
     @property
     def qd(self):
@@ -59,7 +64,9 @@ class Model(object):
 
     @qd.setter
     def qd(self, value):
-        self._qd = -np.asarray(value)
+        value[2] *= -1
+        value[5] *= -1
+        self._qd = np.asarray(value)
 
     @property
     def state(self):
@@ -78,15 +85,20 @@ class Model(object):
 
         :return:
         """
+        rate = rospy.Rate(500)  # 1000hz
+        pub_q = rospy.Publisher('q', Float32MultiArray, queue_size=1)
+        pub_qd = rospy.Publisher('qd', Float32MultiArray, queue_size=1)
+        msg = Float32MultiArray()
         while 1:
-            q = self.handle.get_all_joint_pos()
-            #q = np.zeros(self._model.qdot_size)
-            qd = self.handle.get_all_joint_vel()
-            qdd = np.zeros(self._model.qdot_size)
-            self.update_state(q, qd)
-            self.q = q
-            self.qd = qd
-            rbdl.UpdateKinematics(self._model, self.q, self.qd, qdd)
+
+            self.q = self.handle.get_all_joint_pos()
+            self.qd = self.handle.get_all_joint_vel()
+            msg.data = self.q.tolist()
+            self.update_state(self.q, self.qd)
+            pub_q.publish(msg)
+            msg.data = self.qd.tolist()
+            pub_qd.publish(msg)
+            rate.sleep()
 
     @abc.abstractmethod
     def  ambf_to_dyn(self, q):
@@ -97,12 +109,18 @@ class Model(object):
         pass
 
     @abc.abstractmethod
-    def update_state(self, q,qd):
+    def update_state(self, q, qd):
         self.state = q + qd
 
-    @abc.abstractmethod
-    def calculate_dynamics(self, q_d, qd_d, qdd_d):
-        pass
+    def calculate_dynamics(self, qdd):
+        # self.q = self.handle.get_all_joint_pos()
+        # self.qd = self.handle.get_all_joint_vel()
+        # print self.q
+        tau = np.asarray([0.0] * 6)
+        #self.qd = np.array(6*[0.0])
+        rbdl.InverseDynamics(self._model, self.q, self.qd, qdd, tau)
+        return tau
+        #return np.array([-0.47484118,  0.42351732,  0.50338838, -0.47484118,  0.42351732,  0.50338838])
 
     def get_right_leg(self):
         """

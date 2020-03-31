@@ -4,81 +4,40 @@ import math
 import numpy as np
 from geometry_msgs.msg import Pose, Wrench
 from Controller import PD_Controller
+from std_msgs.msg import Float32MultiArray
+
+from Model import Model
+class BodyController():
 
 
-class LowerBody(object):
+    def __init__(self, model):
+        """
 
-    def __init__(self,start, end):
-        self.starting_height = start
-        self.ending_height = end
-class PlaneController(object):
-
-    def __init__(self, name_space):
-        self.h = 1.40
-        rospy.init_node("plane_controller")
-        rospy.Subscriber("joint_cmd", ambf.ObjectCmd, self.controller_cb)
-        rospy.Subscriber(name_space + "/body/State", ambf.ObjectState, self.state_callback)
-        self.pub = rospy.Publisher( name_space + "/body/Command", ambf.ObjectCmd, queue_size=1)
-        self.position = np.asarray([0, 0, 0])
-        self.velocity = np.asarray([0, 0, 0])
-        self.prevous_position = np.asarray([0, 0, 0])
-        self.have_state = False
-        self.prevous_time = 0
-        kp = np.array([100, 200, 200])
-        kd = np.array([15.0, 15.0, 15.0])
-        self.controller = PD_Controller.PDController(kp, kd)
-        self.time = 0
-        self.got_cmd = False
+        :type model: Model.Model
+        """
+        self.pub= rospy.Publisher('tau',Float32MultiArray, queue_size=1)
+        self._model = model
+        self.theta = np.linspace(0,-0.5,100)
         self.count = 0
 
+    def calc_gravity(self):
 
 
-    def controller_cb(self, msg):
-        """
 
-        :type msg: ambf.ObjectCmd
-        """
-        self.count+=1
+        self.count = min(self.count, 99)
+        Kp = np.zeros((6,6))
+        Kd = np.zeros((6, 6))
+        Kp[0,0] = 85
+        Kd[0, 0] = 10.0
+
+        qdd = np.zeros(6)
+        g = self._model.calculate_dynamics(qdd)
         print self.count
-        if self.count>500:
-            self.got_cmd = True
-            pos_ref = np.asarray([0.0, 0, self.h])
-            vel_ref = np.asarray([0, 0, 0])
-            e = pos_ref - self.position
-            ed = vel_ref - self.velocity
-            force = self.controller.calc(e,ed)
-            cmd = msg
-            cmd.wrench.force.x = force[0]
-            cmd.wrench.force.y = force[1]
-            cmd.wrench.force.z = 0
-            print cmd
-            self.pub.publish(cmd)
+        print self.theta
+        tau = g + Kp.dot(np.array([self.theta[self.count], 0, 0, 0.0, 0, 0.0 ]) - self._model.q) + Kd.dot(np.array([-0.0, 0, 0, 0, 0, 0 ]) -  self._model.qd)
 
-    def state_callback(self, msg):
-
-        self.position = np.asarray([msg.pose.position.x,msg.pose.position.y, msg.pose.position.z] )
-
-        if self.time == 0:
-            self.time = msg.wall_time
-        dt = (msg.wall_time - self.time) + 0.0000000001
-        self.time = msg.wall_time
-
-        self.velocity = (self.position - self.prevous_position) / dt
-        self.velocity = np.clip(self.velocity, -2.0, 2.0)
-        self.prevous_position = self.position
-        if not self.got_cmd:
-            pos_ref = np.asarray([0.0, 0, self.h])
-            vel_ref = np.asarray([0, 0, 0])
-            e = pos_ref - self.position
-            ed = vel_ref - self.velocity
-            force = self.controller.calc(e, ed)
-            cmd =  cmd = ambf.ObjectCmd()
-            cmd.wrench.force.x = force[0]
-            cmd.wrench.force.y = force[1]
-            cmd.wrench.force.z = force[2]
-            self.pub.publish(cmd)
-
-
-if __name__ == "__main__":
-    PlaneController("/ambf/env")
-    rospy.spin()
+        msg = Float32MultiArray()
+        msg.data = tau.tolist()
+        self.pub.publish(msg)
+        self._model.send_torque(tau)
+        self.count += 1
