@@ -23,7 +23,6 @@ class Exoskeleton(Model.Model):
         self._state = (self._q, self._qd)
         self._updater.start()
 
-
     @property
     def state(self):
         return self._state

@@ -28,5 +28,4 @@ class PDController(object):
         self._kd = kd
 
     def get_tau(self, e, ed):
-
-        return self.kp*e + self.kd*ed
+        return self.kp.dot(e) + self.kd.dot(ed)

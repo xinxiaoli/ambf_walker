@@ -16,9 +16,8 @@ class DynController():
         :param kd:
         """
         self._model = model
-        self.pdController = PDController.PDController(kp,kd)
+        self.pdController = PDController.PDController(kp, kd)
         self.pub = rospy.Publisher('tau',Float32MultiArray, queue_size=1)
-
 
     def set_gains(self, kp, kd):
         """
@@ -30,7 +29,7 @@ class DynController():
         self.pdController.kp = kp
         self.pdController.kd = kd
 
-    def get_tau(self, q=None, qd=None, qdd=None ):
+    def calc_tau(self, q=None, qd=None, qdd=None ):
         """
 
         :param q:
@@ -39,17 +38,17 @@ class DynController():
         :return:
         """
         aq = np.zeros(6)
-
         if q is not None and qd is not None:
             e = q - self._model.q
             ed = qd - self._model.qd
+            print "e ", e
             aq = self.pdController.get_tau(e, ed)
             if qdd is not None:
                 aq = qdd + aq
-
         tau = self._model.calculate_dynamics(aq)
         msg = Float32MultiArray()
         msg.data = tau.tolist()
         self.pub.publish(msg)
-        return tau
+        self._model.send_torque(tau)
+
 
