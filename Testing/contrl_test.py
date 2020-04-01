@@ -44,12 +44,19 @@ if __name__ == "__main__":
 
     Kp = np.zeros((6, 6))
     Kd = np.zeros((6, 6))
-    Kp[0,0] = 0.0
-    Kd[0, 0] = 0.0
+    Kp[0, 0] = 70.0
+    Kd[0, 0] = 10.0
     Kp[1, 1] = 135.0
     Kd[1, 1] = 1.5
     Kp[2, 2] = 110.0
-    Kd[2, 2] = 0.5
+    Kd[3, 2] = 0.5
+
+    Kp[3, 3] = 70.0
+    Kd[3, 3] = 10.0
+    Kp[4, 4] = 135.0
+    Kd[4, 4] = 1.5
+    Kp[5, 5] = 110.0
+    Kd[5, 5] = 0.5
 
     crl = DynController.DynController(LARRE, Kp, Kd)
     dt = 0.1
@@ -62,9 +69,9 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         count = min(count, int(tf/dt)-1)
 
-        q_d = np.array([q_hip[count].item(), q_knee[count].item(), q_ankle[count].item(), 0.0, 0.0, 0.0])
-        qd_d = np.array([qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item(), 0.0, 0.0, 0.0])
-        qdd_d = np.array([qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(), 0.0, 0.0, 0.0])
+        q_d = np.array([q_hip[count].item(), q_knee[count].item(), q_ankle[count].item(),q_hip[count].item(), q_knee[count].item(), q_ankle[count].item()])
+        qd_d = np.array([qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item(), qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item()])
+        qdd_d = np.array([qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(), qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item()])
         crl.calc_tau(q_d, qd_d)
         msg_vel.data = LARRE.q
         msg_goal.data = q_d

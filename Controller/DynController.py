@@ -46,6 +46,7 @@ class DynController():
             if qdd is not None:
                 aq = qdd + aq
         tau = self._model.calculate_dynamics(aq)
+
         msg = Float32MultiArray()
         msg.data = tau.tolist()
         self.pub.publish(msg)
