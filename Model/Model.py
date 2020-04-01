@@ -38,6 +38,8 @@ class Model(object):
         self._right_leg = Leg.Leg(right_joints["Hip"], right_joints["Knee"], right_joints["Ankle"])
 
     def send_torque(self, tau):
+        tau[2] *= -1
+        tau[5] *= -1
         self.handle.set_all_joint_effort(tau)
 
     @property
@@ -85,7 +87,7 @@ class Model(object):
 
         :return:
         """
-        rate = rospy.Rate(500)  # 1000hz
+        rate = rospy.Rate(1000)  # 1000hz
         pub_q = rospy.Publisher('q', Float32MultiArray, queue_size=1)
         pub_qd = rospy.Publisher('qd', Float32MultiArray, queue_size=1)
         msg = Float32MultiArray()

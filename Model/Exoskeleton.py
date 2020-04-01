@@ -11,6 +11,7 @@ import time
 from lib.GaitCore.Core import Point
 from std_msgs.msg import Float32MultiArray
 from threading import Thread
+
 class Exoskeleton(Model.Model):
 
     def __init__(self, client, mass, height):
