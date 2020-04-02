@@ -1,15 +1,27 @@
 # Import the Client from ambf_client package
 from ambf_client import Client
-import time
+from Utlities import Plotter
+import rospy
+from std_msgs.msg import Float32MultiArray
+from Model import Exoskeleton
+from Controller import TestController
 
-# Create a instance of the client
 _client = Client()
-
-# Connect the client which in turn creates callable objects from ROS topics
-# and initiates a shared pool of threads for bi-directional communication
+# Create a instance of the client
 _client.connect()
+LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
+leg_plot = Plotter.Plotter(LARRE)
+crl = TestController.TestController(LARRE)
+pub=rospy.Publisher('qd',Float32MultiArray, queue_size=1)
+rate = rospy.Rate(1000)   #1000hz
+while not rospy.is_shutdown():
+    leg_plot.update()
+    crl.calc_gravity()
+    rate.sleep()
+    msg = Float32MultiArray()
+    msg.data = LARRE._handle.get_all_joint_vel()
+    pub.publish(msg)
 
-print('\n\n----')
-raw_input("We can see what objects the client has found. Press Enter to continue...")
-# You can print the names of objects found. We should see all the links found
-print(_client.get_obj_names())
+
+_client.clean_up()
+

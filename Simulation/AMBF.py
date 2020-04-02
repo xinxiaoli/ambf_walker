@@ -1,24 +1,24 @@
 import rospy
 import numpy as np
 import ambf_msgs.msg as ambf
-from Model import Exoskeleton
+from Model import Human
+from ambf_client import Client
+import time
 
 
-class AMBF(Exoskeleton.Exoskeleton):
+class AMBF(object):
 
-    def __init__(self, name_space, mass, height):
+    def __init__(self, mass, height):
         """
 
         :param name_space: name space of the the body
         """
 
         super(AMBF, self).__init__(mass, height)
-        rospy.init_node("AMBF_Walker")
-        self.time = 0
-        self.sub = rospy.Subscriber(name_space + "/body/State", ambf.ObjectState, self.joint_callback)
-        self.tau_pub = rospy.Publisher("joint_cmd", ambf.ObjectCmd, queue_size=1)
-        self._time = 0
-        self._dt = 0
+        _client = Client()
+        _client.connect()
+        time.sleep(2)
+        handle = _client.get_obj_handle('Hip')
 
     @property
     def time(self):
