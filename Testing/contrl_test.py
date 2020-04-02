@@ -61,18 +61,20 @@ if __name__ == "__main__":
     crl = DynController.DynController(LARRE, Kp, Kd)
     dt = 0.1
     tf = 2.0
-    q_hip, qd_hip, qdd_hip = get_traj(0.0, -0.5, 0.0, 0.0, tf, dt)
-    q_knee, qd_knee, qdd_knee = get_traj(0.0, 1.15, 0.0, 0.0, tf, dt)
+    q_hip, qd_hip, qdd_hip = get_traj(0.0, 0, 0.0, 0.0, tf, dt)
+    q_knee, qd_knee, qdd_knee = get_traj(0.0, 0.0, 0.0, 0.0, tf, dt)
     q_ankle, qd_ankle, qdd_ankle = get_traj(-0.349, 0, 0.0, 0.0, tf, dt)
     count = 0
 
     while not rospy.is_shutdown():
         count = min(count, int(tf/dt)-1)
-
-        q_d = np.array([q_hip[count].item(), q_knee[count].item(), q_ankle[count].item(),q_hip[count].item(), q_knee[count].item(), q_ankle[count].item()])
-        qd_d = np.array([qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item(), qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item()])
-        qdd_d = np.array([qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(), qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item()])
-        crl.calc_tau(q_d, qd_d)
+        LARRE.handle.set_force(0, 0, 0)
+        LARRE.handle.set_torque(-2, 0, 0)
+        print LARRE.handle.get_rpy()
+        q_d = np.array([q_hip[count].item(), q_knee[count].item(), q_ankle[count].item(), 0.0, 0.0, q_ankle[count].item()])
+        qd_d = np.array([qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item(), 0.0, 0.0, qd_ankle[count].item()])
+        qdd_d = np.array([qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(), 0.0, 0.0, qdd_ankle[count].item()])
+        crl.calc_tau(q_d, qd_d, qdd_d)
         msg_vel.data = LARRE.q
         msg_goal.data = q_d
         leg_plot.update()

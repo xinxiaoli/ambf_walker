@@ -56,8 +56,8 @@ class Plotter(object):
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111, autoscale_on=False, xlim=(-0.7, 0.7), ylim=(-1.25, 0.25))
         self.ax.grid()
-        self.left_leg, = self.ax.plot([0,0,0], [0,-0.5,-0.5], 'bo-', lw=2)
         self.right_leg, = self.ax.plot([0,0,0], [0,-0.5,-0.5], 'ro-', lw=2)
+        self.left_leg, = self.ax.plot([0,0,0], [0,-0.5,-0.5], 'bo-', lw=2)
         self.trunk, = self.ax.plot([], [], 'go-', lw=2)
         # self.__updater = Thread(target=self.update())
         # self.__updater.start()
@@ -73,16 +73,17 @@ class Plotter(object):
         self.trunk.set_ydata([0, 0.25])
         self.trunk.set_xdata([0, 0])
 
-        self.left_leg.set_ydata(
-            [0, points["left_hip"].z, points["left_knee"].z, points["left_ankle"].z, points["left_toe"].z])
-        self.left_leg.set_xdata(
-            [0, points["left_hip"].y, points["left_knee"].y, points["left_ankle"].y, points["left_toe"].y])
+
 
         self.right_leg.set_ydata(
             [0, points["right_hip"].z, points["right_knee"].z, points["right_ankle"].z, points["right_toe"].z])
         self.right_leg.set_xdata(
             [0, points["right_hip"].y, points["right_knee"].y, points["right_ankle"].y, points["right_toe"].y])
 
+        self.left_leg.set_ydata(
+            [0, points["left_hip"].z, points["left_knee"].z, points["left_ankle"].z, points["left_toe"].z])
+        self.left_leg.set_xdata(
+            [0, points["left_hip"].y, points["left_knee"].y, points["left_ankle"].y, points["left_toe"].y])
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
