@@ -96,14 +96,14 @@ if __name__ == "__main__":
 
         count = min(count, int(tf/dt)-1)
         if count == 1999:
-            height = height-0.001
+            #height = height-0.001
 
-            if height < -0.23:
-                LARRE.handle.set_force(0,0,20.0)
-                print "force"
-            else:
-                LARRE.handle.set_rpy(0, 0, 0)
-                LARRE.handle.set_pos(0, 0, height)
+            # if height < -0.23:
+            #     LARRE.handle.set_force(0,0, 20.0)
+            #     print "force"
+            # else:
+            LARRE.handle.set_rpy(0, 0, 0)
+            LARRE.handle.set_pos(0, 0, height)
 
         else:
             LARRE.handle.set_rpy(0, 0, 0)
