@@ -1,12 +1,128 @@
-
+# Import the Client from ambf_client package
 from ambf_client import Client
+from Utlities import Plotter
+import rospy
+import numpy as np
+from std_msgs.msg import Float32MultiArray
+from Model import Exoskeleton
+from Controller import DynController
 import time
 
-_client = Client()
 
-_client.connect()
+def get_traj(q0, qf, v0, vf, tf, dt):
 
-handle = _client.get_obj_handle('Hip')
-handle.set_pos(0,0,0)
-for i in range(0, 5000):
-    time.sleep(0.001) # Sleep for a while to see the effect of the command before moving on
+    b = np.array([q0, v0, qf, vf]).reshape((-1,1))
+    A = np.array([[1.0, 0.0, 0.0, 0.0],
+                  [0.0, 1.0, 0.0, 0.0],
+                  [1.0, 0.0, tf ** 2, tf ** 3],
+                  [0.0, 0.0, 2 * tf, 3 * tf * 2]])
+
+    x = np.linalg.solve(A, b)
+    q = []
+    qd = []
+    qdd = []
+
+    for t in np.linspace(0, tf, tf/dt):
+        q.append(x[0] + x[1] * t + x[2] * t * t + x[3] * t * t * t)
+        qd.append(x[1] + 2*x[2] * t + 3*x[3] * t * t)
+        qdd.append(2*x[2] + 6*x[3] * t)
+
+    return q, qd, qdd
+
+if __name__ == "__main__":
+    pub = rospy.Publisher('qd',Float32MultiArray, queue_size=1)
+    pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
+    msg_vel = Float32MultiArray()
+    msg_goal = Float32MultiArray()
+
+
+    _client = Client()
+    _client.connect()
+    rate = rospy.Rate(1000)
+    LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
+    #leg_plot = Plotter.Plotter(LARRE)
+
+    Kp = np.zeros((6, 6))
+    Kd = np.zeros((6, 6))
+    # Kp[0, 0] = 70.0
+    # Kd[0, 0] = 10.0
+    # Kp[1, 1] = 135.0
+    # Kd[1, 1] = 1.5
+    # Kp[2, 2] = 110.0
+    # Kd[2, 2] = 0.5
+    #
+    # Kp[3, 3] = 70.0
+    # Kd[3, 3] = 10.0
+    # Kp[4, 4] = 135.0
+    # Kd[4, 4] = 1.5
+    # Kp[5, 5] = 110.0
+    # Kd[5, 5] = 0.5
+
+    Kp_hip = 200.0
+    Kd_hip = 2.0
+
+    Kp_knee = 150.0
+    Kd_knee = 1.0
+
+    Kp_ankle = 750.0
+    Kd_ankle = 0.4
+
+    Kp[0, 0] = Kp_hip
+    Kd[0, 0] = Kd_hip
+    Kp[1, 1] = Kp_knee
+    Kd[1, 1] = Kd_knee
+    Kp[2, 2] = Kp_ankle
+    Kd[2, 2] = Kd_ankle
+
+    Kp[3, 3] = Kp_hip
+    Kd[3, 3] = Kd_hip
+    Kp[4, 4] = Kp_knee
+    Kd[4, 4] = Kd_knee
+    Kp[5, 5] = Kp_ankle
+    Kd[5, 5] = Kd_ankle
+
+    crl = DynController.DynController(LARRE, Kp, Kd)
+    dt = 0.01
+    tf = 5.0
+    q_hip0, qd_hip0, qdd_hip0 = get_traj(0.0, -0.25, 0.0, 0.0, tf, dt)
+    q_knee0, qd_knee0, qdd_knee0 = get_traj(0.0, 0.25, 0.0, 0.0, tf, dt)
+    q_ankle0, qd_ankle0, qdd_ankle0 = get_traj(-0.349, 0.5*3.14, 0.0, 0.0, tf, dt)
+    
+    q_hip1, qd_hip1, qdd_hip1 = get_traj(0.0, -0.25, 0.0, 0.0, tf, dt)
+    q_knee1, qd_knee1, qdd_knee1 = get_traj(0.0, .25, 0.0, 0.0, tf, dt)
+    q_ankle1, qd_ankle1, qdd_ankle1 = get_traj(-0.349, 0.0, 0.0, 0.0, tf, dt)
+    
+    count = 0
+    LARRE.handle.set_rpy(0, 0, 0)
+    LARRE.handle.set_pos(0, 0, -0.1)
+    time.sleep(5)
+    while not rospy.is_shutdown():
+
+        count = min(count, int(tf/dt)-1)
+        if count == int(tf/dt)-1:
+            LARRE.handle.set_force(0,0,0)
+            # q_d = np.array([q_hip1[count].item(), q_knee1[count].item(), q_ankle1[count], q_hip1[count].item(), q_knee1[count].item(), q_ankle1[count]])
+            # qd_d = np.array([qd_hip1[count].item(), qd_knee1[count].item(), 0.0, qd_hip1[count].item(), qd_knee1[count].item(), 0.0 ])
+            # qdd_d = np.array([qdd_hip1[count].item(), qdd_knee1[count].item(), 0.0, qdd_hip1[count].item(), qdd_knee1[count].item(), 0.0 ])
+        else:
+            LARRE.handle.set_rpy(0, 0, 0)
+            LARRE.handle.set_pos(0, 0, -0.1)
+        q_d = np.array([q_hip0[count].item(), q_knee0[count].item(), q_ankle0[count].item(), q_hip0[count].item(), q_knee0[count].item(), q_ankle0[count].item()])
+        qd_d = np.array([qd_hip0[count].item(), qd_knee0[count].item(), qd_ankle0[count].item(), qd_hip0[count].item(), qd_knee0[count].item(), qd_ankle0[count].item()])
+        qdd_d = np.array([qdd_hip0[count].item(), qdd_knee0[count].item(), qdd_ankle0[count].item(), qdd_hip0[count].item(), qdd_knee0[count].item(), qdd_ankle0[count].item()])
+            
+        crl.calc_tau(q_d, qd_d, qdd_d)
+        msg_vel.data = LARRE.q
+        msg_goal.data = q_d
+        #leg_plot.update()
+        pub.publish(msg_vel)
+        pub_goal.publish(msg_goal)
+        count += 1
+        rate.sleep()
+
+    _client.clean_up()
+
+
+
+
+

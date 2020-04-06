@@ -6,8 +6,8 @@ import numpy as np
 from std_msgs.msg import Float32MultiArray
 from Model import Exoskeleton
 from Controller import DynController
-
-
+import time
+from Controller import PDController
 
 def get_traj(q0, qf, v0, vf, tf, dt):
 
@@ -40,44 +40,82 @@ if __name__ == "__main__":
     _client.connect()
     rate = rospy.Rate(1000)
     LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
-    leg_plot = Plotter.Plotter(LARRE)
+    #leg_plot = Plotter.Plotter(LARRE)
 
     Kp = np.zeros((6, 6))
     Kd = np.zeros((6, 6))
-    Kp[0, 0] = 70.0
-    Kd[0, 0] = 10.0
-    Kp[1, 1] = 135.0
-    Kd[1, 1] = 1.5
-    Kp[2, 2] = 110.0
-    Kd[3, 2] = 0.5
+    # Kp[0, 0] = 70.0
+    # Kd[0, 0] = 10.0
+    # Kp[1, 1] = 135.0
+    # Kd[1, 1] = 1.5
+    # Kp[2, 2] = 110.0
+    # Kd[2, 2] = 0.5
+    #
+    # Kp[3, 3] = 70.0
+    # Kd[3, 3] = 10.0
+    # Kp[4, 4] = 135.0
+    # Kd[4, 4] = 1.5
+    # Kp[5, 5] = 110.0
+    # Kd[5, 5] = 0.5
 
-    Kp[3, 3] = 70.0
-    Kd[3, 3] = 10.0
-    Kp[4, 4] = 135.0
-    Kd[4, 4] = 1.5
-    Kp[5, 5] = 110.0
-    Kd[5, 5] = 0.5
+    Kp_hip = 100.0
+    Kd_hip = 2.0
 
+    Kp_knee = 125.0
+    Kd_knee = 1.0
+
+    Kp_ankle = 750.0
+    Kd_ankle = 0.4
+
+    Kp[0, 0] = Kp_hip
+    Kd[0, 0] = Kd_hip
+    Kp[1, 1] = Kp_knee
+    Kd[1, 1] = Kd_knee
+    Kp[2, 2] = Kp_ankle
+    Kd[2, 2] = Kd_ankle
+
+    Kp[3, 3] = Kp_hip
+    Kd[3, 3] = Kd_hip
+    Kp[4, 4] = Kp_knee
+    Kd[4, 4] = Kd_knee
+    Kp[5, 5] = Kp_ankle
+    Kd[5, 5] = Kd_ankle
+    body_controller = PDController.PDController(np.array([2000]), np.array([100]) )
     crl = DynController.DynController(LARRE, Kp, Kd)
-    dt = 0.1
+    dt = 0.001
     tf = 2.0
-    q_hip, qd_hip, qdd_hip = get_traj(0.0, 0, 0.0, 0.0, tf, dt)
-    q_knee, qd_knee, qdd_knee = get_traj(0.0, 0.0, 0.0, 0.0, tf, dt)
-    q_ankle, qd_ankle, qdd_ankle = get_traj(-0.349, 0, 0.0, 0.0, tf, dt)
+    q_hip, qd_hip, qdd_hip = get_traj(0.0, -0.30, 0.0, 0.0, tf,dt)
+    q_knee, qd_knee, qdd_knee = get_traj(0.0, 0.50, 0.0, 0., tf, dt)
+    q_ankle, qd_ankle, qdd_ankle = get_traj(-0.349, 0.157+0.15, 0.0, 0.0, tf, dt)
     count = 0
-
+    LARRE.handle.set_rpy(0, 0, 0)
+    LARRE.handle.set_pos(0, 0, -0.1)
+    time.sleep(5)
+    height = -0.1
     while not rospy.is_shutdown():
+
         count = min(count, int(tf/dt)-1)
-        LARRE.handle.set_force(0, 0, 0)
-        LARRE.handle.set_torque(-2, 0, 0)
-        print LARRE.handle.get_rpy()
-        q_d = np.array([q_hip[count].item(), q_knee[count].item(), q_ankle[count].item(), 0.0, 0.0, q_ankle[count].item()])
-        qd_d = np.array([qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item(), 0.0, 0.0, qd_ankle[count].item()])
-        qdd_d = np.array([qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(), 0.0, 0.0, qdd_ankle[count].item()])
+        if count == 1999:
+            height = height-0.001
+
+            if height < -0.23:
+                LARRE.handle.set_force(0,0,20.0)
+                print "force"
+            else:
+                LARRE.handle.set_rpy(0, 0, 0)
+                LARRE.handle.set_pos(0, 0, height)
+
+        else:
+            LARRE.handle.set_rpy(0, 0, 0)
+            LARRE.handle.set_pos(0, 0, height)
+
+        q_d = np.array([q_hip[count].item(), q_knee[count].item(), q_ankle[count].item(), q_hip[count].item(), q_knee[count].item(), q_ankle[count].item()])
+        qd_d = np.array([qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item(), qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item()])
+        qdd_d = np.array([qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(), qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item()])
         crl.calc_tau(q_d, qd_d, qdd_d)
         msg_vel.data = LARRE.q
         msg_goal.data = q_d
-        leg_plot.update()
+        #leg_plot.update()
         pub.publish(msg_vel)
         pub_goal.publish(msg_goal)
         count += 1

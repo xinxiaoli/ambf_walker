@@ -54,7 +54,7 @@ class Plotter(object):
     def __init__(self, model):
         self.model = model
         self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, autoscale_on=False, xlim=(-0.7, 0.7), ylim=(-1.25, 0.25))
+        self.ax = self.fig.add_subplot(111, autoscale_on=False, xlim=(-0.6, 0.2), ylim=(-1.2, 0.3))
         self.ax.grid()
         self.right_leg, = self.ax.plot([0,0,0], [0,-0.5,-0.5], 'ro-', lw=2)
         self.left_leg, = self.ax.plot([0,0,0], [0,-0.5,-0.5], 'bo-', lw=2)
