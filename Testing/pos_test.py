@@ -84,13 +84,10 @@ if __name__ == "__main__":
     crl = DynController.DynController(LARRE, Kp, Kd)
     dt = 0.01
     tf = 5.0
-    q_hip0, qd_hip0, qdd_hip0 = get_traj(0.0, -0.25, 0.0, 0.0, tf, dt)
-    q_knee0, qd_knee0, qdd_knee0 = get_traj(0.0, 0.25, 0.0, 0.0, tf, dt)
+    q_hip0, qd_hip0, qdd_hip0 = get_traj(0.0, -0.15, 0.0, 0.0, tf, dt)
+    q_knee0, qd_knee0, qdd_knee0 = get_traj(0.0, 0.15, 0.0, 0.0, tf, dt)
     q_ankle0, qd_ankle0, qdd_ankle0 = get_traj(-0.349, 0.5*3.14, 0.0, 0.0, tf, dt)
-    
-    q_hip1, qd_hip1, qdd_hip1 = get_traj(0.0, -0.25, 0.0, 0.0, tf, dt)
-    q_knee1, qd_knee1, qdd_knee1 = get_traj(0.0, .25, 0.0, 0.0, tf, dt)
-    q_ankle1, qd_ankle1, qdd_ankle1 = get_traj(-0.349, 0.0, 0.0, 0.0, tf, dt)
+
     
     count = 0
     LARRE.handle.set_rpy(0, 0, 0)

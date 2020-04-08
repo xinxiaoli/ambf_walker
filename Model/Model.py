@@ -58,7 +58,7 @@ class Model(object):
     def q(self, value):
         value[2] *= -1
         value[5] *= -1
-        self._q = np.asarray(value) #  -np.array([-0.4, -0.157, 0.349, 0.0,0,0 ])
+        self._q = np.asarray(value[0:6]) #  -np.array([-0.4, -0.157, 0.349, 0.0,0,0 ])
 
     @property
     def qd(self):
@@ -68,7 +68,7 @@ class Model(object):
     def qd(self, value):
         value[2] *= -1
         value[5] *= -1
-        self._qd = np.asarray(value)
+        self._qd = np.asarray(value[0:6])
 
     @property
     def state(self):
@@ -118,7 +118,7 @@ class Model(object):
         # self.q = self.handle.get_all_joint_pos()
         # self.qd = self.handle.get_all_joint_vel()
         # print self.q
-        tau = np.asarray([0.0] * 6)
+        tau = np.asarray([0.0] * 7)
         #self.qd = np.array(6*[0.0])
         rbdl.InverseDynamics(self._model, self.q, self.qd, qdd, tau)
         return tau

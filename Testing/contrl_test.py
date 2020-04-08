@@ -84,9 +84,9 @@ if __name__ == "__main__":
     crl = DynController.DynController(LARRE, Kp, Kd)
     dt = 0.001
     tf = 2.0
-    q_hip, qd_hip, qdd_hip = get_traj(0.0, -0.30, 0.0, 0.0, tf,dt)
-    q_knee, qd_knee, qdd_knee = get_traj(0.0, 0.50, 0.0, 0., tf, dt)
-    q_ankle, qd_ankle, qdd_ankle = get_traj(-0.349, 0.157+0.15, 0.0, 0.0, tf, dt)
+    q_hip, qd_hip, qdd_hip = get_traj(0.0, -0.10, 0.0, 0.0, tf,dt)
+    q_knee, qd_knee, qdd_knee = get_traj(0.0, 0.20, 0.0, 0., tf, dt)
+    q_ankle, qd_ankle, qdd_ankle = get_traj(-0.349, 0.157+0.10, 0.0, 0.0, tf, dt)
     count = 0
     LARRE.handle.set_rpy(0, 0, 0)
     LARRE.handle.set_pos(0, 0, -0.1)
@@ -96,15 +96,7 @@ if __name__ == "__main__":
 
         count = min(count, int(tf/dt)-1)
         if count == 1999:
-            #height = height-0.001
-
-            # if height < -0.23:
-            #     LARRE.handle.set_force(0,0, 20.0)
-            #     print "force"
-            # else:
-            LARRE.handle.set_rpy(0, 0, 0)
-            LARRE.handle.set_pos(0, 0, height)
-
+            LARRE.handle.set_force(0,0,10)
         else:
             LARRE.handle.set_rpy(0, 0, 0)
             LARRE.handle.set_pos(0, 0, height)

@@ -37,7 +37,7 @@ class DynController():
         :param qdd:
         :return:
         """
-        aq = np.zeros(6)
+        aq = np.zeros(7)
         if q is not None and qd is not None:
             e = q - self._model.q
             ed = qd - self._model.qd
