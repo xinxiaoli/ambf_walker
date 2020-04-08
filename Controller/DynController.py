@@ -39,6 +39,7 @@ class DynController():
         """
         aq = np.zeros(7)
         if q is not None and qd is not None:
+            print self._model.q
             e = q - self._model.q
             ed = qd - self._model.qd
             print "e ", e

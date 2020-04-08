@@ -23,6 +23,30 @@ class Exoskeleton(Model.Model):
         self._state = (self._q, self._qd)
         self._updater.start()
 
+    def send_torque(self, tau):
+        tau[2] *= -1
+        tau[5] *= -1
+        super(Exoskeleton, self).send_torque(tau)
+    @property
+    def q(self):
+        return self._q
+
+    @property
+    def qd(self):
+        return self._qd
+
+    @q.setter
+    def q(self, value):
+        value[2] *= -1
+        value[5] *= -1
+        self._q = np.array(value[0:6])
+
+    @qd.setter
+    def qd(self, value):
+        value[2] *= -1
+        value[5] *= -1
+        self._qd = np.array(value[0:6])
+
     @property
     def state(self):
         return self._state

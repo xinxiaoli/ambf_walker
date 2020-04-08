@@ -30,7 +30,6 @@ class Model(object):
                 force = Point.Point(0, 0, 0)
                 moment = Point.Point(0, 0, 0)
                 power = Point.Point(0, 0, 0)
-
                 joint[output] = Joint.Joint(angle, moment, power, force)
                 # joint[output] = core.Newton.Newton(angle, force, moment, power)
 
@@ -38,8 +37,6 @@ class Model(object):
         self._right_leg = Leg.Leg(right_joints["Hip"], right_joints["Knee"], right_joints["Ankle"])
 
     def send_torque(self, tau):
-        tau[2] *= -1
-        tau[5] *= -1
         self.handle.set_all_joint_effort(tau)
 
     @property
@@ -56,9 +53,7 @@ class Model(object):
 
     @q.setter
     def q(self, value):
-        value[2] *= -1
-        value[5] *= -1
-        self._q = np.asarray(value[0:6]) #  -np.array([-0.4, -0.157, 0.349, 0.0,0,0 ])
+        self._q = np.asarray(value) #  -np.array([-0.4, -0.157, 0.349, 0.0,0,0 ])
 
     @property
     def qd(self):
@@ -88,17 +83,15 @@ class Model(object):
         :return:
         """
         rate = rospy.Rate(1000)  # 1000hz
-        pub_q = rospy.Publisher('q', Float32MultiArray, queue_size=1)
         pub_qd = rospy.Publisher('qd', Float32MultiArray, queue_size=1)
         msg = Float32MultiArray()
         while 1:
 
-            self.q = self.handle.get_all_joint_pos()
+            q = self.handle.get_all_joint_pos()
+            self.q = q
             self.qd = self.handle.get_all_joint_vel()
-            msg.data = self.q.tolist()
+            self._joint_num = len(q)
             self.update_state(self.q, self.qd)
-            pub_q.publish(msg)
-            msg.data = self.qd.tolist()
             pub_qd.publish(msg)
             rate.sleep()
 
@@ -118,7 +111,8 @@ class Model(object):
         # self.q = self.handle.get_all_joint_pos()
         # self.qd = self.handle.get_all_joint_vel()
         # print self.q
-        tau = np.asarray([0.0] * 7)
+        tau = np.asarray([0.0] * self._joint_num)
+        print "tau ", self._joint_num
         #self.qd = np.array(6*[0.0])
         rbdl.InverseDynamics(self._model, self.q, self.qd, qdd, tau)
         return tau
