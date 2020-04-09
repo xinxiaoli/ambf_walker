@@ -39,18 +39,15 @@ class DynController():
         """
         aq = np.zeros(7)
         if q is not None and qd is not None:
-            print self._model.q
             e = q - self._model.q
             ed = qd - self._model.qd
-            print "e ", e
             aq = self.pdController.get_tau(e, ed)
             if qdd is not None:
                 aq = qdd + aq
         tau = self._model.calculate_dynamics(aq)
-
         msg = Float32MultiArray()
         msg.data = tau.tolist()
         self.pub.publish(msg)
-        self._model.send_torque(tau)
+        self._model.update_torque(tau)
 
 

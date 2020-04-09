@@ -42,8 +42,8 @@ if __name__ == "__main__":
     LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
     #leg_plot = Plotter.Plotter(LARRE)
 
-    Kp = np.zeros((6, 6))
-    Kd = np.zeros((6, 6))
+    Kp = np.zeros((7, 7))
+    Kd = np.zeros((7, 7))
     # Kp[0, 0] = 70.0
     # Kd[0, 0] = 10.0
     # Kp[1, 1] = 135.0
@@ -95,12 +95,14 @@ if __name__ == "__main__":
     time.sleep(5)
     height = 0.1
     count2 = 0
+
     while not rospy.is_shutdown():
 
         count = min(count, int(tf/dt)-1)
         if count == 1999:
-            if height < -0.23:
-                LARRE.handle.set_force(0, 0, 0)
+            if height < -0.1:
+                LARRE.handle.set_rpy(0.25, 0, 0)
+                LARRE.handle.set_pos(0, 0, height)
             else:
                 height -= 0.001
                 LARRE.handle.set_rpy(0.25, 0, 0)
@@ -111,13 +113,13 @@ if __name__ == "__main__":
             LARRE.handle.set_pos(0, 0, height)
 
         q_d = np.array([q_hip[count].item(), q_knee[count].item(), q_ankle[count].item(),
-                        q_hip[count].item(), q_knee[count].item(), q_ankle[count].item()])
+                        q_hip[count].item(), q_knee[count].item(), q_ankle[count].item(),0.0])
 
         qd_d = np.array([qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item(),
-                         qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item()])
+                         qd_hip[count].item(), qd_knee[count].item(), qd_ankle[count].item(),0.0])
 
         qdd_d = np.array([qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(),
-                          qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item()])
+                          qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(),0.0])
 
         crl.calc_tau(q_d, qd_d, qdd_d)
         msg_vel.data = LARRE.q

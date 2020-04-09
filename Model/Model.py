@@ -17,9 +17,11 @@ class Model(object):
         self._client = client
         self._q = np.array([])
         self._qd = np.array([])
+        self.tau = np.array([])
         self._handle = None
         self._model = self.dynamic_model(mass, height)
         self._updater = Thread(target=self.update)
+        self._enable_control = False
 
         left_joints = {}
         right_joints = {}
@@ -36,8 +38,18 @@ class Model(object):
         self._left_leg = Leg.Leg(left_joints["Hip"], left_joints["Knee"], left_joints["Ankle"])
         self._right_leg = Leg.Leg(right_joints["Hip"], right_joints["Knee"], right_joints["Ankle"])
 
-    def send_torque(self, tau):
-        self.handle.set_all_joint_effort(tau)
+
+    def update_torque(self, tau):
+        self.tau = tau
+        self._enable_control = True
+
+    @property
+    def enable_control(self):
+        return self._enable_control
+
+    @enable_control.setter
+    def enable_control(self, value):
+        self._enable_control = value
 
     @property
     def handle(self):
@@ -53,7 +65,7 @@ class Model(object):
 
     @q.setter
     def q(self, value):
-        self._q = np.asarray(value) #  -np.array([-0.4, -0.157, 0.349, 0.0,0,0 ])
+        self._q = np.asarray(value)
 
     @property
     def qd(self):
@@ -63,7 +75,7 @@ class Model(object):
     def qd(self, value):
         value[2] *= -1
         value[5] *= -1
-        self._qd = np.asarray(value[0:6])
+        self._qd = np.asarray(value)
 
     @property
     def state(self):
@@ -87,11 +99,13 @@ class Model(object):
         msg = Float32MultiArray()
         while 1:
 
-            q = self.handle.get_all_joint_pos()
-            self.q = q
+            self.q = self.handle.get_all_joint_pos()
             self.qd = self.handle.get_all_joint_vel()
-            self._joint_num = len(q)
-            self.update_state(self.q, self.qd)
+            self._joint_num = self.q.size
+            if self._enable_control:
+                print self.tau
+
+                self.handle.set_all_joint_effort(self.tau)
             pub_qd.publish(msg)
             rate.sleep()
 
@@ -108,15 +122,9 @@ class Model(object):
         self.state = q + qd
 
     def calculate_dynamics(self, qdd):
-        # self.q = self.handle.get_all_joint_pos()
-        # self.qd = self.handle.get_all_joint_vel()
-        # print self.q
         tau = np.asarray([0.0] * self._joint_num)
-        print "tau ", self._joint_num
-        #self.qd = np.array(6*[0.0])
-        rbdl.InverseDynamics(self._model, self.q, self.qd, qdd, tau)
+        rbdl.InverseDynamics(self._model, self.q[0:6], self.qd[0:6], qdd[0:6], tau)
         return tau
-        #return np.array([-0.47484118,  0.42351732,  0.50338838, -0.47484118,  0.42351732,  0.50338838])
 
     def get_right_leg(self):
         """

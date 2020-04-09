@@ -84,14 +84,14 @@ if __name__ == "__main__":
     crl = DynController.DynController(LARRE, Kp, Kd)
     dt = 0.001
     tf = 2.0
-    tf2 = 10.0
-    q_hip, qd_hip, qdd_hip = get_traj(0.0, -0.4, 0.0, 0.0, tf,dt)
-    q_knee, qd_knee, qdd_knee = get_traj(0.0, 0.10, 0.0, 0., tf, dt)
-    q_ankle, qd_ankle, qdd_ankle = get_traj(-0.349, 0.157-0.1, 0.0, 0.0, tf, dt)
+    tf2 = 4.0
+    q_hip, qd_hip, qdd_hip = get_traj(0.0, -0.3, 0.0, 0.0, tf,dt)
+    q_knee, qd_knee, qdd_knee = get_traj(0.0, 0.20, 0.0, 0., tf, dt)
+    q_ankle, qd_ankle, qdd_ankle = get_traj(-0.349, 0.157+0.2, 0.0, 0.0, tf, dt)
 
-    q_hip2, qd_hip2, qdd_hip2 = get_traj(-0.4, -1.0, 0.0, 0.0, tf2,dt)
-    q_knee2, qd_knee2, qdd_knee2 = get_traj(0.1, 0.5, 0.0, 0., tf2, dt)
-    q_ankle2, qd_ankle2, qdd_ankle2 = get_traj(0.157-0.1, 0.157-0.5, 0.0, 0.0, tf2, dt)
+    q_hip2, qd_hip2, qdd_hip2 = get_traj(-0.3, -1.0, 0.0, 0.0, tf2,dt)
+    q_knee2, qd_knee2, qdd_knee2 = get_traj(0.20, 0.9,  0.0, 0., tf2, dt)
+    q_ankle2, qd_ankle2, qdd_ankle2 = get_traj(0.157+0.2, 0.157+0.1, 0.0, 0.0, tf2, dt)
 
     count = 0
     LARRE.handle.set_rpy(0, 0, 0)
@@ -102,18 +102,20 @@ if __name__ == "__main__":
     standing = True
     while not rospy.is_shutdown():
 
-
+        count = min(count, int(tf/dt)-1)
         if count == 1999:
             if height < -0.23:
-                LARRE.handle.set_force(0,0,0)
+                LARRE.handle.set_force(0, 0, 0.0)
                 standing = False
+                count2 += 1
+                count2 = min(count2, int(tf2/dt)-1)
             else:
                 height -= 0.001
-                LARRE.handle.set_rpy(0.5, 0, 0)
+                LARRE.handle.set_rpy(0.25, 0, 0)
                 LARRE.handle.set_pos(0, 0, height)
 
         else:
-            LARRE.handle.set_rpy(0.5, 0, 0.0)
+            LARRE.handle.set_rpy(0.25, 0, 0.0)
             LARRE.handle.set_pos(0, 0, height)
 
 
@@ -127,8 +129,6 @@ if __name__ == "__main__":
 
             qdd_d = np.array([qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(),
                               qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item()])
-            count += 1
-            count = min(count, int(tf / dt) - 1)
         else:
             q_d = np.array([q_hip2[count2].item(), q_knee2[count2].item(), q_ankle2[count2].item(),
                             q_hip[count].item(), q_knee[count].item(), q_ankle[count].item()])
@@ -139,8 +139,6 @@ if __name__ == "__main__":
             qdd_d = np.array([qdd_hip2[count2].item(), qdd_knee2[count2].item(), qdd_ankle2[count2].item(),
                               qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item()])
 
-            count2 += 1
-            count2 = min(count2, int(tf2 / dt) - 1)
 
         crl.calc_tau(q_d, qd_d, qdd_d)
         msg_vel.data = LARRE.q
@@ -148,7 +146,7 @@ if __name__ == "__main__":
         #leg_plot.update()
         pub.publish(msg_vel)
         pub_goal.publish(msg_goal)
-
+        count += 1
         rate.sleep()
 
     _client.clean_up()
