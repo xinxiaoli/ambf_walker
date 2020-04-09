@@ -45,5 +45,5 @@ class TestController():
         msg.data = tau.tolist()
         self.pub.publish(msg)
         self.pub_goal.publish(self.msg_goal)
-        self._model.send_torque(tau)
+        self._model.update_torque(tau)
         self.count += 1

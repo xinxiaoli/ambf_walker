@@ -17,11 +17,37 @@ class Exoskeleton(Model.Model):
     def __init__(self, client, mass, height):
         super(Exoskeleton, self).__init__(client, mass, height)
         self._handle = self._client.get_obj_handle('Hip')
-        self.q = 6 * [0.0]
-        self.qd = 6 * [0.0]
+        self.q = 7 * [0.0]
+        self.qd = 7 * [0.0]
         time.sleep(2)
         self._state = (self._q, self._qd)
         self._updater.start()
+
+    def update_torque(self, tau):
+        tau[2] *= -1
+        tau[5] *= -1
+        tau[-1] = 0.0
+        super(Exoskeleton, self).update_torque(tau)
+
+    @property
+    def q(self):
+        return self._q
+
+    @property
+    def qd(self):
+        return self._qd
+
+    @q.setter
+    def q(self, value):
+        value[2] *= -1
+        value[5] *= -1
+        self._q = np.array(value)
+
+    @qd.setter
+    def qd(self, value):
+        value[2] *= -1
+        value[5] *= -1
+        self._qd = np.array(value)
 
     @property
     def state(self):
