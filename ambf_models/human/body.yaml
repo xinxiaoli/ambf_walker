@@ -31,8 +31,8 @@ joints:
 - JOINT right_knee
 - JOINT right_shoulder
 - JOINT right_wrist
-high resolution path: new_stl/high_res/
-low resolution path: new_stl/low_res/
+high resolution path: high_res/
+low resolution path: low_res/
 ignore inter-collision: true
 namespace: /ambf/env/
 BODY right_arm_bot:
