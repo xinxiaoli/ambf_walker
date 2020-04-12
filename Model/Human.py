@@ -40,6 +40,27 @@ class Human(Model.Model):
         bodies["left"] = {}
         segments = ["thigh", "shank", "foot"]
 
+        # percent total body weight from average in de Leva
+        per_head = 6.81
+        per_trunk = 43.02
+        per_upper_arm = 2.63
+        per_lower_arm = 1.5 + 0.585     # forearm + hand
+        per_thigh = 14.47
+        per_shank = 4.57
+        per_foot = 1.33
+
+        # mass["head"] = total_mass * per_head
+        # mass["right_arm_top"] = total_mass * per_upper_arm
+        # mass["left_arm_top"] = total_mass * per_upper_arm
+        # mass["right_arm_bot"] = total_mass * per_lower_arm
+        # mass["left_arm_bot"] = total_mass * per_lower_arm
+        # mass["right_thigh"] = total_mass * per_thigh
+        # mass["left_thigh"] = total_mass * per_thigh
+        # mass["right_shin"] = total_mass * per_shank
+        # mass["left_shin"] = total_mass * per_shank
+        # mass["right_foot"] = total_mass * per_foot
+        # mass["left_foot"] = total_mass * per_foot
+
         mass["body"] = 2.37
         mass["head"] = 1.00
         mass["right_arm_top"] = 1.00
@@ -52,6 +73,7 @@ class Human(Model.Model):
         mass["left_shin"] = 1.28
         mass["right_foot"] = 0.86
         mass["left_foot"] = 0.86
+
         parent_dist = {}
         parent_dist["body"] = np.array([0.0, 0.0, 0.0])
 
@@ -98,17 +120,21 @@ class Human(Model.Model):
 
         xtrans.r = parent_dist["left_thigh"]
         self.left_thigh = model.AddBody(self.hip, xtrans, joint_rot_z, bodies["left_thigh"], "left_thigh")
+
         xtrans.E = np.eye(3)
         xtrans.r = parent_dist["left_shank"]
         self.left_shank = model.AddBody(self.left_thigh, xtrans, joint_rot_z, bodies["left_shank"], "left_shank")
+
         xtrans.r = parent_dist["left_foot"]
         self.left_foot = model.AddBody(self.left_shank, xtrans, joint_rot_z, bodies["left_foot"], "left_foot")
 
         xtrans.r = parent_dist["right_thigh"]
         self.right_thigh = model.AddBody(self.hip, xtrans, joint_rot_z, bodies["right_thigh"], "right_thigh")
+
         xtrans.E = np.eye(3)
         xtrans.r = parent_dist["right_shank"]
         self.right_shank = model.AddBody(self.right_thigh, xtrans, joint_rot_z, bodies["right_shank"], "right_shank")
+
         xtrans.r = parent_dist["right_foot"]
         self.right_foot = model.AddBody(self.right_shank, xtrans, joint_rot_z, bodies["right_foot"], "right_foot")
 
@@ -124,5 +150,10 @@ class Human(Model.Model):
 
 
     def update_state(self, q, qd):
-        pass
+        self.get_left_leg().hip.angle.z = q[0]
+        self.get_left_leg().knee.angle.z = q[1]
+        self.get_left_leg().ankle.angle.z = q[2]
 
+        self.get_right_leg().hip.angle.z = q[3]
+        self.get_right_leg().knee.angle.z = q[4]
+        self.get_right_leg().ankle.angle.z = q[5]
