@@ -93,7 +93,7 @@ class Human(Model.Model):
         parent_dist["right_foot"] = np.array([0.0, -0.00623, -0.41995])
 
         parent_dist["left_arm_top"] = np.array([0.21473, 0.00711, 0.15701])
-        parent_dist["left_arm_bot"] = np.array([[0.13306, -0.04375, -0.24511])
+        parent_dist["left_arm_bot"] = np.array([0.13306, -0.04375, -0.24511])
 
         parent_dist["right_arm_top"] = np.array([-0.21473,  0.00711,  0.15701])
         parent_dist["right_arm_bot"] = np.array([-0.12709, -0.04443, -0.24723])
