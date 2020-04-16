@@ -15,11 +15,27 @@ from threading import Thread
 class Human(Model.Model):
 
     def __init__(self, client, mass, height):
+        # inits dynamic model and joints for leg
         super(Human, self).__init__(client, mass, height)
+
+        self._handle = self._client.get_obj_handle('body')
+
+        """
+        state of each segment, format in order of creation:
+        right thigh
+        left thigh
+        right shin
+        left shin
+        right foot
+        left foot
+        body
+        """
+        self.q = 7 * [0.0]
+        self.qd = 7 * [0.0]
 
         time.sleep(2)
         self._state = (self._q, self._qd)
-        self._updater.start()
+        self._updater.start()   # start update thread
 
     @property
     def state(self):
@@ -49,30 +65,30 @@ class Human(Model.Model):
         per_shank = 4.57
         per_foot = 1.33
 
-        # mass["head"] = total_mass * per_head
-        # mass["right_arm_top"] = total_mass * per_upper_arm
-        # mass["left_arm_top"] = total_mass * per_upper_arm
-        # mass["right_arm_bot"] = total_mass * per_lower_arm
-        # mass["left_arm_bot"] = total_mass * per_lower_arm
-        # mass["right_thigh"] = total_mass * per_thigh
-        # mass["left_thigh"] = total_mass * per_thigh
-        # mass["right_shin"] = total_mass * per_shank
-        # mass["left_shin"] = total_mass * per_shank
-        # mass["right_foot"] = total_mass * per_foot
-        # mass["left_foot"] = total_mass * per_foot
+        mass["head"] = total_mass * per_head
+        mass["right_arm_top"] = total_mass * per_upper_arm
+        mass["left_arm_top"] = total_mass * per_upper_arm
+        mass["right_arm_bot"] = total_mass * per_lower_arm
+        mass["left_arm_bot"] = total_mass * per_lower_arm
+        mass["right_thigh"] = total_mass * per_thigh
+        mass["left_thigh"] = total_mass * per_thigh
+        mass["right_shin"] = total_mass * per_shank
+        mass["left_shin"] = total_mass * per_shank
+        mass["right_foot"] = total_mass * per_foot
+        mass["left_foot"] = total_mass * per_foot
 
-        mass["body"] = 2.37
-        mass["head"] = 1.00
-        mass["right_arm_top"] = 1.00
-        mass["left_arm_top"] = 1.00
-        mass["right_arm_bot"] = 1.00
-        mass["left_arm_bot"] = 1.00
-        mass["right_thigh"] = 2.11
-        mass["left_thigh"] = 2.11
-        mass["right_shin"] = 1.28
-        mass["left_shin"] = 1.28
-        mass["right_foot"] = 0.86
-        mass["left_foot"] = 0.86
+        # mass["body"] = 2.37
+        # mass["head"] = 1.00
+        # mass["right_arm_top"] = 1.00
+        # mass["left_arm_top"] = 1.00
+        # mass["right_arm_bot"] = 1.00
+        # mass["left_arm_bot"] = 1.00
+        # mass["right_thigh"] = 2.11
+        # mass["left_thigh"] = 2.11
+        # mass["right_shin"] = 1.28
+        # mass["left_shin"] = 1.28
+        # mass["right_foot"] = 0.86
+        # mass["left_foot"] = 0.86
 
         parent_dist = {}
         parent_dist["body"] = np.array([0.0, 0.0, 0.0])
@@ -146,8 +162,11 @@ class Human(Model.Model):
 
         fk = {}
 
-
-
+    def calculate_dynamics(self, qdd):
+        # Overrides as human has more states. Not sure if really need since upperbody will not be controlled?
+        tau = np.asarray([0.0] * self._joint_num)
+        rbdl.InverseDynamics(self._model, self.q[0:6], self.qd[0:6], qdd[0:6], tau)
+        return tau
 
     def update_state(self, q, qd):
         self.get_left_leg().hip.angle.z = q[0]
