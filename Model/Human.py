@@ -59,13 +59,13 @@ class Human(Model.Model):
         segments = ["thigh", "shank", "foot"]
 
         # percent total body weight from average in de Leva
-        per_head = 6.81
-        per_trunk = 43.02
-        per_upper_arm = 2.63
-        per_lower_arm = 1.5 + 0.585     # forearm + hand
-        per_thigh = 14.47
-        per_shank = 4.57
-        per_foot = 1.33
+        per_head = 6.81/100
+        per_trunk = 43.02/100
+        per_upper_arm = 2.63/100
+        per_lower_arm = (1.5 + 0.585)/100     # forearm + hand
+        per_thigh = 14.47/100
+        per_shank = 4.57/100
+        per_foot = 1.33/100
 
         mass["head"] = total_mass * per_head
         mass["body"] = total_mass * per_trunk
@@ -93,22 +93,22 @@ class Human(Model.Model):
 
         self.num_of_segments = len(parent_dist)
 
-        inertia["body"] = np.diag([0.077847, 0.037547, 0.0])
-        inertia["head"] = np.diag([0.030981, 0.010303, 0.026485])
+        inertia["body"] = np.diag([0.077847, 0.037547, 0.0])*mass["body"]
+        inertia["head"] = np.diag([0.030981, 0.010303, 0.026485])*mass["head"]
 
-        inertia["left_thigh"] = np.diag([0.06323, 0.06404, 0.008088])
-        inertia["left_shank"] = np.diag([0.068736, 0.004477, 0.067222])
-        inertia["left_foot"] = np.diag([0.014174, 0.013262, 0.003501])
+        inertia["left_thigh"] = np.diag([0.06323, 0.06404, 0.008088])*mass["left_thigh"]
+        inertia["left_shank"] = np.diag([0.068736, 0.004477, 0.067222])*mass["left_shank"]
+        inertia["left_foot"] = np.diag([0.014174, 0.013262, 0.003501])*mass["left_foot"]
 
-        inertia["right_thigh"] = np.diag([0.06323, 0.06404, 0.008088])
-        inertia["right_shank"] = np.diag([0.068736, 0.004477, 0.067222])
-        inertia["right_foot"] = np.diag([0.014174, 0.013262, 0.003501])
+        inertia["right_thigh"] = np.diag([0.06323, 0.06404, 0.008088])*mass["right_thigh"]
+        inertia["right_shank"] = np.diag([0.068736, 0.004477, 0.067222])*mass["right_shank"]
+        inertia["right_foot"] = np.diag([0.014174, 0.013262, 0.003501])*mass["right_foot"]
 
-        inertia["left_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])
-        inertia["left_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])
+        inertia["left_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])*mass["left_arm_top"]
+        inertia["left_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])*mass["left_arm_bot"]
 
-        inertia["right_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])
-        inertia["right_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])
+        inertia["right_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])*mass["right_arm_top"]
+        inertia["right_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])*mass["right_arm_bot"]
 
         com["hip"] = np.array([0.00, -0.02, 0.18])
         com["left_thigh"] = np.array([0.02, 0.01, -0.09])
