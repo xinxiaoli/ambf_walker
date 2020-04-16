@@ -56,7 +56,7 @@ class Human(Model.Model):
         inertia = {}
         bodies["right"] = {}
         bodies["left"] = {}
-        segments = ["thigh", "shank", "foot"]
+        segments = ["thigh", "shank", "foot", "arm_bot", "arm_top"]
 
         # percent total body weight from average in de Leva
         per_head = 6.81/100
@@ -82,14 +82,21 @@ class Human(Model.Model):
 
         parent_dist = {}
         parent_dist["body"] = np.array([0.0, 0.0, 0.0])
+        parent_dist["head"] = np.array([0.00002, -0.006489, 0.261994])
 
-        parent_dist["left_thigh"] = np.array([0.237, -0.124, -0.144])
-        parent_dist["left_shank"] = np.array([0.033, -0.03, -0.436])
-        parent_dist["left_foot"] = np.array([0.02, -0.027, -0.39])
+        parent_dist["left_thigh"] = np.array([0.066515, -0.028853, -0.388835])
+        parent_dist["left_shank"] = np.array([[0.05359, 0.00073,  0.40753]])
+        parent_dist["left_foot"] = np.array([0.0,  0.00623, -0.41995])
 
-        parent_dist["right_thigh"] = np.array([-0.237, -0.124, -0.144])
-        parent_dist["right_shank"] = np.array([0.033, -0.03, -0.436])
-        parent_dist["right_foot"] = np.array([0.02, -0.027, -0.39])
+        parent_dist["right_thigh"] = np.array([-0.066515, -0.028853, -0.388835])
+        parent_dist["right_shank"] = np.array([-0.05359, 0.00073,  -0.40752])
+        parent_dist["right_foot"] = np.array([0.0, -0.00623, -0.41995])
+
+        parent_dist["left_arm_top"] = np.array([0.21473, 0.00711, 0.15701])
+        parent_dist["left_arm_bot"] = np.array([[0.13306, -0.04375, -0.24511])
+
+        parent_dist["right_arm_top"] = np.array([-0.21473,  0.00711,  0.15701])
+        parent_dist["right_arm_bot"] = np.array([-0.12709, -0.04443, -0.24723])
 
         self.num_of_segments = len(parent_dist)
 
