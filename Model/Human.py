@@ -93,15 +93,22 @@ class Human(Model.Model):
 
         self.num_of_segments = len(parent_dist)
 
-        inertia["hip"] = np.diag([0.0, 0.0, 0.0])
+        inertia["body"] = np.diag([0.077847, 0.037547, 0.0])
+        inertia["head"] = np.diag([0.030981, 0.010303, 0.026485])
 
-        inertia["left_thigh"] = np.diag([0.0, 0.0, 0.07])
-        inertia["left_shank"] = np.diag([0.18, 0.18, 0.0])
-        inertia["left_foot"] = np.diag([0.07, 0.07, 0.0])
+        inertia["left_thigh"] = np.diag([0.06323, 0.06404, 0.008088])
+        inertia["left_shank"] = np.diag([0.068736, 0.004477, 0.067222])
+        inertia["left_foot"] = np.diag([0.014174, 0.013262, 0.003501])
 
-        inertia["right_thigh"] = np.diag([0.0, 0.00, 0.07])
-        inertia["right_shank"] = np.diag([0.18, 0.18, 0.0])
-        inertia["right_foot"] = np.diag([0.07, 0.07, 0.0])
+        inertia["right_thigh"] = np.diag([0.06323, 0.06404, 0.008088])
+        inertia["right_shank"] = np.diag([0.068736, 0.004477, 0.067222])
+        inertia["right_foot"] = np.diag([0.014174, 0.013262, 0.003501])
+
+        inertia["left_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])
+        inertia["left_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])
+
+        inertia["right_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])
+        inertia["right_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])
 
         com["hip"] = np.array([0.00, -0.02, 0.18])
         com["left_thigh"] = np.array([0.02, 0.01, -0.09])
