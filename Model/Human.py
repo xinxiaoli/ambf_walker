@@ -63,17 +63,17 @@ class Human(Model.Model):
         inertia = {}
         bodies["right"] = {}
         bodies["left"] = {}
-        segments = ["thigh", "calf", "foot"]
+        segments = ["thigh", "shank", "foot", "arm_bot", "arm_top"]
 
         # percent total body weight from average in de Leva
-        per_head = 6.81
-        per_trunk = 43.02
-        per_upper_arm = 2.63
-        per_lower_arm = 1.5
-        per_hand = 0.585
-        per_thigh = 14.47
-        per_calf = 4.57
-        per_foot = 1.33
+        per_head = 6.81/100
+        per_trunk = 43.02/100
+        per_upper_arm = 2.63/100
+        per_lower_arm = 1.5/100     # forearm + hand
+        per_hand = 0.585/100
+        per_thigh = 14.47/100
+        per_calf = 4.57/100
+        per_foot = 1.33/100
 
         mass["head"] = total_mass * per_head
         mass["body"] = total_mass * per_trunk
@@ -85,32 +85,46 @@ class Human(Model.Model):
         mass["left_hand"] = total_mass * per_hand
         mass["right_thigh"] = total_mass * per_thigh
         mass["left_thigh"] = total_mass * per_thigh
-        mass["right_calf"] = total_mass * per_calf
-        mass["left_calf"] = total_mass * per_calf
+        mass["right_shank"] = total_mass * per_calf
+        mass["left_shank"] = total_mass * per_calf
         mass["right_foot"] = total_mass * per_foot
         mass["left_foot"] = total_mass * per_foot
 
         parent_dist["body"] = np.array([0.0, 0.0, 0.0])
+        parent_dist["head"] = np.array([0.00002, -0.006489, 0.261994])
 
-        parent_dist["left_thigh"] = np.array([0.237, -0.124, -0.144])
-        parent_dist["left_calf"] = np.array([0.033, -0.03, -0.436])
-        parent_dist["left_foot"] = np.array([0.02, -0.027, -0.39])
+        parent_dist["left_thigh"] = np.array([0.066515, -0.028853, -0.388835])
+        parent_dist["left_shank"] = np.array([[0.05359, 0.00073,  0.40753]])
+        parent_dist["left_foot"] = np.array([0.0,  0.00623, -0.41995])
 
-        parent_dist["right_thigh"] = np.array([-0.237, -0.124, -0.144])
-        parent_dist["right_calf"] = np.array([0.033, -0.03, -0.436])
-        parent_dist["right_foot"] = np.array([0.02, -0.027, -0.39])
+        parent_dist["right_thigh"] = np.array([-0.066515, -0.028853, -0.388835])
+        parent_dist["right_shank"] = np.array([-0.05359, 0.00073,  -0.40752])
+        parent_dist["right_foot"] = np.array([0.0, -0.00623, -0.41995])
+
+        parent_dist["left_arm_top"] = np.array([0.21473, 0.00711, 0.15701])
+        parent_dist["left_arm_bot"] = np.array([0.13306, -0.04375, -0.24511])
+
+        parent_dist["right_arm_top"] = np.array([-0.21473,  0.00711,  0.15701])
+        parent_dist["right_arm_bot"] = np.array([-0.12709, -0.04443, -0.24723])
 
         self.num_of_segments = len(parent_dist)
 
-        inertia["body"] = np.diag([0.0, 0.0, 0.0])
+        inertia["body"] = np.diag([0.077847, 0.037547, 0.0])*mass["body"]
+        inertia["head"] = np.diag([0.030981, 0.010303, 0.026485])*mass["head"]
 
-        inertia["left_thigh"] = np.diag([0.0, 0.0, 0.07])
-        inertia["left_calf"] = np.diag([0.18, 0.18, 0.0])
-        inertia["left_foot"] = np.diag([0.07, 0.07, 0.0])
+        inertia["left_thigh"] = np.diag([0.06323, 0.06404, 0.008088])*mass["left_thigh"]
+        inertia["left_shank"] = np.diag([0.068736, 0.004477, 0.067222])*mass["left_shank"]
+        inertia["left_foot"] = np.diag([0.014174, 0.013262, 0.003501])*mass["left_foot"]
 
-        inertia["right_thigh"] = np.diag([0.0, 0.00, 0.07])
-        inertia["right_calf"] = np.diag([0.18, 0.18, 0.0])
-        inertia["right_foot"] = np.diag([0.07, 0.07, 0.0])
+        inertia["right_thigh"] = np.diag([0.06323, 0.06404, 0.008088])*mass["right_thigh"]
+        inertia["right_shank"] = np.diag([0.068736, 0.004477, 0.067222])*mass["right_shank"]
+        inertia["right_foot"] = np.diag([0.014174, 0.013262, 0.003501])*mass["right_foot"]
+
+        inertia["left_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])*mass["left_arm_top"]
+        inertia["left_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])*mass["left_arm_bot"]
+
+        inertia["right_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])*mass["right_arm_top"]
+        inertia["right_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])*mass["right_arm_bot"]
 
         com["body"] = np.array([0.00, -0.02, 0.18])
 
