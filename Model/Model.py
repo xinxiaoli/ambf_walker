@@ -103,14 +103,14 @@ class Model(object):
             self.qd = self.handle.get_all_joint_vel()
             self._joint_num = self.q.size
             if self._enable_control:
-                print self.tau
+                print(self.tau)
 
                 self.handle.set_all_joint_effort(self.tau)
             pub_qd.publish(msg)
             rate.sleep()
 
     @abc.abstractmethod
-    def  ambf_to_dyn(self, q):
+    def ambf_to_dyn(self, q):
         pass
 
     @abc.abstractmethod
