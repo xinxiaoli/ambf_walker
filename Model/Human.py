@@ -30,8 +30,9 @@ class Human(Model.Model):
         left foot
         body
         """
-        self.q = 7 * [0.0]
-        self.qd = 7 * [0.0]
+        # num_of_segments should be initialized with the dynamical model, which is created in the constructor
+        self.q = self.num_of_segments * [0.0]
+        self.qd = self.num_of_segments * [0.0]
 
         time.sleep(2)
         self._state = (self._q, self._qd)
@@ -46,6 +47,7 @@ class Human(Model.Model):
         self._state = np.concatenate(value)
 
     def dynamic_model(self, total_mass, height):
+        # TODO: Add joints and bodies for arms and head
 
         model = rbdl.Model()
         bodies = {}
@@ -66,29 +68,17 @@ class Human(Model.Model):
         per_foot = 1.33
 
         mass["head"] = total_mass * per_head
+        mass["body"] = total_mass * per_trunk
         mass["right_arm_top"] = total_mass * per_upper_arm
         mass["left_arm_top"] = total_mass * per_upper_arm
         mass["right_arm_bot"] = total_mass * per_lower_arm
         mass["left_arm_bot"] = total_mass * per_lower_arm
         mass["right_thigh"] = total_mass * per_thigh
         mass["left_thigh"] = total_mass * per_thigh
-        mass["right_shin"] = total_mass * per_shank
-        mass["left_shin"] = total_mass * per_shank
+        mass["right_shank"] = total_mass * per_shank
+        mass["left_shank"] = total_mass * per_shank
         mass["right_foot"] = total_mass * per_foot
         mass["left_foot"] = total_mass * per_foot
-
-        # mass["body"] = 2.37
-        # mass["head"] = 1.00
-        # mass["right_arm_top"] = 1.00
-        # mass["left_arm_top"] = 1.00
-        # mass["right_arm_bot"] = 1.00
-        # mass["left_arm_bot"] = 1.00
-        # mass["right_thigh"] = 2.11
-        # mass["left_thigh"] = 2.11
-        # mass["right_shin"] = 1.28
-        # mass["left_shin"] = 1.28
-        # mass["right_foot"] = 0.86
-        # mass["left_foot"] = 0.86
 
         parent_dist = {}
         parent_dist["body"] = np.array([0.0, 0.0, 0.0])
@@ -100,6 +90,8 @@ class Human(Model.Model):
         parent_dist["right_thigh"] = np.array([-0.237, -0.124, -0.144])
         parent_dist["right_shank"] = np.array([0.033, -0.03, -0.436])
         parent_dist["right_foot"] = np.array([0.02, -0.027, -0.39])
+
+        self.num_of_segments = len(parent_dist)
 
         inertia["hip"] = np.diag([0.0, 0.0, 0.0])
 
@@ -120,7 +112,7 @@ class Human(Model.Model):
         com["right_shank"] = np.array([0.02, -0.007, 0.06])
         com["right_foot"] = np.array([0.08, -0.06, 0.04])
 
-        hip_body = rbdl.Body.fromMassComInertia(mass["hip"], com["hip"], inertia["hip"])
+        hip_body = rbdl.Body.fromMassComInertia(mass["body"], com["hip"], inertia["hip"])
         for segs in segments:
             bodies["right_" + segs] = rbdl.Body.fromMassComInertia(mass["right_" + segs], com["right_" + segs],
                                                                    inertia["right_" + segs])
