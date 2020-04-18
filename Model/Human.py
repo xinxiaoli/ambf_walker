@@ -40,17 +40,17 @@ class Human(Model.Model):
     def state(self, value):
         self._state = np.concatenate(value)
 
-    @q.setter
-    def q(self, value):
-        # TODO: transform RBDL to AMBF
-        self._q = np.asarray(value)
-
-    @qd.setter
-    def qd(self, value):
-        # TODO: transform RBDL to AMBF
-        value[2] *= -1
-        value[5] *= -1
-        self._qd = np.asarray(value)
+    # @q.setter
+    # def q(self, value):
+    #     # TODO: transform RBDL to AMBF
+    #     self._q = np.asarray(value)
+    #
+    # @qd.setter
+    # def qd(self, value):
+    #     # TODO: transform RBDL to AMBF
+    #     value[2] *= -1
+    #     value[5] *= -1
+    #     self._qd = np.asarray(value)
 
 
     def dynamic_model(self, total_mass, height):
