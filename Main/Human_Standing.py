@@ -25,7 +25,7 @@ Kd = np.array([0,gains[0][1],gains[1][1],gains[2][1],gains[3][1],gains[4][1],gai
 
 Controller = PDController(Kp, Kd)
 
-input("Press any key to start standing")
+# input("Press any key to start standing")
 
 # def go(count):
 #
@@ -46,17 +46,17 @@ input("Press any key to start standing")
 #     return cmd
 
 # Loop to stay standing
-while not rospy.is_shutdown():
-    # Get current states
-    q = human.q
-    qd = human.qd
-
-    # Calc effort from PID
-    aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
-
-    # Calc tau from dynamical model
-    tau = human.calculate_dynamics(aq)
-    human.tau = tau
+# while not rospy.is_shutdown():
+#     # Get current states
+#     q = human.q
+#     qd = human.qd
+#
+#     # Calc effort from PID
+#     aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
+#
+#     # Calc tau from dynamical model
+#     tau = human.calculate_dynamics(aq)
+#     human.tau = tau
 
 
 

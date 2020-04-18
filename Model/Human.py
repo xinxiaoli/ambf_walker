@@ -20,9 +20,6 @@ class Human(Model.Model):
         super(Human, self).__init__(client, mass, height)
 
         self.handle = self._client.get_obj_handle('body')
-        self.body_children = ["left_thigh", "left_foot", "left_calf", "left_arm_bot", "left_arm_top", "left_hand",
-                         "right_thigh", "right_foot", "right_calf", "right_arm_bot", "right_arm_top", "right_hand",
-                         "head"]
 
         # num_of_segments should be initialized with the dynamical model, which is created in the constructor
         self.q = self.num_of_segments * [0.0]
@@ -31,6 +28,23 @@ class Human(Model.Model):
         time.sleep(2)
         self._state = (self._q, self._qd)
         self._updater.start()   # start update thread
+
+        """
+        Order of AMBF Joints
+        left hip
+        left ankle
+        left knee
+        left elbow
+        left shoulder
+        left arm bot-left hand
+        neck
+        right hip
+        right ankle
+        right knee
+        right elbow
+        right shoulder
+        right wrist
+        """
 
     @property
     def state(self):
@@ -178,7 +192,7 @@ class Human(Model.Model):
         # Right Hip
         xtrans.r = parent_dist["right_thigh"]
         self.right_thigh = model.AddBody(self.body, xtrans, joint_rot_z, bodies["right_thigh"], "right_thigh")
-        
+
         # Right Knee
         # xtrans.E = np.eye(3)
         xtrans.r = parent_dist["right_calf"]
@@ -187,6 +201,20 @@ class Human(Model.Model):
         # Right Ankle
         xtrans.r = parent_dist["right_foot"]
         self.right_foot = model.AddBody(self.right_calf, xtrans, joint_rot_z, bodies["right_foot"], "right_foot")
+
+        # Left Shoulder
+
+        # Left Elbow
+
+        # Left Wrist
+
+        # Right Shoulder
+
+        # Right Elbow
+
+        # Right Wrist
+
+        # Neck
 
         model.gravity = np.array([0, 0, -9.81])
 
