@@ -2,7 +2,6 @@
 This should be moved to a seperate repo later
 """
 
-
 import abc
 import numpy as np
 import rbdl
@@ -27,23 +26,23 @@ class Human(Model.Model):
 
         time.sleep(2)
         self._state = (self._q, self._qd)
-        self._updater.start()   # start update thread
+        self._updater.start()  # start update thread
 
         """
-        Order of AMBF Joints
-        left hip
-        left ankle
-        left knee
-        left elbow
-        left shoulder
-        left arm bot-left hand
-        neck
-        right hip
-        right ankle
-        right knee
-        right elbow
-        right shoulder
-        right wrist
+        Order of AMBF Joints        Order of RBDL Joints
+        left hip                    left hip
+        left ankle                  left knee
+        left knee                   left ankle
+        left elbow                  right hip
+        left shoulder               right knee
+        left arm bot-left hand      right ankle
+        neck                        left shoulder
+        right hip                   left elbow
+        right ankle                 left wrist
+        right knee                  right shoulder
+        right elbow                 right elbow
+        right shoulder              right wrist
+        right wrist                 neck
         """
 
     @property
@@ -56,7 +55,7 @@ class Human(Model.Model):
 
     # @q.setter
     # def q(self, value):
-    #     # TODO: transform RBDL to AMBF
+    #     # TODO: transform AMBF to RBDL
     #     self._q = np.asarray(value)
     #
     # @qd.setter
@@ -65,7 +64,6 @@ class Human(Model.Model):
     #     value[2] *= -1
     #     value[5] *= -1
     #     self._qd = np.asarray(value)
-
 
     def dynamic_model(self, total_mass, height):
         # TODO: Add joints and bodies for arms and head
@@ -81,14 +79,14 @@ class Human(Model.Model):
         segments = ["thigh", "calf", "foot", "arm_bot", "arm_top"]
 
         # percent total body weight from average in de Leva
-        per_head = 6.81/100
-        per_trunk = 43.02/100
-        per_upper_arm = 2.63/100
-        per_lower_arm = 1.5/100
-        per_hand = 0.585/100
-        per_thigh = 14.47/100
-        per_calf = 4.57/100
-        per_foot = 1.33/100
+        per_head = 6.81 / 100
+        per_trunk = 43.02 / 100
+        per_upper_arm = 2.63 / 100
+        per_lower_arm = 1.5 / 100
+        per_hand = 0.585 / 100
+        per_thigh = 14.47 / 100
+        per_calf = 4.57 / 100
+        per_foot = 1.33 / 100
 
         # Masses for each of the segments based off of percents
         mass["head"] = total_mass * per_head
@@ -110,44 +108,43 @@ class Human(Model.Model):
         mass["right_arm_bot"] = total_mass * per_lower_arm
         mass["right_hand"] = total_mass * per_hand
 
-
         # Distance of CoM from its parent
         parent_dist["body"] = np.array([0.0, 0.0, 0.0])
         parent_dist["head"] = np.array([0.00002, -0.006489, 0.261994])
 
         parent_dist["left_thigh"] = np.array([0.066515, -0.028853, -0.388835])
-        parent_dist["left_calf"] = np.array([[0.05359, 0.00073,  0.40753]])
-        parent_dist["left_foot"] = np.array([0.0,  0.00623, -0.41995])
+        parent_dist["left_calf"] = np.array([[0.05359, 0.00073, 0.40753]])
+        parent_dist["left_foot"] = np.array([0.0, 0.00623, -0.41995])
 
         parent_dist["right_thigh"] = np.array([-0.066515, -0.028853, -0.388835])
-        parent_dist["right_calf"] = np.array([-0.05359, 0.00073,  -0.40752])
+        parent_dist["right_calf"] = np.array([-0.05359, 0.00073, -0.40752])
         parent_dist["right_foot"] = np.array([0.0, -0.00623, -0.41995])
 
         parent_dist["left_arm_top"] = np.array([0.21473, 0.00711, 0.15701])
         parent_dist["left_arm_bot"] = np.array([0.13306, -0.04375, -0.24511])
 
-        parent_dist["right_arm_top"] = np.array([-0.21473,  0.00711,  0.15701])
+        parent_dist["right_arm_top"] = np.array([-0.21473, 0.00711, 0.15701])
         parent_dist["right_arm_bot"] = np.array([-0.12709, -0.04443, -0.24723])
 
         self.num_of_segments = len(parent_dist)
 
         # Inertial Matrices for each segment
-        inertia["body"] = np.diag([0.077847, 0.037547, 0.0])*mass["body"]
-        inertia["head"] = np.diag([0.030981, 0.010303, 0.026485])*mass["head"]
+        inertia["body"] = np.diag([0.077847, 0.037547, 0.0]) * mass["body"]
+        inertia["head"] = np.diag([0.030981, 0.010303, 0.026485]) * mass["head"]
 
-        inertia["left_thigh"] = np.diag([0.06323, 0.06404, 0.008088])*mass["left_thigh"]
-        inertia["left_calf"] = np.diag([0.068736, 0.004477, 0.067222])*mass["left_calf"]
-        inertia["left_foot"] = np.diag([0.014174, 0.013262, 0.003501])*mass["left_foot"]
+        inertia["left_thigh"] = np.diag([0.06323, 0.06404, 0.008088]) * mass["left_thigh"]
+        inertia["left_calf"] = np.diag([0.068736, 0.004477, 0.067222]) * mass["left_calf"]
+        inertia["left_foot"] = np.diag([0.014174, 0.013262, 0.003501]) * mass["left_foot"]
 
-        inertia["right_thigh"] = np.diag([0.06323, 0.06404, 0.008088])*mass["right_thigh"]
-        inertia["right_calf"] = np.diag([0.068736, 0.004477, 0.067222])*mass["right_calf"]
-        inertia["right_foot"] = np.diag([0.014174, 0.013262, 0.003501])*mass["right_foot"]
+        inertia["right_thigh"] = np.diag([0.06323, 0.06404, 0.008088]) * mass["right_thigh"]
+        inertia["right_calf"] = np.diag([0.068736, 0.004477, 0.067222]) * mass["right_calf"]
+        inertia["right_foot"] = np.diag([0.014174, 0.013262, 0.003501]) * mass["right_foot"]
 
-        inertia["left_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])*mass["left_arm_top"]
-        inertia["left_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])*mass["left_arm_bot"]
+        inertia["left_arm_top"] = np.diag([0.035737, 0.020891, 0.018449]) * mass["left_arm_top"]
+        inertia["left_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787]) * mass["left_arm_bot"]
 
-        inertia["right_arm_top"] = np.diag([0.035737, 0.020891, 0.018449])*mass["right_arm_top"]
-        inertia["right_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787])*mass["right_arm_bot"]
+        inertia["right_arm_top"] = np.diag([0.035737, 0.020891, 0.018449]) * mass["right_arm_top"]
+        inertia["right_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787]) * mass["right_arm_bot"]
 
         # Center of masses
         com["body"] = np.array([0.00, -0.02, 0.18])
@@ -221,7 +218,6 @@ class Human(Model.Model):
         return model
 
     def fk(self):
-
         fk = {}
 
     def calculate_dynamics(self, qdd):
@@ -229,3 +225,37 @@ class Human(Model.Model):
         tau = np.asarray([0.0] * self._joint_num)
         rbdl.InverseDynamics(self._model, self.q, self.qd, qdd, tau)
         return tau
+
+    def ambf_to_rbdl(self, input_q, reverse = false):
+        """
+        bool reverse: to transfrom rbdl to ambf
+        Order of AMBF Joints        Order of RBDL Joints
+        1  left hip                    left hip
+        2  left ankle                  left knee
+        3  left knee                   left ankle
+        4  left elbow                  right hip
+        5  left shoulder               right knee
+        6  left arm bot-left hand      right ankle
+        7  neck                        left shoulder
+        8  right hip                   left elbow
+        9  right ankle                 left wrist
+        10 right knee                  right shoulder
+        11 right elbow                 right elbow
+        12 right shoulder              right wrist
+        13 right wrist                 neck
+        """
+        # order of rbdl wrt ambf
+        rbdl_order = [1, 3, 2, 8, 10, 9, 5, 4, 6, 12, 11, 13, 7]
+        # for now, this order is included since we don't have the arm joints yet
+        rbdl_order_lower = rbdl_order[:7]
+
+        order = rbdl_order_lower
+        transformed_q = len(order)
+
+        for i in range(len(order)):
+            if not reverse:
+                transformed_q[i] = input_q[order[i]]
+            else:
+                transformed_q[order[i]] = input_q[i]
+
+        return transformed_q

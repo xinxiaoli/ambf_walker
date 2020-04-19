@@ -7,7 +7,6 @@ from Model.Human import Human
 import rospy
 import ambf_msgs.msg as ambf
 
-
 # Create Client and connect
 _client = Client()
 _client.connect()
@@ -18,54 +17,26 @@ q_goal = [0.0] * 7
 qd_goal = [0.0] * 7
 qdd_goal = [0.0] * 7
 
-gains = ( [ 510,36.8],[565,42.89],[354,45.2],[ 510,36.8],[565,42.89],[354,45.2])
+gains = ([510, 36.8], [565, 42.89], [354, 45.2], [510, 36.8], [565, 42.89], [354, 45.2])
 
-Kp = np.array([0,gains[0][0],gains[1][0],gains[2][0],gains[3][0],gains[4][0],gains[5][0] ])
-Kd = np.array([0,gains[0][1],gains[1][1],gains[2][1],gains[3][1],gains[4][1],gains[5][1] ])
+Kp = np.array([0, gains[0][0], gains[1][0], gains[2][0], gains[3][0], gains[4][0], gains[5][0]])
+Kd = np.array([0, gains[0][1], gains[1][1], gains[2][1], gains[3][1], gains[4][1], gains[5][1]])
 
 Controller = PDController(Kp, Kd)
 
-# input("Press any key to start standing")
 
-# def go(count):
-#
-#     q = h.q
-#     qd = h.qd
-#
-#     for i in range(6):
-#         q_goal[i] = 0
-#         qd_goal[i] = 0
-#         qdd_goal[i] = 0
-#
-#     aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
-#     tau = h.calculate_dynamics(aq)
-#
-#     for i in range(6):
-#         cmd[i] = tau[i + 1]
-#
-#     return cmd
+# val = input("Press 'S' to start standing. Press any other button to go to live-interface. You can call 'loop()' later")
 
 # Loop to stay standing
-# while not rospy.is_shutdown():
-#     # Get current states
-#     q = human.q
-#     qd = human.qd
-#
-#     # Calc effort from PID
-#     aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
-#
-#     # Calc tau from dynamical model
-#     tau = human.calculate_dynamics(aq)
-#     human.tau = tau
+def loop():
+    while not rospy.is_shutdown():
+        # Get current states
+        q = human.q
+        qd = human.qd
 
+        # Calc effort from PID
+        aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
 
-
-
-
-
-
-
-
-
-
-
+        # Calc tau from dynamical model
+        tau = human.calculate_dynamics(aq)
+        human.tau = tau
