@@ -138,7 +138,7 @@ class Human(Model.Model):
         inertia["left_calf"] = np.diag([0.05865, 0.0, 0.0]) * mass["left_calf"]
         inertia["left_foot"] = np.diag([0.174576, 0.173107, 0.0]) * mass["left_foot"]
 
-        inertia["right_thigh"] = np.diag([0.06323, 0.06404, 0.008088]) * mass["right_thigh"]  # needs to be fixed in blender
+        inertia["right_thigh"] = np.diag([-0.3066, -0.3041, 0.0309]) * mass["right_thigh"]  # needs to be fixed in blender
         inertia["right_calf"] = np.diag([0.058648, 0.0, 0.0]) * mass["right_calf"]
         inertia["right_foot"] = np.diag([0.174573, 0.173105, 0.0]) * mass["right_foot"]
 
@@ -147,7 +147,7 @@ class Human(Model.Model):
         inertia["left_hand"] = np.diag([0.14476, 0.148051, 0.020571]) * mass["left_hand"]
 
         inertia["right_arm_top"] = np.diag([0.240887, 0.218034, 0.0]) * mass["right_arm_top"]
-        inertia["right_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787]) * mass["right_arm_bot"]  # needs to be fixed in blender
+        inertia["right_arm_bot"] = np.diag([-0.2124, -0.2126, -0.0228]) * mass["right_arm_bot"]  # needs to be fixed in blender
         inertia["right_hand"] = np.diag([0.144774, 0.148058, 0.020569]) * mass["right_hand"]
 
         # Center of masses
@@ -158,7 +158,7 @@ class Human(Model.Model):
         com["left_calf"] = np.array([0.000001, -0.201606, -0.025365])
         com["left_foot"] = np.array([0.000013, -0.02361, 0.079922])
 
-        com["right_thigh"] = np.array([0, 0, 0])  # needs to be fixed in blender
+        com["right_thigh"] = np.array([-0.042817, 0.010513, -0.184988])  # needs to be fixed in blender
         com["right_calf"] = np.array([0.000001, -0.201603, -0.025365])
         com["right_foot"] = np.array([0.000013, -0.023609, 0.079921])
 
@@ -167,7 +167,7 @@ class Human(Model.Model):
         com["left_hand"] = np.array([-0.033968, 0.008122, 0.068737])
 
         com["right_arm_top"] = np.array([-0.008303, -0.089742, 0.097849])
-        com["right_arm_bot"] = np.array([0, 0, 0])  # needs to be fixed in blender
+        com["right_arm_bot"] = np.array([0.006707, -0.012308, -0.113982])  # needs to be fixed in blender
         com["right_hand"] = np.array([0.033968, 0.008124, 0.068738])
 
 
