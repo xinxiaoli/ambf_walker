@@ -219,19 +219,30 @@ class Human(Model.Model):
         self.left_arm_top = model.AddBody(self.body, xtrans, joint_rot_z, bodies["left_arm_top"], "left_arm_top")
 
         # Left Elbow
-        xtrans.r = [arent]
+        xtrans.r = parent_dist["left_arm_bot"]
+        self.left_arm_bot = model.AddBody(self.left_arm_top, xtrans, joint_rot_z, bodies["left_arm_bot"],
+                                          "left_arm_bot")
 
         # Left Wrist
+        xtrans.r = parent_dist["left_hand"]
+        self.left_hand = model.AddBody(self.left_arm_bot, xtrans, joint_rot_z, bodies["left_hand"], "left_hand")
 
         # Right Shoulder
         xtrans.r = parent_dist["right_arm_top"]
         self.right_arm_top = model.AddBody(self.body, xtrans, joint_rot_z, bodies["right_arm_top"], "right_arm_top")
 
         # Right Elbow
+        xtrans.r = parent_dist["right_arm_bot"]
+        self.right_arm_bot = model.AddBody(self.right_arm_top, xtrans, joint_rot_z, bodies["right_arm_bot"],
+                                          "right_arm_bot")
 
         # Right Wrist
+        xtrans.r = parent_dist["right_hand"]
+        self.right_hand = model.AddBody(self.right_arm_bot, xtrans, joint_rot_z, bodies["right_hand"], "right_hand")
 
         # Neck
+        xtrans.r = parent_dist["head"]
+        self.head = model.AddBody(self.body, xtrans, joint_rot_z, bodies["head"], "head")
 
         model.gravity = np.array([0, 0, -9.81])
 
