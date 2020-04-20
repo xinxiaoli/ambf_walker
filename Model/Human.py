@@ -76,7 +76,7 @@ class Human(Model.Model):
         inertia = {}
         bodies["right"] = {}
         bodies["left"] = {}
-        segments = ["thigh", "calf", "foot", "arm_bot", "arm_top"]
+        segments = ["thigh", "calf", "foot", "arm_bot", "arm_top", "hand"]
 
         # percent total body weight from average in de Leva
         per_head = 6.81 / 100
@@ -113,7 +113,7 @@ class Human(Model.Model):
         parent_dist["head"] = np.array([0.00002, -0.006489, 0.261994])
 
         parent_dist["left_thigh"] = np.array([0.066515, -0.028853, -0.388835])
-        parent_dist["left_calf"] = np.array([[0.05359, 0.00073, 0.40753]])
+        parent_dist["left_calf"] = np.array([0.05359, 0.00073, 0.40753])
         parent_dist["left_foot"] = np.array([0.0, 0.00623, -0.41995])
 
         parent_dist["right_thigh"] = np.array([-0.066515, -0.028853, -0.388835])
@@ -122,7 +122,7 @@ class Human(Model.Model):
 
         parent_dist["left_arm_top"] = np.array([0.21473, 0.00711, 0.15701])
         parent_dist["left_arm_bot"] = np.array([0.13306, -0.04375, -0.24511])
-        parent_dist["left_hand"] = np.array([-0.76922, -0.09107, -0.2435 ])
+        parent_dist["left_hand"] = np.array([-0.76922, -0.09107, -0.2435])
 
         parent_dist["right_arm_top"] = np.array([-0.21473, 0.00711, 0.15701])
         parent_dist["right_arm_bot"] = np.array([-0.12709, -0.04443, -0.24723])
@@ -257,7 +257,7 @@ class Human(Model.Model):
         rbdl.InverseDynamics(self._model, self.q, self.qd, qdd, tau)
         return tau
 
-    def ambf_to_rbdl(self, input_q, reverse = false):
+    def ambf_to_rbdl(self, input_q, reverse = False):
         """
         bool reverse: to transfrom rbdl to ambf
         Order of AMBF Joints        Order of RBDL Joints
@@ -280,7 +280,7 @@ class Human(Model.Model):
         # for now, this order is included since we don't have the arm joints yet
         rbdl_order_lower = rbdl_order[:7]
 
-        order = rbdl_order_lower
+        order = rbdl_order
         transformed_q = len(order)
 
         for i in range(len(order)):
