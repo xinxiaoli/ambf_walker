@@ -215,12 +215,17 @@ class Human(Model.Model):
         self.right_foot = model.AddBody(self.right_calf, xtrans, joint_rot_z, bodies["right_foot"], "right_foot")
 
         # Left Shoulder
+        xtrans.r = parent_dist["left_arm_top"]
+        self.left_arm_top = model.AddBody(self.body, xtrans, joint_rot_z, bodies["left_arm_top"], "left_arm_top")
 
         # Left Elbow
+        xtrans.r = [arent]
 
         # Left Wrist
 
         # Right Shoulder
+        xtrans.r = parent_dist["right_arm_top"]
+        self.right_arm_top = model.AddBody(self.body, xtrans, joint_rot_z, bodies["right_arm_top"], "right_arm_top")
 
         # Right Elbow
 
