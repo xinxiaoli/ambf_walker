@@ -108,7 +108,7 @@ class Human(Model.Model):
         mass["right_arm_bot"] = total_mass * per_lower_arm
         mass["right_hand"] = total_mass * per_hand
 
-        # Distance of CoM from its parent
+        # Distance of base of link from its parent
         parent_dist["body"] = np.array([0.0, 0.0, 0.0])
         parent_dist["head"] = np.array([0.00002, -0.006489, 0.261994])
 
@@ -122,9 +122,11 @@ class Human(Model.Model):
 
         parent_dist["left_arm_top"] = np.array([0.21473, 0.00711, 0.15701])
         parent_dist["left_arm_bot"] = np.array([0.13306, -0.04375, -0.24511])
+        parent_dist["left_hand"] = np.array([-0.76922, -0.09107, -0.2435 ])
 
         parent_dist["right_arm_top"] = np.array([-0.21473, 0.00711, 0.15701])
         parent_dist["right_arm_bot"] = np.array([-0.12709, -0.04443, -0.24723])
+        parent_dist["right_hand"] = np.array([-0.07497, -0.09137, -0.24297])
 
         self.num_of_segments = len(parent_dist)
 
@@ -142,9 +144,11 @@ class Human(Model.Model):
 
         inertia["left_arm_top"] = np.diag([0.035737, 0.020891, 0.018449]) * mass["left_arm_top"]
         inertia["left_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787]) * mass["left_arm_bot"]
+        inertia["left_hand"] = np.diag([0.00722, 0.009424, 0.003174]) * mass["left_hand"]
 
         inertia["right_arm_top"] = np.diag([0.035737, 0.020891, 0.018449]) * mass["right_arm_top"]
         inertia["right_arm_bot"] = np.diag([0.01537, 0.015327, 0.001787]) * mass["right_arm_bot"]
+        inertia["right_hand"] = np.diag([0.144774, 0.148058, 0.020569]) * mass["right_hand"]
 
         # Center of masses
         com["body"] = np.array([0.00, -0.02, 0.18])
