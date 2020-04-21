@@ -76,7 +76,8 @@ class Human(Model.Model):
         inertia = {}
         bodies["right"] = {}
         bodies["left"] = {}
-        segments = ["thigh", "calf", "foot", "arm_bot", "arm_top"]
+        # segments = ["thigh", "calf", "foot", "arm_bot", "arm_top"]
+        segments = ["thigh", "calf", "foot"]
 
         # percent total body weight from average in de Leva
         per_head = 6.81 / 100
@@ -113,7 +114,7 @@ class Human(Model.Model):
         parent_dist["head"] = np.array([0.00002, -0.006489, 0.261994])
 
         parent_dist["left_thigh"] = np.array([0.066515, -0.028853, -0.388835])
-        parent_dist["left_calf"] = np.array([[0.05359, 0.00073, 0.40753]])
+        parent_dist["left_calf"] = np.array([0.05359, 0.00073, 0.40753])
         parent_dist["left_foot"] = np.array([0.0, 0.00623, -0.41995])
 
         parent_dist["right_thigh"] = np.array([-0.066515, -0.028853, -0.388835])
@@ -178,7 +179,7 @@ class Human(Model.Model):
         self.left_thigh = model.AddBody(self.body, xtrans, joint_rot_z, bodies["left_thigh"], "left_thigh")
 
         # Left Knee
-        # xtrans.E = np.eye(3)
+        xtrans.E = np.eye(3)
         xtrans.r = parent_dist["left_calf"]
         self.left_calf = model.AddBody(self.left_thigh, xtrans, joint_rot_z, bodies["left_calf"], "left_calf")
 
@@ -191,7 +192,7 @@ class Human(Model.Model):
         self.right_thigh = model.AddBody(self.body, xtrans, joint_rot_z, bodies["right_thigh"], "right_thigh")
 
         # Right Knee
-        # xtrans.E = np.eye(3)
+        xtrans.E = np.eye(3)
         xtrans.r = parent_dist["right_calf"]
         self.right_calf = model.AddBody(self.right_thigh, xtrans, joint_rot_z, bodies["right_calf"], "right_calf")
 
@@ -223,10 +224,10 @@ class Human(Model.Model):
     def calculate_dynamics(self, qdd):
         # Overrides as human has more states. Not sure if really need since upperbody will not be controlled?
         tau = np.asarray([0.0] * self._joint_num)
-        rbdl.InverseDynamics(self._model, self.q, self.qd, qdd, tau)
-        return tau
+        rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(self.q), self.ambf_to_rbdl(self.qd), self.ambf_to_rbdl(qdd), tau)
+        return self.ambf_to_rbdl(tau, reverse=True)
 
-    def ambf_to_rbdl(self, input_q, reverse = false):
+    def ambf_to_rbdl(self, input, reverse=False):
         """
         bool reverse: to transfrom rbdl to ambf
         Order of AMBF Joints        Order of RBDL Joints
@@ -250,12 +251,14 @@ class Human(Model.Model):
         rbdl_order_lower = rbdl_order[:7]
 
         order = rbdl_order_lower
-        transformed_q = len(order)
+        transformed = len(order)
 
+        print(input)
+        print(order)
         for i in range(len(order)):
             if not reverse:
-                transformed_q[i] = input_q[order[i]]
+                transformed[i] = input[order[i]]
             else:
-                transformed_q[order[i]] = input_q[i]
+                transformed[order[i]] = input[i]
 
-        return transformed_q
+        return transformed

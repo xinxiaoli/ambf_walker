@@ -29,14 +29,16 @@ Controller = PDController(Kp, Kd)
 
 # Loop to stay standing
 def loop():
+    rate = rospy.Rate(1000)
     while not rospy.is_shutdown():
         # Get current states
-        q = human.q
-        qd = human.qd
+        q = human.q[:7]
+        qd = human.qd[:7]
 
         # Calc effort from PID
-        aq = qdd_goal + Controller.calc(q_goal - q, qd_goal - qd)
+        aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
 
         # Calc tau from dynamical model
         tau = human.calculate_dynamics(aq)
         human.tau = tau
+        rate.sleep()
