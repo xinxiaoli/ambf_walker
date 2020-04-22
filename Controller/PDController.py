@@ -29,3 +29,6 @@ class PDController(object):
 
     def get_tau(self, e, ed):
         return self.kp.dot(e) + self.kd.dot(ed)
+
+    def get_tau_multiply(self, e, ed):
+        return np.multiply(self.kp, e) + np.multiply(self.kd, ed)

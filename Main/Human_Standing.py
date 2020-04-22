@@ -10,20 +10,18 @@ import ambf_msgs.msg as ambf
 # Create Client and connect
 _client = Client()
 _client.connect()
-print(_client.get_obj_names())
+rospy.sleep(1)
 
 human = Human(_client, 50, 1.5)
 left_order = human.ambf_order_crutch_left
 right_order = human.ambf_order_crutch_right
 joints = human.handle.get_joint_names()
+print(joints)
 
-print("Setting pos to 0 for all")
-# body = human.handle
+# print("Setting pos to 0 for all")
+body = human.handle
 # body.set_pos(0,0,0)
-# children = body.get_children_names()
-#
-# for child in children:
-#     _client.get_obj_handle(child).set_pos(0,0,0)
+children = body.get_children_names()
 
 num_joints = len(joints)
 q_goal = np.array([0.0] * num_joints)
@@ -32,37 +30,38 @@ qdd_goal = np.array([0.0] * num_joints)
 
 Controller = PDController(0,0)
 
-K_hip = [10, 0]
-K_knee = [10, 0]
-K_ankle = [10, 0]
+k_hip = [1, 1]
+k_knee = [1, 1]
+k_ankle = [10, 1]
 
 
 def init_k_vals():
-    Kp = np.zeros(num_joints)
-    Kp[left_order['hip']] = K_hip[0]
-    Kp[left_order['knee']] = K_knee[0]
-    Kp[left_order['ankle']] = K_ankle[0]
-    Kp[right_order['hip']] = K_hip[0]
-    Kp[right_order['knee']] = K_knee[0]
-    Kp[right_order['ankle']] = K_ankle[0]
+    kp = np.zeros(num_joints)
+    kp[left_order['hip']] = k_hip[0]
+    kp[left_order['knee']] = k_knee[0]
+    kp[left_order['ankle']] = k_ankle[0]
+    kp[right_order['hip']] = k_hip[0]
+    kp[right_order['knee']] = k_knee[0]
+    kp[right_order['ankle']] = k_ankle[0]
 
-    Kd = np.zeros(num_joints)
-    Kd[left_order['hip']] = K_hip[1]
-    Kd[left_order['knee']] = K_knee[1]
-    Kd[left_order['ankle']] = K_ankle[1]
-    Kd[right_order['hip']] = K_hip[1]
-    Kd[right_order['knee']] = K_knee[1]
-    Kd[right_order['ankle']] = K_ankle[1]
+    kd = np.zeros(num_joints)
+    kd[left_order['hip']] = k_hip[1]
+    kd[left_order['knee']] = k_knee[1]
+    kd[left_order['ankle']] = k_ankle[1]
+    kd[right_order['hip']] = k_hip[1]
+    kd[right_order['knee']] = k_knee[1]
+    kd[right_order['ankle']] = k_ankle[1]
 
-    Kp = np.diag(Kp)
-    Kd = np.diag(Kd)
+    kp = np.diag(kp)
+    kd = np.diag(kd)
 
-    Controller = PDController(Kp, Kd)
+    Controller = PDController(kp, kd)
     return Controller
 
 
 # Loop to stay standing
 def loop():
+    Controller = init_k_vals()
     # rate = rospy.Rate(100)
     start = rospy.get_time()
     now = rospy.get_time()
@@ -84,5 +83,6 @@ def loop():
         # rate.sleep()
     print("5 seconds over")
 
-Controller = init_k_vals()
+
 # loop()
+
