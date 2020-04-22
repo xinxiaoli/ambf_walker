@@ -26,9 +26,9 @@ print("Setting pos to 0 for all")
 #     _client.get_obj_handle(child).set_pos(0,0,0)
 
 num_joints = len(joints)
-q_goal = [0.0] * num_joints
-qd_goal = [0.0] * num_joints
-qdd_goal = [0.0] * num_joints
+q_goal = np.array([0.0] * num_joints)
+qd_goal = np.array([0.0] * num_joints)
+qdd_goal = np.array([0.0] * num_joints)
 
 Controller = PDController(0,0)
 
@@ -68,11 +68,12 @@ def loop():
         # Get current states
         q = human.q
         qd = human.qd
-
+        print("Q: ")
+        print(q)
         # Calc effort from PID
         aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
-        # print("Aq:")
-        # print(aq)
+        print("Aq:")
+        print(aq)
 
         # Calc tau from dynamical model
         tau = human.calculate_dynamics(aq)
