@@ -73,8 +73,8 @@ class Model(object):
 
     @qd.setter
     def qd(self, value):
-        value[2] *= -1
-        value[5] *= -1
+        # value[2] *= -1
+        # value[5] *= -1
         self._qd = np.asarray(value)
 
     @property
@@ -103,7 +103,7 @@ class Model(object):
             self.qd = self.handle.get_all_joint_vel()
             self._joint_num = self.q.size
             if self._enable_control:
-                print(self.tau)
+                # print(self.tau)
 
                 self.handle.set_all_joint_effort(self.tau)
             pub_qd.publish(msg)

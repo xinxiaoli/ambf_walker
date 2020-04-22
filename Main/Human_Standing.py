@@ -13,32 +13,72 @@ _client.connect()
 print(_client.get_obj_names())
 
 human = Human(_client, 50, 1.5)
-q_goal = [0.0] * 7
-qd_goal = [0.0] * 7
-qdd_goal = [0.0] * 7
+left_order = human.ambf_order_crutch_left
+right_order = human.ambf_order_crutch_right
+joints = human.handle.get_joint_names()
 
-gains = ([510, 36.8], [565, 42.89], [354, 45.2], [510, 36.8], [565, 42.89], [354, 45.2])
+print("Setting pos to 0 for all")
+# body = human.handle
+# body.set_pos(0,0,0)
+# children = body.get_children_names()
+#
+# for child in children:
+#     _client.get_obj_handle(child).set_pos(0,0,0)
 
-Kp = np.array([0, gains[0][0], gains[1][0], gains[2][0], gains[3][0], gains[4][0], gains[5][0]])
-Kd = np.array([0, gains[0][1], gains[1][1], gains[2][1], gains[3][1], gains[4][1], gains[5][1]])
+num_joints = len(joints)
+q_goal = [0.0] * num_joints
+qd_goal = [0.0] * num_joints
+qdd_goal = [0.0] * num_joints
 
-Controller = PDController(Kp, Kd)
+Controller = PDController(0,0)
+
+K_hip = [10, 0]
+K_knee = [10, 0]
+K_ankle = [10, 0]
 
 
-# val = input("Press 'S' to start standing. Press any other button to go to live-interface. You can call 'loop()' later")
+def init_k_vals():
+    Kp = np.zeros(num_joints)
+    Kp[left_order['hip']] = K_hip[0]
+    Kp[left_order['knee']] = K_knee[0]
+    Kp[left_order['ankle']] = K_ankle[0]
+    Kp[right_order['hip']] = K_hip[0]
+    Kp[right_order['knee']] = K_knee[0]
+    Kp[right_order['ankle']] = K_ankle[0]
+
+    Kd = np.zeros(num_joints)
+    Kd[left_order['hip']] = K_hip[1]
+    Kd[left_order['knee']] = K_knee[1]
+    Kd[left_order['ankle']] = K_ankle[1]
+    Kd[right_order['hip']] = K_hip[1]
+    Kd[right_order['knee']] = K_knee[1]
+    Kd[right_order['ankle']] = K_ankle[1]
+
+    Controller = PDController(Kp, Kd)
+    return Controller
+
 
 # Loop to stay standing
 def loop():
-    rate = rospy.Rate(1000)
-    while not rospy.is_shutdown():
+    # rate = rospy.Rate(100)
+    start = rospy.get_time()
+    now = rospy.get_time()
+    while abs(now - start) < 5:
+        now = rospy.get_time()
         # Get current states
-        q = human.q[:7]
-        qd = human.qd[:7]
+        q = human.q
+        qd = human.qd
 
         # Calc effort from PID
         aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
+        # print("Aq:")
+        # print(aq)
 
         # Calc tau from dynamical model
         tau = human.calculate_dynamics(aq)
-        human.tau = tau
-        rate.sleep()
+        human.update_torque(tau)
+        # rate.sleep()
+    print("5 seconds over")
+
+Controller = init_k_vals()
+# loop()

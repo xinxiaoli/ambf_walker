@@ -21,29 +21,16 @@ class Human(Model.Model):
         self.handle = self._client.get_obj_handle('body')
 
         # num_of_segments should be initialized with the dynamical model, which is created in the constructor
-        self.q = self.num_of_segments * [0.0]
-        self.qd = self.num_of_segments * [0.0]
+        self.num_joints = len(self.handle.get_joint_names())
+        self.q = self.num_joints * [0.0]
+        self.qd = self.num_joints * [0.0]
 
         time.sleep(2)
         self._state = (self._q, self._qd)
         self._updater.start()  # start update thread
 
-        """
-        Order of AMBF Joints        Order of RBDL Joints
-        left hip                    left hip
-        left ankle                  left knee
-        left knee                   left ankle
-        left elbow                  right hip
-        left shoulder               right knee
-        left arm bot-left hand      right ankle
-        neck                        left shoulder
-        right hip                   left elbow
-        right ankle                 left wrist
-        right knee                  right shoulder
-        right elbow                 right elbow
-        right shoulder              right wrist
-        right wrist                 neck
-        """
+        self.ambf_order_crutch_left = {'crutch': 0, 'hip': 1, 'ankle': 2, 'knee': 3, 'elbow': 4, 'shoulder': 5, 'wrist': 6, 'neck': 7}
+        self.ambf_order_crutch_right = {'crutch': 8, 'hip': 9, 'ankle': 10, 'knee': 11, 'elbow': 12, 'shoulder': 13, 'wrist': 14, 'neck': 7}
 
     @property
     def state(self):
@@ -255,11 +242,11 @@ class Human(Model.Model):
 
     def calculate_dynamics(self, qdd):
         # Overrides as human has more states. Not sure if really need since upperbody will not be controlled?
-        tau = np.asarray([0.0] * self._joint_num)
+        tau = np.asarray([0.0] * self.num_joints)
         rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(self.q), self.ambf_to_rbdl(self.qd), self.ambf_to_rbdl(qdd), tau)
         return self.ambf_to_rbdl(tau, reverse=True)
 
-    def ambf_to_rbdl(self, input, reverse=False):
+    def ambf_to_rbdl(self, input_arr, reverse=False):
         """
         bool reverse: to transfrom rbdl to ambf
         Order of AMBF Joints        Order of RBDL Joints
@@ -277,20 +264,42 @@ class Human(Model.Model):
         12 right shoulder              right wrist
         13 right wrist                 neck
         """
+        """
+        Order of AMBF Joints crutch    Order of RBDL Joints
+        0  left crutch hip             left hip
+        1  left hip                    left knee
+        2  left ankle                  left ankle
+        3  left knee                   right hip
+        4  left elbow                  right knee
+        5  left shoulder               right ankle
+        6  left arm bot-left hand      left shoulder
+        7  neck                        left elbow
+        8  right_crutch_shoulder       left wrist
+        9  right hip                   right shoulder
+        10 right ankle                 right elbow
+        11 right knee                  right wrist
+        12 right elbow                 neck
+        13 right shoulder              
+        14 right wrist                 
+        """
+
         # order of rbdl wrt ambf
-        rbdl_order = [1, 3, 2, 8, 10, 9, 5, 4, 6, 12, 11, 13, 7]
+        rbdl_order = [0, 2, 3, 7, 9, 10, 4, 3, 5, 11, 12, 12, 6]
+        self.rbdl_order_crutch = [1, 3, 2, 9, 11, 10, 5, 4, 6, 13, 12, 14, 7]
+
         # for now, this order is included since we don't have the arm joints yet
         rbdl_order_lower = rbdl_order[:7]
 
-        order = rbdl_order
-        transformed_q = len(order)
+        order = self.rbdl_order_crutch
+        if not reverse:
+            transformed = np.zeros(len(order))
+        else:
+            transformed = np.zeros(15)
 
-        print(input)
-        print(order)
         for i in range(len(order)):
             if not reverse:
-                transformed[i] = input[order[i]]
+                transformed[i] = input_arr[order[i]]
             else:
-                transformed[order[i]] = input[i]
+                transformed[order[i]] = input_arr[i]
 
         return transformed
