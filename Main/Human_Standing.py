@@ -54,6 +54,9 @@ def init_k_vals():
     Kd[right_order['knee']] = K_knee[1]
     Kd[right_order['ankle']] = K_ankle[1]
 
+    Kp = np.diag(Kp)
+    Kd = np.diag(Kd)
+
     Controller = PDController(Kp, Kd)
     return Controller
 
