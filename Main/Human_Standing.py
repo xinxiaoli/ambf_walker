@@ -12,7 +12,7 @@ _client = Client()
 _client.connect()
 rospy.sleep(1)
 
-human = Human(_client, 50, 1.5)
+human = Human(_client, 1.0, 1.5)
 left_order = human.ambf_order_crutch_left
 right_order = human.ambf_order_crutch_right
 joints = human.handle.get_joint_names()
@@ -20,7 +20,12 @@ print(joints)
 
 # print("Setting pos to 0 for all")
 body = human.handle
-# body.set_pos(0,0,0)
+
+def set_body():
+    body.set_pos(0,0,.2)
+    body.set_rpy(1.3,0,0)
+
+
 children = body.get_children_names()
 
 num_joints = len(joints)
@@ -30,9 +35,9 @@ qdd_goal = np.array([0.0] * num_joints)
 
 Controller = PDController(0,0)
 
-k_hip = [1, 1]
-k_knee = [1, 1]
-k_ankle = [10, 1]
+k_hip = [30, 1]
+k_knee = [30, 1]
+k_ankle = [20, 1]
 
 
 def init_k_vals():
@@ -70,18 +75,23 @@ def loop():
         # Get current states
         q = human.q
         qd = human.qd
-        print("Q: ")
-        print(q)
+        # print("Q: ")
+        # print(q)
         # Calc effort from PID
         aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
-        print("Aq:")
-        print(aq)
+        # print("Aq:")
+        # print(aq)
 
         # Calc tau from dynamical model
         tau = human.calculate_dynamics(aq)
         human.update_torque(tau)
         # rate.sleep()
     print("5 seconds over")
+
+def loop_free():
+    print("removing controller oh boy")
+    body._cmd.enable_position_controller = False
+    loop()
 
 
 # loop()

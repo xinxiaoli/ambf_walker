@@ -68,14 +68,23 @@ class Human(Model.Model):
 
 
         # percent total body weight from average in de Leva
-        per_head = 6.81 / 100
-        per_trunk = 43.02 / 100
-        per_upper_arm = 2.63 / 100
-        per_lower_arm = 1.5 / 100
-        per_hand = 0.585 / 100
-        per_thigh = 14.47 / 100
-        per_calf = 4.57 / 100
-        per_foot = 1.33 / 100
+        # per_head = 6.81 / 100
+        # per_trunk = 43.02 / 100
+        # per_upper_arm = 2.63 / 100
+        # per_lower_arm = 1.5 / 100
+        # per_hand = 0.585 / 100
+        # per_thigh = 14.47 / 100
+        # per_calf = 4.57 / 100
+        # per_foot = 1.33 / 100
+
+        per_head = 1
+        per_trunk = 1
+        per_upper_arm = 1
+        per_lower_arm = 1
+        per_hand = 1
+        per_thigh = 1
+        per_calf =1
+        per_foot = 1
 
         # Masses for each of the segments based off of percents
         mass["head"] = total_mass * per_head

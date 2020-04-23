@@ -74,7 +74,7 @@ class Model(object):
     @qd.setter
     def qd(self, value):
         # value[1] *= -1
-        value[9] *= -1
+        # value[9] *= -1
         self._qd = np.asarray(value)
 
     @property
