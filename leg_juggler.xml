@@ -1,21 +1,37 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root version="2.3.8">
  <tabbed_widget parent="main_window" name="Main Window">
-  <plotmatrix rows="2" tab_name="plot" columns="1">
-   <plot row="0" col="0">
-    <range bottom="-0.019513" left="43.040715" right="48.039967" top="0.051259"/>
+  <plotmatrix tab_name="plot" rows="2" columns="2">
+   <plot col="0" row="0">
+    <range right="169.926911" bottom="-0.013777" top="0.008457" left="164.927409"/>
     <limitY/>
-    <curve R="214" G="39" custom_transform="noTransform" B="40" name="/qd/data.1"/>
-    <curve R="188" G="189" custom_transform="noTransform" B="34" name="/qd/data.2"/>
-    <curve R="31" G="119" custom_transform="noTransform" B="180" name="/qd/data.3"/>
+    <curve custom_transform="noTransform" B="40" R="214" name="/qd/data.1" G="39"/>
+    <curve custom_transform="noTransform" B="34" R="188" name="/qd/data.2" G="189"/>
+    <curve custom_transform="noTransform" B="180" R="31" name="/qd/data.3" G="119"/>
     <transform value="noTransform"/>
    </plot>
-   <plot row="1" col="0">
-    <range bottom="-0.007136" left="43.040715" right="48.039967" top="0.008367"/>
+   <plot col="0" row="1">
+    <range right="169.926911" bottom="-0.012873" top="0.007021" left="164.927409"/>
     <limitY/>
-    <curve R="26" G="201" custom_transform="noTransform" B="56" name="/qd/data.10"/>
-    <curve R="255" G="127" custom_transform="noTransform" B="14" name="/qd/data.11"/>
-    <curve R="23" G="190" custom_transform="noTransform" B="207" name="/qd/data.9"/>
+    <curve custom_transform="noTransform" B="56" R="26" name="/qd/data.10" G="201"/>
+    <curve custom_transform="noTransform" B="14" R="255" name="/qd/data.11" G="127"/>
+    <curve custom_transform="noTransform" B="207" R="23" name="/qd/data.9" G="190"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot col="1" row="0">
+    <range right="169.927123" bottom="-0.357836" top="0.008728" left="164.927490"/>
+    <limitY/>
+    <curve custom_transform="noTransform" B="40" R="214" name="/q/data.1" G="39"/>
+    <curve custom_transform="noTransform" B="34" R="188" name="/q/data.2" G="189"/>
+    <curve custom_transform="noTransform" B="180" R="31" name="/q/data.3" G="119"/>
+    <transform value="noTransform"/>
+   </plot>
+   <plot col="1" row="1">
+    <range right="169.927123" bottom="-0.357833" top="0.008728" left="164.927490"/>
+    <limitY/>
+    <curve custom_transform="noTransform" B="56" R="26" name="/q/data.10" G="201"/>
+    <curve custom_transform="noTransform" B="14" R="255" name="/q/data.11" G="127"/>
+    <curve custom_transform="noTransform" B="207" R="23" name="/q/data.9" G="190"/>
     <transform value="noTransform"/>
    </plot>
   </plotmatrix>
@@ -41,8 +57,8 @@
    <discard_large_arrays value="true"/>
    <max_array_size value="100"/>
   </plugin>
-  <plugin status="idle" ID="ROS /rosout Visualization"/>
-  <plugin status="idle" ID="ROS Topic Re-Publisher"/>
+  <plugin ID="ROS /rosout Visualization" status="idle"/>
+  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
  </Plugins>
  <!-- - - - - - - - - - - - - - - -->
  <previouslyLoaded_Datafiles/>
