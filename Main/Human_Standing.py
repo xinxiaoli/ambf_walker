@@ -5,6 +5,7 @@ import numpy as np
 import time
 from Model.Human import Human
 import rospy
+from std_msgs.msg import Float32, Float32MultiArray
 import ambf_msgs.msg as ambf
 
 # Create Client and connect
@@ -18,7 +19,6 @@ right_order = human.ambf_order_crutch_right
 joints = human.handle.get_joint_names()
 print(joints)
 
-# print("Setting pos to 0 for all")
 body = human.handle
 
 def set_body():
@@ -65,12 +65,11 @@ def init_k_vals():
 
 
 # Loop to stay standing
-def loop():
+def loop(t=5):
     Controller = init_k_vals()
-    # rate = rospy.Rate(100)
     start = rospy.get_time()
     now = rospy.get_time()
-    while abs(now - start) < 5:
+    while abs(now - start) < t:
         now = rospy.get_time()
         # Get current states
         q = human.q
@@ -85,14 +84,11 @@ def loop():
         # Calc tau from dynamical model
         tau = human.calculate_dynamics(aq)
         human.update_torque(tau)
-        # rate.sleep()
-    print("5 seconds over")
+
+    print("5 second loop over")
 
 def loop_free():
     print("removing controller oh boy")
     body._cmd.enable_position_controller = False
     loop()
-
-
-# loop()
 
