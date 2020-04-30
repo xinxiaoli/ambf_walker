@@ -1,6 +1,7 @@
 import sys
 from ambf_client import Client
 from Controller.PDController import PDController
+from Controller.TrajectoryGen import TrajectoryGen
 import numpy as np
 import time
 from Model.Human import Human
@@ -14,33 +15,41 @@ _client.connect()
 rospy.sleep(1)
 
 human = Human(_client, 1.0, 1.5)
-left_order = human.ambf_order_crutch_left
-right_order = human.ambf_order_crutch_right
-joints = human.handle.get_joint_names()
-print(joints)
-
 body = human.handle
 
-def set_body():
-    body.set_pos(0,0,.2)
-    body.set_rpy(1.3,0,0)
-
+leg_segs = ['hip', 'knee', 'ankle']
+left_order = human.ambf_order_crutch_left
+right_order = human.ambf_order_crutch_right
 
 children = body.get_children_names()
+print(children)
 
-num_joints = len(joints)
-q_goal = np.array([0.0] * num_joints)
-qd_goal = np.array([0.0] * num_joints)
-qdd_goal = np.array([0.0] * num_joints)
+# Targets joint values
+num_joints = len(children)
 
-Controller = PDController(0,0)
+# controller inits
+Controller = PDController(0, 0)
+hip_traj = TrajectoryGen()
+knee_traj = TrajectoryGen()
+ankle_traj = TrajectoryGen()
+trajs = [hip_traj, knee_traj, ankle_traj]
 
-k_hip = [30, 1]
-k_knee = [30, 1]
-k_ankle = [20, 1]
+# Initial PID Params
+k_hip = [1000, 100]
+k_knee = [3000, 300]
+k_ankle = [1000, 100]
+hip_goal = 0
+knee_goal = human.joint_limits['knee'][0]
+ankle_goal = human.joint_limits['ankle'][1]
+
+pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
 
 
 def init_k_vals():
+    """
+    set the k values for each joint based on the parameter
+    recreates the Controller
+    """
     kp = np.zeros(num_joints)
     kp[left_order['hip']] = k_hip[0]
     kp[left_order['knee']] = k_knee[0]
@@ -65,30 +74,110 @@ def init_k_vals():
 
 
 # Loop to stay standing
-def loop(t=5):
-    Controller = init_k_vals()
+def loop(tf=5):
+    Controller = init_k_vals()     # initialize the controller values
+
+    hip_traj.create_traj(0, hip_goal, 0, 0, tf)
+    knee_traj.create_traj(0, knee_goal, 0, 0, tf)
+    ankle_traj.create_traj(0, ankle_goal, 0, 0, tf)
+
     start = rospy.get_time()
-    now = rospy.get_time()
-    while abs(now - start) < t:
-        now = rospy.get_time()
-        # Get current states
-        q = human.q
-        qd = human.qd
-        # print("Q: ")
-        # print(q)
-        # Calc effort from PID
-        aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
-        # print("Aq:")
-        # print(aq)
+    t = 0
 
-        # Calc tau from dynamical model
-        tau = human.calculate_dynamics(aq)
-        human.update_torque(tau)
-
+    # run the controller for the given time
+    print("Starting loop")
+    while abs(t) < tf:
+        t = control_loop(start, Controller)
     print("5 second loop over")
 
-def loop_free():
-    print("removing controller oh boy")
+
+def control_loop(start, Controller):
+    t = rospy.get_time() - start
+
+    q_goal = np.array([0.0] * num_joints)
+    qd_goal = np.array([0.0] * num_joints)
+    qdd_goal = np.array([0.0] * num_joints)
+    msg = Float32MultiArray()
+
+    # get traj value
+    for i in range(len(trajs)):
+        traj_q, traj_qd, traj_qdd = trajs[i].get_traj(t)  # values from traj for specific joint
+
+        # set the traj values to the correct joint state
+        q_goal[left_order[leg_segs[i]]] = traj_q
+        q_goal[right_order[leg_segs[i]]] = traj_q
+        qd_goal[left_order[leg_segs[i]]] = traj_qd
+        qd_goal[right_order[leg_segs[i]]] = traj_qd
+        qdd_goal[left_order[leg_segs[i]]] = traj_qdd
+        qdd_goal[right_order[leg_segs[i]]] = traj_qdd
+
+    # publish
+    msg.data = q_goal
+    pub_goal.publish(msg)
+
+    # Get current states
+    q = human.q
+    qd = human.qd
+    aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
+
+    # Calc tau from dynamical model
+    tau = human.calculate_dynamics(aq)
+    human.update_torque(tau)
+    t = rospy.get_time() - start
+    return t
+
+def set_body(h=.2,r=1.3):
+    """
+    Set body position to standing
+    """
+    body.set_pos(0, 0, h)
+    body.set_rpy(r, 0, 0)
+
+def free_body():
+    """
+    undo the 'set_body' and remove all efforts
+    """
+    print("removing position setpoints oh boy")
     body._cmd.enable_position_controller = False
-    loop()
+    remove_torques()
+
+def remove_torques():
+    for i in range(len(body.get_joint_names())):
+        body.set_joint_effort(i,0)
+
+def slowly_lower():
+    """
+    start body above ground then slowly lower until feet are touching (0,0,0)
+    release position controller and continue control loop
+    """
+    h = .2
+    set_body(h)
+    start = rospy.get_time()
+    t = 0
+    tf = 10
+    dh = .0001
+
+    Controller = init_k_vals()  # initialize the controller values
+
+    hip_traj.create_traj(0, hip_goal, 0, 0, tf)
+    knee_traj.create_traj(0, knee_goal, 0, 0, tf)
+    ankle_traj.create_traj(0, ankle_goal, 0, 0, tf)
+
+    # run the controller for the given time
+    print("Starting loop")
+    while abs(t) < tf:
+        if h >= 0:
+            h -= dh
+            set_body(h)
+        elif h <= 0 and h is not -1:
+            print('At ground, free body')
+            free_body()
+            h = -1
+
+        t = control_loop(start, Controller)
+    print("loop done")
+
+
+set_body()
+
 

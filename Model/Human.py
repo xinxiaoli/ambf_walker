@@ -29,8 +29,14 @@ class Human(Model.Model):
         self._state = (self._q, self._qd)
         self._updater.start()  # start update thread
 
-        self.ambf_order_crutch_left = {'crutch': 0, 'hip': 1, 'ankle': 2, 'knee': 3, 'elbow': 4, 'shoulder': 5, 'wrist': 6, 'neck': 7}
-        self.ambf_order_crutch_right = {'crutch': 8, 'hip': 9, 'ankle': 10, 'knee': 11, 'elbow': 12, 'shoulder': 13, 'wrist': 14, 'neck': 7}
+        # self.joint_name = self.handle.get_joint_names()
+
+        self.ambf_order_crutch_left = {'crutch': 0, 'hip': 1, 'ankle': 2, 'knee': 3, 'elbow': 4, 'shoulder': 5,
+                                       'wrist': 6, 'neck': 7}
+        self.ambf_order_crutch_right = {'crutch': 8, 'hip': 9, 'ankle': 10, 'knee': 11, 'elbow': 12, 'shoulder': 13,
+                                        'wrist': 14, 'neck': 7}
+
+        self.joint_limits = self.get_limits()
 
     @property
     def state(self):
@@ -66,25 +72,24 @@ class Human(Model.Model):
 
         segments = ["thigh", "calf", "foot", "arm_bot", "arm_top", "hand"]
 
-
         # percent total body weight from average in de Leva
-        # per_head = 6.81 / 100
-        # per_trunk = 43.02 / 100
-        # per_upper_arm = 2.63 / 100
-        # per_lower_arm = 1.5 / 100
-        # per_hand = 0.585 / 100
-        # per_thigh = 14.47 / 100
-        # per_calf = 4.57 / 100
-        # per_foot = 1.33 / 100
+        per_head = 6.81 / 100.0
+        per_trunk = 43.02 / 100.0
+        per_upper_arm = 2.63 / 100.0
+        per_lower_arm = 1.5 / 100.0
+        per_hand = 0.585 / 100.0
+        per_thigh = 14.47 / 100.0
+        per_calf = 4.57 / 100.0
+        per_foot = 1.33 / 100.0
 
-        per_head = 1
-        per_trunk = 1
-        per_upper_arm = 1
-        per_lower_arm = 1
-        per_hand = 1
-        per_thigh = 1
-        per_calf =1
-        per_foot = 1
+        # per_head = 1
+        # per_trunk = 1
+        # per_upper_arm = 1
+        # per_lower_arm = 1
+        # per_hand = 1
+        # per_thigh = 1
+        # per_calf = 1
+        # per_foot = 1
 
         # Masses for each of the segments based off of percents
         mass["head"] = total_mass * per_head
@@ -136,7 +141,8 @@ class Human(Model.Model):
         inertia["left_calf"] = np.diag([0.05865, 0.0, 0.0]) * mass["left_calf"]
         inertia["left_foot"] = np.diag([0.174576, 0.173107, 0.0]) * mass["left_foot"]
 
-        inertia["right_thigh"] = np.diag([0.433321, 0.435854, 0.0]) * mass["right_thigh"]  # needs to be fixed in blender
+        inertia["right_thigh"] = np.diag([0.433321, 0.435854, 0.0]) * mass[
+            "right_thigh"]  # needs to be fixed in blender
         inertia["right_calf"] = np.diag([0.058648, 0.0, 0.0]) * mass["right_calf"]
         inertia["right_foot"] = np.diag([0.174573, 0.173105, 0.0]) * mass["right_foot"]
 
@@ -145,7 +151,8 @@ class Human(Model.Model):
         inertia["left_hand"] = np.diag([0.14476, 0.148051, 0.020571]) * mass["left_hand"]
 
         inertia["right_arm_top"] = np.diag([0.240887, 0.218034, 0.0]) * mass["right_arm_top"]
-        inertia["right_arm_bot"] = np.diag([0.243486, 0.243336, 0.026448]) * mass["right_arm_bot"]  # needs to be fixed in blender
+        inertia["right_arm_bot"] = np.diag([0.243486, 0.243336, 0.026448]) * mass[
+            "right_arm_bot"]  # needs to be fixed in blender
         inertia["right_hand"] = np.diag([0.144774, 0.148058, 0.020569]) * mass["right_hand"]
 
         # Center of masses
@@ -167,7 +174,6 @@ class Human(Model.Model):
         com["right_arm_top"] = np.array([-0.008303, -0.089742, 0.097849])
         com["right_arm_bot"] = np.array([0.006707, -0.012308, -0.113982])  # needs to be fixed in blender
         com["right_hand"] = np.array([0.033968, 0.008124, 0.068738])
-
 
         body_rbdl = rbdl.Body.fromMassComInertia(mass["body"], com["body"], inertia["body"])
         bodies["head"] = rbdl.Body.fromMassComInertia(mass["head"], com["head"], inertia["head"])
@@ -232,7 +238,7 @@ class Human(Model.Model):
         # Right Elbow
         xtrans.r = parent_dist["right_arm_bot"]
         self.right_arm_bot = model.AddBody(self.right_arm_top, xtrans, joint_rot_z, bodies["right_arm_bot"],
-                                          "right_arm_bot")
+                                           "right_arm_bot")
 
         # Right Wrist
         xtrans.r = parent_dist["right_hand"]
@@ -250,9 +256,13 @@ class Human(Model.Model):
         fk = {}
 
     def calculate_dynamics(self, qdd):
-        # Overrides as human has more states. Not sure if really need since upperbody will not be controlled?
         tau = np.asarray([0.0] * self.num_joints)
-        rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(self.q), self.ambf_to_rbdl(self.qd), self.ambf_to_rbdl(qdd), tau)
+
+        # if not defined, set to the obj attributes
+        q = self.q
+        qd = self.qd
+
+        rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau)
         return self.ambf_to_rbdl(tau, reverse=True)
 
     def ambf_to_rbdl(self, input_arr, reverse=False):
@@ -312,3 +322,10 @@ class Human(Model.Model):
                 transformed[order[i]] = input_arr[i]
 
         return transformed
+
+    def get_limits(self):
+        return {
+            'hip': [0.8727, -1.5708],
+            'knee': [0, 2.618],
+            'ankle': [0.7854, -0.3491],
+            }
