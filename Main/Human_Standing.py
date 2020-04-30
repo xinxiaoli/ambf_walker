@@ -35,10 +35,10 @@ ankle_traj = TrajectoryGen()
 trajs = [hip_traj, knee_traj, ankle_traj]
 
 # Initial PID Params
-k_hip = [0, 0]
-k_knee = [0, 0]
+k_hip = [1000, 100]
+k_knee = [3000, 300]
 k_ankle = [1000, 100]
-hip_goal = human.joint_limits['hip'][1]
+hip_goal = 0
 knee_goal = human.joint_limits['knee'][0]
 ankle_goal = human.joint_limits['ankle'][1]
 
@@ -109,7 +109,7 @@ def loop(tf=5):
         # Get current states
         msg.data = q_goal
         pub_goal.publish(msg)
-        
+
         q = human.q
         qd = human.qd
         aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
