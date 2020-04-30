@@ -2,3 +2,5 @@
 *.pyc
 /venv/*
 **/*.STL
+*.yaml
+*.yaml.old
