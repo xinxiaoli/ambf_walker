@@ -38,8 +38,8 @@ class TrajectoryGen(object):
 
         a = self.traj_coeffs
 
-        q = a[0] + a[1] * t + a[2] * t**2 + a[3] * t**3
-        qd = a[1] + 2 * a[2] * t + 3 * a[3] * t**2
+        q = a[0] + a[1] * t + a[2] * t*t + a[3] * t*t*t
+        qd = a[1] + 2 * a[2] * t + 3 * a[3] * t*t
         qdd = 2 * a[2] + 6 * a[3] * t
 
         return q, qd, qdd

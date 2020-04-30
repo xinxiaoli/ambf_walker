@@ -29,10 +29,14 @@ class Human(Model.Model):
         self._state = (self._q, self._qd)
         self._updater.start()  # start update thread
 
+        # self.joint_name = self.handle.get_joint_names()
+
         self.ambf_order_crutch_left = {'crutch': 0, 'hip': 1, 'ankle': 2, 'knee': 3, 'elbow': 4, 'shoulder': 5,
                                        'wrist': 6, 'neck': 7}
         self.ambf_order_crutch_right = {'crutch': 8, 'hip': 9, 'ankle': 10, 'knee': 11, 'elbow': 12, 'shoulder': 13,
                                         'wrist': 14, 'neck': 7}
+
+        self.joint_limits = self.get_limits()
 
     @property
     def state(self):
@@ -69,23 +73,23 @@ class Human(Model.Model):
         segments = ["thigh", "calf", "foot", "arm_bot", "arm_top", "hand"]
 
         # percent total body weight from average in de Leva
-        # per_head = 6.81 / 100
-        # per_trunk = 43.02 / 100
-        # per_upper_arm = 2.63 / 100
-        # per_lower_arm = 1.5 / 100
-        # per_hand = 0.585 / 100
-        # per_thigh = 14.47 / 100
-        # per_calf = 4.57 / 100
-        # per_foot = 1.33 / 100
+        per_head = 6.81 / 100.0
+        per_trunk = 43.02 / 100.0
+        per_upper_arm = 2.63 / 100.0
+        per_lower_arm = 1.5 / 100.0
+        per_hand = 0.585 / 100.0
+        per_thigh = 14.47 / 100.0
+        per_calf = 4.57 / 100.0
+        per_foot = 1.33 / 100.0
 
-        per_head = 1
-        per_trunk = 1
-        per_upper_arm = 1
-        per_lower_arm = 1
-        per_hand = 1
-        per_thigh = 1
-        per_calf = 1
-        per_foot = 1
+        # per_head = 1
+        # per_trunk = 1
+        # per_upper_arm = 1
+        # per_lower_arm = 1
+        # per_hand = 1
+        # per_thigh = 1
+        # per_calf = 1
+        # per_foot = 1
 
         # Masses for each of the segments based off of percents
         mass["head"] = total_mass * per_head
@@ -251,12 +255,12 @@ class Human(Model.Model):
     def fk(self):
         fk = {}
 
-    def calculate_dynamics(self, qdd, qd=None, q=None):
+    def calculate_dynamics(self, qdd):
         tau = np.asarray([0.0] * self.num_joints)
 
         # if not defined, set to the obj attributes
-        if not q: q = self.q
-        if not qd: qd = self.qd
+        q = self.q
+        qd = self.qd
 
         rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau)
         return self.ambf_to_rbdl(tau, reverse=True)
@@ -318,3 +322,10 @@ class Human(Model.Model):
                 transformed[order[i]] = input_arr[i]
 
         return transformed
+
+    def get_limits(self):
+        return {
+            'hip': [0.8727, -1.5708],
+            'knee': [0, 2.618],
+            'ankle': [0.7854, -0.3491],
+            }

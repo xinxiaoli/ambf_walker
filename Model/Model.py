@@ -97,22 +97,27 @@ class Model(object):
         rate = rospy.Rate(1000)  # 1000hz
         pub_qd = rospy.Publisher('qd', Float32MultiArray, queue_size=1)
         pub_q = rospy.Publisher('q', Float32MultiArray, queue_size=1)
+        pub_tau = rospy.Publisher('tau', Float32MultiArray, queue_size=1)
         msg_qd = Float32MultiArray()
         msg_q = Float32MultiArray()
+        msg_tau = Float32MultiArray()
 
         while 1:
             self.q = self.handle.get_all_joint_pos()
             self.qd = self.handle.get_all_joint_vel()
             self._joint_num = self.q.size
-            if self._enable_control:
-                # print(self.tau)
 
+            msg_tau.data = self.tau
+            if self._enable_control:
                 self.handle.set_all_joint_effort(self.tau)
+            else:
+                msg_tau.data = self.q * 0
 
             msg_qd.data = self.qd
             msg_q.data = self.q
             pub_qd.publish(msg_qd)
             pub_q.publish(msg_q)
+            pub_tau.publish(msg_tau)
             rate.sleep()
 
     @abc.abstractmethod

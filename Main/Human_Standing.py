@@ -26,10 +26,6 @@ print(children)
 
 # Targets joint values
 num_joints = len(children)
-empty_joints = np.array([0.0] * num_joints)
-q_goal = empty_joints
-qd_goal = empty_joints
-qdd_goal = empty_joints
 
 # controller inits
 Controller = PDController(0, 0)
@@ -39,12 +35,14 @@ ankle_traj = TrajectoryGen()
 trajs = [hip_traj, knee_traj, ankle_traj]
 
 # Initial PID Params
-k_hip = [30, 1]
-k_knee = [30, 1]
-k_ankle = [20, 1]
-hip_goal = -5
-knee_goal = 0
-ankle_goal = 0
+k_hip = [0, 0]
+k_knee = [0, 0]
+k_ankle = [1000, 100]
+hip_goal = human.joint_limits['hip'][1]
+knee_goal = human.joint_limits['knee'][0]
+ankle_goal = human.joint_limits['ankle'][1]
+
+pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
 
 
 def init_k_vals():
@@ -81,57 +79,74 @@ def loop(tf=5):
 
     hip_traj.create_traj(0, hip_goal, 0, 0, tf)
     knee_traj.create_traj(0, knee_goal, 0, 0, tf)
-    ankle_traj.create_traj(0, ankle_goal, 0, 0, tf)
+    ankle_traj.create_traj(0, -0.3491, 0, 0, tf)
 
     start = rospy.get_time()
-    now = rospy.get_time()
     t = 0
+    msg = Float32MultiArray()
 
     # run the controller for the given time
     print("Starting loop")
     while abs(t) < tf:
         t = rospy.get_time() - start
 
+        q_goal = np.array([0.0] * num_joints)
+        qd_goal = np.array([0.0] * num_joints)
+        qdd_goal = np.array([0.0] * num_joints)
+
         # get traj value
         for i in range(len(trajs)):
-            x, xd, xdd = trajs[i].get_traj(t)   # values from traj for specific joint
+            traj_q, traj_qd, traj_qdd = trajs[i].get_traj(t)   # values from traj for specific joint
 
-            # set the traj values to the corret joint state
-            q_goal[left_order[leg_segs[i]]] = x
-            q_goal[right_order[leg_segs[i]]] = x
-            qd_goal[left_order[leg_segs[i]]] = xd
-            qd_goal[right_order[leg_segs[i]]] = xd
-            qdd_goal[left_order[leg_segs[i]]] = xdd
-            qdd_goal[right_order[leg_segs[i]]] = xdd
+            # set the traj values to the correct joint state
+            q_goal[left_order[leg_segs[i]]] = traj_q
+            q_goal[right_order[leg_segs[i]]] = traj_q
+            qd_goal[left_order[leg_segs[i]]] = traj_qd
+            qd_goal[right_order[leg_segs[i]]] = traj_qd
+            qdd_goal[left_order[leg_segs[i]]] = traj_qdd
+            qdd_goal[right_order[leg_segs[i]]] = traj_qdd
 
         # Get current states
+        msg.data = q_goal
+        pub_goal.publish(msg)
+        
         q = human.q
         qd = human.qd
         aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
-
+        # print('q')
+        # print(q)
         # Calc tau from dynamical model
         tau = human.calculate_dynamics(aq)
+        # print('tau')
+        # print(tau)
         human.update_torque(tau)
         t = rospy.get_time() - start
 
     print("5 second loop over")
 
 
-def set_body():
+def set_body(h=.2,r=1.3):
     """
     Set body position to standing
     """
-    body.set_pos(0, 0, .2)
-    body.set_rpy(1.3, 0, 0)
+    body.set_pos(0, 0, h)
+    body.set_rpy(r, 0, 0)
 
 
 def free_body():
     """
-    undo the 'set_body'
+    undo the 'set_body' and remove all efforts
     """
     print("removing position setpoints oh boy")
     body._cmd.enable_position_controller = False
+    remove_torques()
 
 
+def remove_torques():
+    for i in range(len(body.get_joint_names())):
+        body.set_joint_effort(i,0)
+
+
+set_body()
 
 
