@@ -14,7 +14,7 @@ _client = Client()
 _client.connect()
 rospy.sleep(1)
 
-human = Human(_client, 1.0, 1.5)
+human = Human(_client, 50.0, 1.5)
 body = human.handle
 
 leg_segs = ['hip', 'knee', 'ankle']
@@ -35,12 +35,12 @@ ankle_traj = TrajectoryGen()
 trajs = [hip_traj, knee_traj, ankle_traj]
 
 # Initial PID Params
-k_hip = [1000, 100]
-k_knee = [3000, 300]
-k_ankle = [1000, 100]
+k_hip = [0, 0]
+k_knee = [0, 0]
+k_ankle = [80, 5]
 hip_goal = 0
 knee_goal = human.joint_limits['knee'][0]
-ankle_goal = human.joint_limits['ankle'][1]
+ankle_goal = 0
 
 pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
 
