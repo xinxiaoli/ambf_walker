@@ -8,6 +8,7 @@ from Model.Human import Human
 import rospy
 from std_msgs.msg import Float32, Float32MultiArray
 import ambf_msgs.msg as ambf
+import math
 
 # Create Client and connect
 _client = Client()
@@ -35,8 +36,8 @@ ankle_traj = TrajectoryGen()
 trajs = [hip_traj, knee_traj, ankle_traj]
 
 # Initial PID Params
-k_hip = [0, 0]
-k_knee = [0, 0]
+k_hip = [100, 10]
+k_knee = [100, 10]
 k_ankle = [80, 5]
 hip_goal = 0
 knee_goal = human.joint_limits['knee'][0]
@@ -126,12 +127,14 @@ def control_loop(start, Controller):
     t = rospy.get_time() - start
     return t
 
-def set_body(h=.2,r=1.3):
+
+def set_body(h=.2, r=math.pi/2):
     """
     Set body position to standing
     """
     body.set_pos(0, 0, h)
     body.set_rpy(r, 0, 0)
+
 
 def free_body():
     """
@@ -141,11 +144,13 @@ def free_body():
     body._cmd.enable_position_controller = False
     remove_torques()
 
+
 def remove_torques():
     for i in range(len(body.get_joint_names())):
         body.set_joint_effort(i,0)
 
-def slowly_lower():
+
+def slowly_lower(tf=10):
     """
     start body above ground then slowly lower until feet are touching (0,0,0)
     release position controller and continue control loop
@@ -154,8 +159,7 @@ def slowly_lower():
     set_body(h)
     start = rospy.get_time()
     t = 0
-    tf = 10
-    dh = .0001
+    dh = h/5
 
     Controller = init_k_vals()  # initialize the controller values
 
@@ -167,7 +171,7 @@ def slowly_lower():
     print("Starting loop")
     while abs(t) < tf:
         if h >= 0:
-            h -= dh
+            h = .2 - dh*t
             set_body(h)
         elif h <= 0 and h is not -1:
             print('At ground, free body')
@@ -176,6 +180,7 @@ def slowly_lower():
 
         t = control_loop(start, Controller)
     print("loop done")
+    remove_torques()
 
 
 set_body()
