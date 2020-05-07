@@ -85,10 +85,13 @@ def loop(tf=5):
     start = rospy.get_time()
     t = 0
 
+    rate = rospy.Rate(1000)  # 1000hz
+
     # run the controller for the given time
     print("Starting loop")
     while abs(t) < tf:
         t = control_loop(start, Controller)
+        rate.sleep()
     print("5 second loop over")
 
 
@@ -169,6 +172,7 @@ def slowly_lower(tf=10):
 
     # run the controller for the given time
     print("Starting loop")
+    rate = rospy.Rate(1000)  # 1000hz
     while abs(t) < tf:
         if h >= 0:
             h = .2 - dh*t
@@ -179,6 +183,7 @@ def slowly_lower(tf=10):
             h = -1
 
         t = control_loop(start, Controller)
+        rate.sleep()
     print("loop done")
     remove_torques()
 
