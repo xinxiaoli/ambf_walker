@@ -19,8 +19,7 @@ human = Human(_client, 50.0, 1.5)
 body = human.handle
 
 leg_segs = ['hip', 'knee', 'ankle']
-left_order = human.ambf_order_crutch_left
-right_order = human.ambf_order_crutch_right
+orders = [human.ambf_order_crutch_left, human.ambf_order_crutch_right]
 
 children = body.get_children_names()
 print(children)
@@ -30,18 +29,21 @@ num_joints = len(children)
 
 # controller inits
 Controller = PDController(0, 0)
-hip_traj = TrajectoryGen()
-knee_traj = TrajectoryGen()
-ankle_traj = TrajectoryGen()
-trajs = [hip_traj, knee_traj, ankle_traj]
+trajs = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
+         [TrajectoryGen(), TrajectoryGen(), TrajectoryGen()]
+]
 
 # Initial PID Params
-k_hip = [100, 10]
-k_knee = [100, 10]
-k_ankle = [80, 5]
-hip_goal = -1.1
-knee_goal = 1.9
-ankle_goal = -0.32
+Ks = [
+    [100, 10],
+    [100, 10],
+    [80, 5],
+]
+goals = [
+    [-1.1],
+    [1.9],
+    [-0.76]
+]
 
 pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
 
@@ -51,26 +53,14 @@ def init_k_vals():
     set the k values for each joint based on the parameter
     recreates the Controller
     """
-    kp = np.zeros(num_joints)
-    kp[left_order['hip']] = k_hip[0]
-    kp[left_order['knee']] = k_knee[0]
-    kp[left_order['ankle']] = k_ankle[0]
-    kp[right_order['hip']] = k_hip[0]
-    kp[right_order['knee']] = k_knee[0]
-    kp[right_order['ankle']] = k_ankle[0]
+    K_mat = np.zeros((2,num_joints,num_joints))
+    for i in range(2):
+        for j in range(len(orders)):
+            for k in range(len(leg_segs)):
+                idx = orders[j][leg_segs[k]]
+                K_mat[i,idx,idx] = Ks[k][i]
 
-    kd = np.zeros(num_joints)
-    kd[left_order['hip']] = k_hip[1]
-    kd[left_order['knee']] = k_knee[1]
-    kd[left_order['ankle']] = k_ankle[1]
-    kd[right_order['hip']] = k_hip[1]
-    kd[right_order['knee']] = k_knee[1]
-    kd[right_order['ankle']] = k_ankle[1]
-
-    kp = np.diag(kp)
-    kd = np.diag(kd)
-
-    Controller = PDController(kp, kd)
+    Controller = PDController(K_mat[0,...], K_mat[1,...])
     return Controller
 
 
@@ -78,9 +68,8 @@ def init_k_vals():
 def loop(tf=5):
     Controller = init_k_vals()     # initialize the controller values
 
-    hip_traj.create_traj(0, hip_goal, 0, 0, tf)
-    knee_traj.create_traj(0, knee_goal, 0, 0, tf)
-    ankle_traj.create_traj(0, ankle_goal, 0, 0, tf)
+    for j in range(len(trajs[0])):
+        trajs[0][j].create_traj(0, goals[j][0], 0, 0, tf)
 
     start = rospy.get_time()
     t = 0
@@ -98,31 +87,29 @@ def loop(tf=5):
 def control_loop(start, Controller):
     t = rospy.get_time() - start
 
-    q_goal = np.array([0.0] * num_joints)
-    qd_goal = np.array([0.0] * num_joints)
-    qdd_goal = np.array([0.0] * num_joints)
+    goals = np.zeros((3,num_joints))
     msg = Float32MultiArray()
 
     # get traj value
-    for i in range(len(trajs)):
-        traj_q, traj_qd, traj_qdd = trajs[i].get_traj(t)  # values from traj for specific joint
+    for j in range(len(trajs[0])):
+        traj_data = trajs[0][j].get_traj(t)  # values from traj for specific joint
 
         # set the traj values to the correct joint state
-        q_goal[left_order[leg_segs[i]]] = traj_q
-        q_goal[right_order[leg_segs[i]]] = [-0.05,0,-0.1][i]
-        qd_goal[left_order[leg_segs[i]]] = traj_qd
-        qd_goal[right_order[leg_segs[i]]] = 0
-        qdd_goal[left_order[leg_segs[i]]] = traj_qdd
-        qdd_goal[right_order[leg_segs[i]]] = 0
+        goals[0,orders[0][leg_segs[j]]] = traj_data[0]
+        goals[1,orders[0][leg_segs[j]]] = traj_data[1]
+        goals[2,orders[0][leg_segs[j]]] = traj_data[2]
+        goals[0,orders[1][leg_segs[j]]] = [-0.05,0,-0.1][j]
+        goals[1,orders[1][leg_segs[j]]] = 0
+        goals[2,orders[1][leg_segs[j]]] = 0
 
     # publish
-    msg.data = q_goal
+    msg.data = goals[0,:]
     pub_goal.publish(msg)
 
     # Get current states
     q = human.q
     qd = human.qd
-    aq = qdd_goal + Controller.get_tau(q_goal - q, qd_goal - qd)
+    aq = goals[2,:] + Controller.get_tau(goals[0,:] - q, goals[1,:] - qd)
 
     # Calc tau from dynamical model
     tau = human.calculate_dynamics(aq)
@@ -131,7 +118,7 @@ def control_loop(start, Controller):
     return t
 
 
-def set_body(h=.2, r=math.pi/2):
+def set_body(h=.2, r=math.pi/2+0.15):
     """
     Set body position to standing
     """
@@ -166,9 +153,8 @@ def slowly_lower(tf=10):
 
     Controller = init_k_vals()  # initialize the controller values
 
-    hip_traj.create_traj(0, hip_goal, 0, 0, tf)
-    knee_traj.create_traj(0, knee_goal, 0, 0, tf)
-    ankle_traj.create_traj(0, ankle_goal, 0, 0, tf)
+    for j in range(len(trajs[0])):
+        trajs[0][j].create_traj(0, 0, 0, 0, tf)
 
     # run the controller for the given time
     print("Starting loop")
@@ -179,13 +165,19 @@ def slowly_lower(tf=10):
             set_body(h)
         elif h <= 0 and h is not -1:
             print('At ground, free body')
-            free_body()
+            #free_body()
             h = -1
 
         t = control_loop(start, Controller)
         rate.sleep()
     print("loop done")
-    remove_torques()
+    #remove_torques()
 
+    for j in range(len(trajs[0])):
+        trajs[0][i].create_traj(0, goals[j][0], 0, 0, tf)
+
+    while abs(t) < tf:
+        t = control_loop(start, Controller)
+        rate.sleep()
 
 set_body()
