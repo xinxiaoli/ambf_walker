@@ -37,9 +37,9 @@ trajs = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
 # Each row is for each joint
 # Kp constants are first, Kv constants are second
 Ks = [
-    [100, 10],
-    [100, 10],
-    [80, 5],
+    [120, 12],
+    [120, 12],
+    [ 90,  8],
 ]
 
 # The first group is for the left leg, the second is for the right leg
@@ -47,14 +47,14 @@ Ks = [
 # Each element in that row is then a list of the setpoints
 goals = [
     [
-        [-1.1],
-        [1.9],
-        [-0.76]
+        [-0.07, -1.12,  -0.9],
+        [    0,   1.9,  0.15],
+        [ -0.1, -0.78,   0.8]
     ],
     [
-        [-0.05],
-        [0],
-        [-0.1]
+        [-0.07, -0.12,  0.22],
+        [    0,     0,     0],
+        [ -0.1,  -0.1,  -0.2]
     ]
 ]
 
@@ -82,22 +82,22 @@ def init_k_vals():
 def loop(tf=5):
     Controller = init_k_vals()     # initialize the controller values
 
-    for side in range(len(orders)):
-        for joint in range(len(trajs[0])):
-            trajs[side][joint].create_traj(0, goals[side][joint][0], 0, 0, tf)
+    for waypoint in range(1,len(goals[0][0])):
+        for side in range(len(orders)):
+            for joint in range(len(trajs[0])):
+                trajs[side][joint].create_traj(goals[side][joint][waypoint-1], goals[side][joint][waypoint], 0, 0, tf)
 
-    start = rospy.get_time()
-    t = 0
+        start = rospy.get_time()
+        t = 0
 
-    rate = rospy.Rate(1000)  # 1000hz
+        rate = rospy.Rate(1000)  # 1000hz
 
-    # run the controller for the given time
-    print("Starting loop")
-    while abs(t) < tf:
-        t = control_loop(start, Controller)
-        rate.sleep()
-    print("{0} second loop over".format(tf))
-
+        # run the controller for the given time
+        print("Starting loop")
+        while abs(t) < tf:
+            t = control_loop(start, Controller)
+            rate.sleep()
+        print("{0} second loop over".format(tf))
 
 def control_loop(start, Controller):
     t = rospy.get_time() - start
@@ -130,7 +130,7 @@ def control_loop(start, Controller):
     return t
 
 
-def set_body(h=.2, r=math.pi/2+0.15):
+def set_body(h=.2, r=math.pi/2+0.08):
     """
     Set body position to standing
     """
@@ -144,7 +144,7 @@ def free_body():
     """
     print("removing position setpoints oh boy")
     body._cmd.enable_position_controller = False
-    remove_torques()
+    #remove_torques()
 
 
 def remove_torques():
@@ -172,13 +172,14 @@ def slowly_lower(tf=10):
     # run the controller for the given time
     print("Starting loop")
     rate = rospy.Rate(1000)  # 1000hz
-    while abs(t) < tf:
+    while abs(t) < 6:
         if h >= 0:
             h = .2 - dh*t
             set_body(h)
         elif h <= 0 and h is not -1:
             print('At ground, free body')
             h = -1
+            free_body()
 
         t = control_loop(start, Controller)
         rate.sleep()
