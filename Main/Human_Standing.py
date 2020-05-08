@@ -36,12 +36,12 @@ ankle_traj = TrajectoryGen()
 trajs = [hip_traj, knee_traj, ankle_traj]
 
 # Initial PID Params
-k_hip = [100, 10]
-k_knee = [100, 10]
-k_ankle = [80, 5]
-hip_goal = -1.1
-knee_goal = 1.9
-ankle_goal = -0.32
+k_hip = [170, 17]
+k_knee = [200, 20]
+k_ankle = [80, 8]
+hip_goal = 0
+knee_goal = 0
+ankle_goal = 0
 
 pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
 
@@ -109,11 +109,12 @@ def control_loop(start, Controller):
 
         # set the traj values to the correct joint state
         q_goal[left_order[leg_segs[i]]] = traj_q
-        q_goal[right_order[leg_segs[i]]] = [-0.05,0,-0.1][i]
+        q_goal[right_order[leg_segs[i]]] = traj_q
+        # q_goal[right_order[leg_segs[i]]] = [-0.05,0,-0.1][i]
         qd_goal[left_order[leg_segs[i]]] = traj_qd
-        qd_goal[right_order[leg_segs[i]]] = 0
+        qd_goal[right_order[leg_segs[i]]] = traj_qd
         qdd_goal[left_order[leg_segs[i]]] = traj_qdd
-        qdd_goal[right_order[leg_segs[i]]] = 0
+        qdd_goal[right_order[leg_segs[i]]] = traj_qd
 
     # publish
     msg.data = q_goal

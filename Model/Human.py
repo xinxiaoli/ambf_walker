@@ -20,6 +20,9 @@ class Human(Model.Model):
         super(Human, self).__init__(client, mass, height)
 
         self.handle = self._client.get_obj_handle('body')
+        self.left_foot_handle = self._client.get_obj_handle('left_foot')
+        self.left_calf_handle = self._client.get_obj_handle('left_calf')
+        self.left_thigh_handle = self._client.get_obj_handle('left_thigh')
         self.mass = mass
 
         # num_of_segments should be initialized with the dynamical model, which is created in the constructor
@@ -344,18 +347,40 @@ class Human(Model.Model):
         g = 9.81
         force = g*self.mass/2
 
-        z = self.handle.get_pos().z
-        roll = self.handle.get_rpy()[0]
+        body_pos = self.handle.get_pos()
+        z = body_pos.z
 
-        r = z * math.tan(roll - math.pi/2)
+        foot_pos = self.left_foot_handle.get_pos()
+        calf_pos = self.left_calf_handle.get_pos()
+        thigh_pos = self.left_thigh_handle.get_pos()
 
-        moment = force * r
+        r_foot = self.calc_mag_diff(body_pos.x, body_pos.y, foot_pos.x, foot_pos.y)
+        r_calf = self.calc_mag_diff(body_pos.x, body_pos.y, calf_pos.x, calf_pos.y)
+        r_thigh = self.calc_mag_diff(body_pos.x, body_pos.y, thigh_pos.x, thigh_pos.y)
 
-        # set ankle forces in the z
-        self.fext[self.ambf_order_crutch_left['ankle']][2] = -force
-        self.fext[self.ambf_order_crutch_right['ankle']][2] = -force
+        foot_moment = -r_foot * force
+        calf_moment = r_calf * force
+        thigh_moment = r_thigh * force
+        # thigh_moment = 0
 
-        # set ankle forces in the z
-        self.fext[self.ambf_order_crutch_left['ankle']][5] = -moment
-        self.fext[self.ambf_order_crutch_right['ankle']][5] = -moment
+        # set ankle moments in X
+        if z <= -0.25:
+            print(force, thigh_moment, calf_moment, foot_moment)
+            # left
+            self.fext[1][0] = thigh_moment
+            self.fext[2][0] = calf_moment
+            self.fext[3][0] = foot_moment
 
+            # right
+            self.fext[4][0] = thigh_moment
+            self.fext[5][0] = calf_moment
+            self.fext[6][0] = foot_moment
+        else:
+            self.fext[2][0] = 0
+            self.fext[3][0] = 0
+            self.fext[5][0] = 0
+            self.fext[6][0] = 0
+
+
+    def calc_mag_diff(self, x1, y1, x2, y2):
+        return abs(math.sqrt(x1**2 + y1**2) - math.sqrt(x2**2 + y2**2))
