@@ -34,19 +34,31 @@ trajs = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
 ]
 
 # Initial PID Params
+# Each row is for each joint
+# Kp constants are first, Kv constants are second
 Ks = [
     [100, 10],
     [100, 10],
     [80, 5],
 ]
+
+# The first group is for the left leg, the second is for the right leg
+# Each row of the block is for each joint of the leg
+# Each element in that row is then a list of the setpoints
 goals = [
-    [-1.1],
-    [1.9],
-    [-0.76]
+    [
+        [-1.1],
+        [1.9],
+        [-0.76]
+    ],
+    [
+        [-0.05],
+        [0],
+        [-0.1]
+    ]
 ]
 
 pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
-
 
 def init_k_vals():
     """
@@ -54,22 +66,25 @@ def init_k_vals():
     recreates the Controller
     """
     K_mat = np.zeros((2,num_joints,num_joints))
+    # For both Kp and Kv
     for i in range(2):
-        for j in range(len(orders)):
-            for k in range(len(leg_segs)):
-                idx = orders[j][leg_segs[k]]
-                K_mat[i,idx,idx] = Ks[k][i]
+        for side in range(len(orders)):
+            for joint in range(len(leg_segs)):
+                # Which cell in the matrix is this one
+                idx = orders[side][leg_segs[joint]]
+                # Create the diagonal matrix as we go
+                K_mat[i,idx,idx] = Ks[joint][i]
 
     Controller = PDController(K_mat[0,...], K_mat[1,...])
     return Controller
-
 
 # Loop to stay standing
 def loop(tf=5):
     Controller = init_k_vals()     # initialize the controller values
 
-    for j in range(len(trajs[0])):
-        trajs[0][j].create_traj(0, goals[j][0], 0, 0, tf)
+    for side in range(len(orders)):
+        for joint in range(len(trajs[0])):
+            trajs[side][joint].create_traj(0, goals[side][joint][0], 0, 0, tf)
 
     start = rospy.get_time()
     t = 0
@@ -81,35 +96,32 @@ def loop(tf=5):
     while abs(t) < tf:
         t = control_loop(start, Controller)
         rate.sleep()
-    print("5 second loop over")
+    print("{0} second loop over".format(tf))
 
 
 def control_loop(start, Controller):
     t = rospy.get_time() - start
 
-    goals = np.zeros((3,num_joints))
+    goal_qs = np.zeros((3,num_joints))
     msg = Float32MultiArray()
 
     # get traj value
-    for j in range(len(trajs[0])):
-        traj_data = trajs[0][j].get_traj(t)  # values from traj for specific joint
-
-        # set the traj values to the correct joint state
-        goals[0,orders[0][leg_segs[j]]] = traj_data[0]
-        goals[1,orders[0][leg_segs[j]]] = traj_data[1]
-        goals[2,orders[0][leg_segs[j]]] = traj_data[2]
-        goals[0,orders[1][leg_segs[j]]] = [-0.05,0,-0.1][j]
-        goals[1,orders[1][leg_segs[j]]] = 0
-        goals[2,orders[1][leg_segs[j]]] = 0
+    for side in range(len(orders)):
+        for joint in range(len(trajs[0])):
+            traj_data = trajs[side][joint].get_traj(t)  # values from traj for specific joint
+            idx = orders[side][leg_segs[joint]]
+            # Iterate through the q,qd,qdd for each trajectory
+            for k in range(len(traj_data)):
+                goal_qs[k,idx] = traj_data[k]
 
     # publish
-    msg.data = goals[0,:]
+    msg.data = goal_qs[0,:]
     pub_goal.publish(msg)
 
     # Get current states
     q = human.q
     qd = human.qd
-    aq = goals[2,:] + Controller.get_tau(goals[0,:] - q, goals[1,:] - qd)
+    aq = goal_qs[2,:] + Controller.get_tau(goal_qs[0,:] - q, goal_qs[1,:] - qd)
 
     # Calc tau from dynamical model
     tau = human.calculate_dynamics(aq)
@@ -153,8 +165,9 @@ def slowly_lower(tf=10):
 
     Controller = init_k_vals()  # initialize the controller values
 
-    for j in range(len(trajs[0])):
-        trajs[0][j].create_traj(0, 0, 0, 0, tf)
+    for side in range(len(orders)):
+        for joint in range(len(trajs[0])):
+            trajs[side][joint].create_traj(0, 0, 0, 0, tf)
 
     # run the controller for the given time
     print("Starting loop")
@@ -165,19 +178,12 @@ def slowly_lower(tf=10):
             set_body(h)
         elif h <= 0 and h is not -1:
             print('At ground, free body')
-            #free_body()
             h = -1
 
         t = control_loop(start, Controller)
         rate.sleep()
     print("loop done")
-    #remove_torques()
 
-    for j in range(len(trajs[0])):
-        trajs[0][i].create_traj(0, goals[j][0], 0, 0, tf)
-
-    while abs(t) < tf:
-        t = control_loop(start, Controller)
-        rate.sleep()
+    loop(tf)
 
 set_body()
