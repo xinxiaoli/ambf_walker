@@ -26,7 +26,7 @@ class Human(Model.Model):
         self.num_joints = len(self.handle.get_joint_names())
         self.q = self.num_joints * [0.0]
         self.qd = self.num_joints * [0.0]
-        self.fext = self.num_joints * [rbdl.SpatialVector()]
+        self.fext = np.zeros((self.num_joints, 6))
 
         time.sleep(2)
         self._state = (self._q, self._qd)
@@ -266,7 +266,7 @@ class Human(Model.Model):
         qd = self.qd
 
         self.calc_fext()
-        rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau)
+        rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau, self.fext)
         return self.ambf_to_rbdl(tau, reverse=True)
 
     def ambf_to_rbdl(self, input_arr, reverse=False):
@@ -352,10 +352,10 @@ class Human(Model.Model):
         moment = force * r
 
         # set ankle forces in the z
-        self.fext[self.ambf_order_crutch_left['ankle']][2] = force
-        self.fext[self.ambf_order_crutch_right['ankle']][2] = force
+        self.fext[self.ambf_order_crutch_left['ankle']][2] = -force
+        self.fext[self.ambf_order_crutch_right['ankle']][2] = -force
 
         # set ankle forces in the z
-        self.fext[self.ambf_order_crutch_left['ankle']][5] = moment
-        self.fext[self.ambf_order_crutch_right['ankle']][5] = moment
+        self.fext[self.ambf_order_crutch_left['ankle']][5] = -moment
+        self.fext[self.ambf_order_crutch_right['ankle']][5] = -moment
 
