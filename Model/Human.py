@@ -351,8 +351,9 @@ class Human(Model.Model):
         g = 9.81
         force = g*self.mass/2
 
+        trig_height = -1.4
+
         body_pos = self.handle.get_pos()
-        z = body_pos.z
 
         leg_pos = {}
         r_leg = {}
@@ -362,16 +363,26 @@ class Human(Model.Model):
             r_leg[key] = self.calc_mag_diff(body_pos.x, body_pos.y, leg_pos[key].x, leg_pos[key].y)
             moments[key] = r_leg[key] * force
 
-        if leg_pos['left_foot'].z <= -1.3:
-            print(moments['left_calf'], -moments['left_foot'])
+        f = force
+
+        self.fext = np.zeros((self.num_joints, 6))
+        if leg_pos['left_foot'].z <= trig_height:
             self.fext[1][0] = moments['left_thigh']
             self.fext[2][0] = moments['left_calf']
             self.fext[3][0] = -moments['left_foot']
-        if leg_pos['right_foot'].z <= -1.3:
-            print("right force")
+
+            self.fext[1][5] = f
+            self.fext[2][5] = f
+            self.fext[3][5] = -f
+
+        if leg_pos['right_foot'].z <= trig_height:
             self.fext[4][0] = moments['right_thigh']
             self.fext[5][0] = moments['right_calf']
             self.fext[6][0] = -moments['right_foot']
+
+            self.fext[4][5] = f
+            self.fext[5][5] = f
+            self.fext[6][5] = -f
 
 
     def calc_mag_diff(self, x1, y1, x2, y2):

@@ -36,9 +36,9 @@ trajs = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
 # Each row is for each joint
 # Kp constants are first, Kv constants are second
 Ks = [
+    [110, 11],
     [120, 12],
-    [120, 12],
-    [ 90,  8],
+    [50, 5],
 ]
 
 # The first group is for the left leg, the second is for the right leg
@@ -56,6 +56,9 @@ goals = [
         [ -0.1,  -0.1,  -0.2]
     ]
 ]
+
+# Standing
+goals = np.zeros((3,3,2))
 
 pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
 
@@ -129,12 +132,15 @@ def control_loop(start, Controller):
     return t
 
 
-def set_body(h=.2, r=math.pi/2+0.08):
+def set_body(remove_t = False, h=.2, r=math.pi/2+0.08):
     """
     Set body position to standing
     """
     body.set_pos(0, 0, h)
     body.set_rpy(r, 0, 0)
+
+    if remove_t:
+        remove_torques()
 
 
 def free_body():
@@ -157,7 +163,7 @@ def slowly_lower(tf=10):
     release position controller and continue control loop
     """
     h = .2
-    set_body(h)
+    set_body(h=h)
     start = rospy.get_time()
     t = 0
     dh = h/5
@@ -174,7 +180,7 @@ def slowly_lower(tf=10):
     while abs(t) < 6:
         if h >= 0:
             h = .2 - dh*t
-            set_body(h)
+            set_body(h=h)
         elif h <= 0 and h is not -1:
             print('At ground, free body')
             h = -1
