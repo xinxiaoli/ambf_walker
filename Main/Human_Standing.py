@@ -36,8 +36,8 @@ trajs = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
 # Each row is for each joint
 # Kp constants are first, Kv constants are second
 Ks = [
-    [170, 17],
-    [200, 20],
+    [120, 12],
+    [120, 12],
     [ 90,  8],
 ]
 

@@ -20,9 +20,13 @@ class Human(Model.Model):
         super(Human, self).__init__(client, mass, height)
 
         self.handle = self._client.get_obj_handle('body')
-        self.left_foot_handle = self._client.get_obj_handle('left_foot')
-        self.left_calf_handle = self._client.get_obj_handle('left_calf')
-        self.left_thigh_handle = self._client.get_obj_handle('left_thigh')
+
+        leg = ['thigh', 'calf', 'foot']
+        self.leg_handlers = {}
+        for seg in leg:
+            self.leg_handlers['left_' + seg]= self._client.get_obj_handle('left_' + seg)
+            self.leg_handlers['right_' + seg] = self._client.get_obj_handle('right_' + seg)
+
         self.mass = mass
 
         # num_of_segments should be initialized with the dynamical model, which is created in the constructor
@@ -350,36 +354,24 @@ class Human(Model.Model):
         body_pos = self.handle.get_pos()
         z = body_pos.z
 
-        foot_pos = self.left_foot_handle.get_pos()
-        calf_pos = self.left_calf_handle.get_pos()
-        thigh_pos = self.left_thigh_handle.get_pos()
+        leg_pos = {}
+        r_leg = {}
+        moments = {}
+        for key in self.leg_handlers:
+            leg_pos[key] = self.leg_handlers[key].get_pos()
+            r_leg[key] = self.calc_mag_diff(body_pos.x, body_pos.y, leg_pos[key].x, leg_pos[key].y)
+            moments[key] = r_leg[key] * force
 
-        r_foot = self.calc_mag_diff(body_pos.x, body_pos.y, foot_pos.x, foot_pos.y)
-        r_calf = self.calc_mag_diff(body_pos.x, body_pos.y, calf_pos.x, calf_pos.y)
-        r_thigh = self.calc_mag_diff(body_pos.x, body_pos.y, thigh_pos.x, thigh_pos.y)
-
-        foot_moment = -r_foot * force
-        calf_moment = r_calf * force
-        thigh_moment = r_thigh * force
-        # thigh_moment = 0
-
-        # set ankle moments in X
-        if z <= -0.25:
-            print(force, thigh_moment, calf_moment, foot_moment)
-            # left
-            self.fext[1][0] = thigh_moment
-            self.fext[2][0] = calf_moment
-            self.fext[3][0] = foot_moment
-
-            # right
-            self.fext[4][0] = thigh_moment
-            self.fext[5][0] = calf_moment
-            self.fext[6][0] = foot_moment
-        else:
-            self.fext[2][0] = 0
-            self.fext[3][0] = 0
-            self.fext[5][0] = 0
-            self.fext[6][0] = 0
+        if leg_pos['left_foot'].z <= -1.3:
+            print(moments['left_calf'], -moments['left_foot'])
+            self.fext[1][0] = moments['left_thigh']
+            self.fext[2][0] = moments['left_calf']
+            self.fext[3][0] = -moments['left_foot']
+        if leg_pos['right_foot'].z <= -1.3:
+            print("right force")
+            self.fext[4][0] = moments['right_thigh']
+            self.fext[5][0] = moments['right_calf']
+            self.fext[6][0] = -moments['right_foot']
 
 
     def calc_mag_diff(self, x1, y1, x2, y2):
