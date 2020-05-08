@@ -38,7 +38,7 @@ trajs = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
 Ks = [
     [110, 11],
     [120, 12],
-    [50, 5],
+    [80, 8],
 ]
 
 # The first group is for the left leg, the second is for the right leg
