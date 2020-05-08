@@ -7,6 +7,7 @@ import numpy as np
 import rbdl
 import Model
 import time
+import math
 from lib.GaitCore.Core import Point
 from std_msgs.msg import Float32MultiArray
 from threading import Thread
@@ -19,11 +20,13 @@ class Human(Model.Model):
         super(Human, self).__init__(client, mass, height)
 
         self.handle = self._client.get_obj_handle('body')
+        self.mass = mass
 
         # num_of_segments should be initialized with the dynamical model, which is created in the constructor
         self.num_joints = len(self.handle.get_joint_names())
         self.q = self.num_joints * [0.0]
         self.qd = self.num_joints * [0.0]
+        self.fext = np.zeros((self.num_joints, 6))
 
         time.sleep(2)
         self._state = (self._q, self._qd)
@@ -262,7 +265,8 @@ class Human(Model.Model):
         q = self.q
         qd = self.qd
 
-        rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau)
+        self.calc_fext()
+        rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau, self.fext)
         return self.ambf_to_rbdl(tau, reverse=True)
 
     def ambf_to_rbdl(self, input_arr, reverse=False):
@@ -329,3 +333,29 @@ class Human(Model.Model):
             'knee': [0, 2.618],
             'ankle': [0.7854, -0.3491],
             }
+
+    def calc_fext(self):
+        """
+        calculates the external forces acting on the feet
+
+        for now assumes that both feet are on the ground and weight is distributed between
+        force and moment are acting about the frame of the foot
+        """
+        g = 9.81
+        force = g*self.mass/2
+
+        z = self.handle.get_pos().z
+        roll = self.handle.get_rpy()[0]
+
+        r = z * math.tan(roll - math.pi/2)
+
+        moment = force * r
+
+        # set ankle forces in the z
+        self.fext[self.ambf_order_crutch_left['ankle']][2] = -force
+        self.fext[self.ambf_order_crutch_right['ankle']][2] = -force
+
+        # set ankle forces in the z
+        self.fext[self.ambf_order_crutch_left['ankle']][5] = -moment
+        self.fext[self.ambf_order_crutch_right['ankle']][5] = -moment
+
