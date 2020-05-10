@@ -40,23 +40,9 @@ if __name__ == "__main__":
     _client.connect()
     rate = rospy.Rate(1000)
     LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
-    #leg_plot = Plotter.Plotter(LARRE)
 
     Kp = np.zeros((7, 7))
     Kd = np.zeros((7, 7))
-    # Kp[0, 0] = 70.0
-    # Kd[0, 0] = 10.0
-    # Kp[1, 1] = 135.0
-    # Kd[1, 1] = 1.5
-    # Kp[2, 2] = 110.0
-    # Kd[2, 2] = 0.5
-    #
-    # Kp[3, 3] = 70.0
-    # Kd[3, 3] = 10.0
-    # Kp[4, 4] = 135.0
-    # Kd[4, 4] = 1.5
-    # Kp[5, 5] = 110.0
-    # Kd[5, 5] = 0.5
 
     Kp_hip = 100.0
     Kd_hip = 2.0
@@ -80,7 +66,8 @@ if __name__ == "__main__":
     Kd[4, 4] = Kd_knee
     Kp[5, 5] = Kp_ankle
     Kd[5, 5] = Kd_ankle
-    body_controller = PDController.PDController(np.array([2000]), np.array([100]) )
+
+    body_controller = PDController.PDController(np.array([2000]), np.array([100]))
     crl = DynController.DynController(LARRE, Kp, Kd)
     dt = 0.001
     tf = 2.0
@@ -100,9 +87,8 @@ if __name__ == "__main__":
 
         count = min(count, int(tf/dt)-1)
         if count == 1999:
-            if height < -0.1:
-                LARRE.handle.set_rpy(0.25, 0, 0)
-                LARRE.handle.set_pos(0, 0, height)
+            if height < -0.23:
+                LARRE.handle.set_force(0.0, 0.0, 0.0)
             else:
                 height -= 0.001
                 LARRE.handle.set_rpy(0.25, 0, 0)
@@ -122,10 +108,6 @@ if __name__ == "__main__":
                           qdd_hip[count].item(), qdd_knee[count].item(), qdd_ankle[count].item(),0.0])
 
         crl.calc_tau(q_d, qd_d, qdd_d)
-        msg_vel.data = LARRE.q
-        msg_goal.data = q_d
-        #leg_plot.update()
-        pub.publish(msg_vel)
         pub_goal.publish(msg_goal)
         count += 1
         rate.sleep()

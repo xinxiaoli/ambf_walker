@@ -9,6 +9,7 @@ import rbdl
 import Model
 import time
 from lib.GaitCore.Core import Point
+from lib.GaitCore.Core import utilities
 from std_msgs.msg import Float32MultiArray
 from threading import Thread
 
@@ -181,7 +182,6 @@ class Exoskeleton(Model.Model):
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_foot, point_local)
         fk["right_ankle"] = Point.Point(data[0], data[1], data[2])
 
-
         q_left = self.get_left_leg().ankle.angle.z
         q_right = self.get_right_leg().ankle.angle.z
         fk["left_toe"] = Point.Point(0, 0, 0)
@@ -205,6 +205,14 @@ class Exoskeleton(Model.Model):
         fk["right_heel"].z = fk["right_ankle"].z - 0.05 + 0.2 * (8.0 / 100.0) * self._height * np.sin(q_right)
 
         return fk
+
+
+    def stance_trajectory(self, tf=2.0, dt=0.01):
+
+        hip = utilities.get_traj(0.0, -0.3, 0.0, 0.0, tf, dt)
+        knee = utilities.get_traj(0.0, 0.20, 0.0, 0., tf, dt)
+        ankle = utilities.get_traj(-0.349, 0.157 + 0.1, 0.0, 0.0, tf, dt)
+        return hip, knee, ankle
 
 
     def update_state(self, q, qd):
