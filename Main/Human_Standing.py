@@ -29,9 +29,6 @@ num_joints = len(children)
 
 # controller inits
 Controller = PDController(0, 0)
-trajs = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
-         [TrajectoryGen(), TrajectoryGen(), TrajectoryGen()]
-]
 
 # Each row is for each joint
 # Kp constants are first, Kv constants are second
@@ -58,18 +55,18 @@ goals_walking = [
 ]
 
 # Standing
-goals_straight = np.zeros((2,3,2))
+goals_straight = np.zeros((3,3,2))
 
 goals_bent = [
     [
         [0, 0],
-        [0, .5],
+        [.5, .5],
         [0,0]
     ],
     [
         [0,0],
-        [0,1],
-        [0,-.3]
+        [1,1],
+        [0,0]
     ]
 ]
 
@@ -97,13 +94,16 @@ def init_k_vals():
 
 # Loop to stay standing
 def loop(tf=5, goals=goals_bent):
+    trajs_loop = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
+             [TrajectoryGen(), TrajectoryGen(), TrajectoryGen()]
+             ]
 
     Controller = init_k_vals()     # initialize the controller values
     print("Starting loop")
     for waypoint in range(1,len(goals[0][0])):
         for side in range(len(orders)):
-            for joint in range(len(trajs[0])):
-                trajs[side][joint].create_traj(goals[side][joint][waypoint-1], goals[side][joint][waypoint], 0, 0, tf)
+            for joint in range(len(trajs_loop[0])):
+                trajs_loop[side][joint].create_traj(goals[side][joint][waypoint-1], goals[side][joint][waypoint], 0, 0, tf)
 
         start = rospy.get_time()
         t = 0
@@ -114,12 +114,13 @@ def loop(tf=5, goals=goals_bent):
         print("going to waypoint {0}".format((waypoint-1)))
 
         while abs(t) < tf:
-            t = control_loop(start, Controller)
+            t = control_loop(start, Controller, trajs_loop)
             rate.sleep()
-    print("{0} second loop over".format(tf))
+        print("{0} second loop over".format(tf))
+    print("all waypoints reached")
 
 
-def control_loop(start, Controller):
+def control_loop(start, Controller, trajectory):
     t = rospy.get_time() - start
 
     goal_qs = np.zeros((3,num_joints))
@@ -127,8 +128,8 @@ def control_loop(start, Controller):
 
     # get traj value
     for side in range(len(orders)):
-        for joint in range(len(trajs[0])):
-            traj_data = trajs[side][joint].get_traj(t)  # values from traj for specific joint
+        for joint in range(len(trajectory[0])):
+            traj_data = trajectory[side][joint].get_traj(t)  # values from traj for specific joint
             idx = orders[side][leg_segs[joint]]
             # Iterate through the q,qd,qdd for each trajectory
             for k in range(len(traj_data)):
@@ -188,6 +189,10 @@ def slowly_lower(tf=10):
 
     Controller = init_k_vals()  # initialize the controller values
 
+    trajs = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
+             [TrajectoryGen(), TrajectoryGen(), TrajectoryGen()]
+             ]
+
     for side in range(len(orders)):
         for joint in range(len(trajs[0])):
             trajs[side][joint].create_traj(0, 0, 0, 0, tf)
@@ -204,7 +209,7 @@ def slowly_lower(tf=10):
             h = -1
             free_body()
 
-        t = control_loop(start, Controller)
+        t = control_loop(start, Controller, trajs)
         rate.sleep()
     print("loop done")
 

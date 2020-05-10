@@ -34,6 +34,7 @@ class Human(Model.Model):
         self.q = self.num_joints * [0.0]
         self.qd = self.num_joints * [0.0]
         self.fext = np.zeros((self.num_joints, 6))
+        self.enable_fext = True;
 
         time.sleep(2)
         self._state = (self._q, self._qd)
@@ -273,7 +274,10 @@ class Human(Model.Model):
         qd = self.qd
 
         self.calc_fext()
-        rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau, self.fext)
+        if self.enable_fext:
+            rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau, self.fext)
+        else:
+            rbdl.InverseDynamics(self._model, self.ambf_to_rbdl(q), self.ambf_to_rbdl(qd), self.ambf_to_rbdl(qdd), tau)
         return self.ambf_to_rbdl(tau, reverse=True)
 
     def ambf_to_rbdl(self, input_arr, reverse=False):
