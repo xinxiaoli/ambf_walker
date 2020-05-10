@@ -28,7 +28,7 @@ class DynController(object):
         self.pdController.kp = kp
         self.pdController.kd = kd
 
-    def calc_tau(self, q=None, qd=None, qdd=None, controllers):
+    def calc_tau(self, q=None, qd=None, qdd=None, controllers=None):
         """
 
         :param q:
@@ -79,7 +79,7 @@ class DynControllerNode(object):
         self.pdController.kp = kp
         self.pdController.kd = kd
 
-    def calc_tau(self, q=None, qd=None, qdd=None):
+    def calc_tau(self, q=None, qd=None, qdd=None, controllers=None):
         """
 
         :param q:
@@ -92,7 +92,15 @@ class DynControllerNode(object):
             e = q - self._model.q
             ed = qd - self._model.qd
             aq = self.pdController.get_tau(e, ed)
-            if qdd is not None:
-                aq = qdd + aq
+        if qdd is not None:
+            aq = qdd + aq
+
+        for ii, cnrl in enumerate(controllers):
+            if cnrl == "LQR":
+                aq[ii] = qdd[ii]
+
         tau = self._model.calculate_dynamics(aq)
-        return tau
+        msg = Float32MultiArray()
+        msg.data = tau.tolist()
+        self.pub.publish(msg)
+        self._model.update_torque(tau)
