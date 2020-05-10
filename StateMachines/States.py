@@ -107,7 +107,7 @@ class GMRTest(smach.State):
             self.msg.qdd = qdd
             self.rate.sleep()
             self.pub.publish(self.msg)
-            return "Initializing"
+            return "Following"
         else:
-            return "Initialized"
+            return "Followed"
 

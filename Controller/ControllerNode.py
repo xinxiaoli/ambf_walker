@@ -17,7 +17,7 @@ class ControllerNode(object):
         self.tau = rospy.Publisher("joint_torque", JointState, queue_size=1)
         self.traj = rospy.Publisher("trajectory", Float32MultiArray, queue_size=1)
         self._enable_control = False
-
+        self.ctrl_list = []
         self.q = np.array([])
         self.qd = np.array([])
         self.qdd = np.array([])
@@ -47,17 +47,18 @@ class ControllerNode(object):
         Kd[4, 4] = Kd_knee
         Kp[5, 5] = Kp_ankle
         Kd[5, 5] = Kd_ankle
-        self.controller = DynController.DynControllerNode(model, Kp, Kd)
+        self.controller = DynController.DynController(model, Kp, Kd)
 
     def update_set_point(self, msg):
         """
 
-        :type traj: JointState
+        :type msg: DesiredJoints
         """
 
         self.q = np.array(msg.q)
         self.qd = np.array(msg.qd)
         self.qdd = np.array(msg.qdd)
+        self.ctrl_list = msg.controllers
         if not self._enable_control:
             self._updater.start()
 
@@ -67,7 +68,7 @@ class ControllerNode(object):
         tau_msg = JointState()
         traj_msg = Float32MultiArray()
         while 1:
-            tau = self.controller.calc_tau(self.q, self.qd, self.qdd)
+            tau = self.controller.calc_tau(self.q, self.qd, self.qdd, self.ctrl_list)
             tau_msg.effort = tau.tolist()
             traj_msg.data = self.q
             self.tau.publish(tau_msg)

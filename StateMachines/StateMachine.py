@@ -21,3 +21,21 @@ class ExoStateMachine(object):
                                                 'Stabilized': 'outcome4'})
 
         outcome = sm.execute()
+
+
+
+class ExoStateMachineTest(object):
+
+    def __init__(self, model):
+        sm = smach.StateMachine(outcomes=['outcome4'])
+
+        with sm:
+            smach.StateMachine.add('Initialize', Initialize(model=model),
+                                    transitions={'Initializing': 'Initialize',
+                                                  'Initialized': 'Following'})
+
+            smach.StateMachine.add('Stabilize', Stabilize(model),
+                                   transitions={'Following': 'Follow',
+                                                'Followed': 'Initialize'})
+
+        outcome = sm.execute()

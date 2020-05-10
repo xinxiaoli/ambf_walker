@@ -50,10 +50,11 @@ class DynController(object):
                 aq[ii] = qdd[ii]
 
         tau = self._model.calculate_dynamics(aq)
-        msg = Float32MultiArray()
-        msg.data = tau.tolist()
-        self.pub.publish(msg)
-        self._model.update_torque(tau)
+        # msg = Float32MultiArray()
+        # msg.data = tau.tolist()
+        # self.pub.publish(msg)
+        # self._model.update_torque(tau)
+        return tau
 
 
 class DynControllerNode(object):
@@ -92,6 +93,7 @@ class DynControllerNode(object):
             e = q - self._model.q
             ed = qd - self._model.qd
             aq = self.pdController.get_tau(e, ed)
+
         if qdd is not None:
             aq = qdd + aq
 
