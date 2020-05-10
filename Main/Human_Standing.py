@@ -44,7 +44,7 @@ Ks = [
 # The first group is for the left leg, the second is for the right leg
 # Each row of the block is for each joint of the leg
 # Each element in that row is then a list of the setpoints
-goals = [
+goals_walking = [
     [
         [-0.07, -1.12,  -0.9],
         [    0,   1.9,  0.15],
@@ -58,9 +58,23 @@ goals = [
 ]
 
 # Standing
-goals = np.zeros((3,3,2))
+goals_straight = np.zeros((2,3,2))
+
+goals_bent = [
+    [
+        [0, 0],
+        [0, .5],
+        [0,0]
+    ],
+    [
+        [0,0],
+        [0,1],
+        [0,-.3]
+    ]
+]
 
 pub_goal = rospy.Publisher('goal', Float32MultiArray, queue_size=1)
+
 
 def init_k_vals():
     """
@@ -80,10 +94,12 @@ def init_k_vals():
     Controller = PDController(K_mat[0,...], K_mat[1,...])
     return Controller
 
-# Loop to stay standing
-def loop(tf=5):
-    Controller = init_k_vals()     # initialize the controller values
 
+# Loop to stay standing
+def loop(tf=5, goals=goals_bent):
+
+    Controller = init_k_vals()     # initialize the controller values
+    print("Starting loop")
     for waypoint in range(1,len(goals[0][0])):
         for side in range(len(orders)):
             for joint in range(len(trajs[0])):
@@ -95,11 +111,13 @@ def loop(tf=5):
         rate = rospy.Rate(1000)  # 1000hz
 
         # run the controller for the given time
-        print("Starting loop")
+        print("going to waypoint {0}".format((waypoint-1)))
+
         while abs(t) < tf:
             t = control_loop(start, Controller)
             rate.sleep()
-        print("{0} second loop over".format(tf))
+    print("{0} second loop over".format(tf))
+
 
 def control_loop(start, Controller):
     t = rospy.get_time() - start
