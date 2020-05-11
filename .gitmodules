@@ -1,3 +1,6 @@
 [submodule "lib/GaitCore"]
 	path = lib/GaitCore
 	url = https://github.com/WPI-AIM/AIM_GaitCore.git
+[submodule "lib/GaitAnalysisToolkit"]
+	path = lib/GaitAnalysisToolkit
+	url = https://github.com/nag92/AIM_GaitAnalysisToolkit.git
