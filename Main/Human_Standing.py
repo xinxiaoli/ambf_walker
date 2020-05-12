@@ -33,9 +33,9 @@ Controller = PDController(0, 0)
 # Each row is for each joint
 # Kp constants are first, Kv constants are second
 Ks = [
-    [110, 11],
-    [120, 12],
-    [80, 8],
+    [110, 10],
+    [110, 10],
+    [50, 5],
 ]
 
 # The first group is for the left leg, the second is for the right leg
@@ -43,14 +43,14 @@ Ks = [
 # Each element in that row is then a list of the setpoints
 goals_walking = [
     [
-        [-0.07, -1.12,  -0.9],
-        [    0,   1.9,  0.15],
-        [ -0.1, -0.78,   0.8]
+        [-0.07, -1.12,  -0.9, -0.12, .22],
+        [    0,   1.9,  0.15, 0, 0],
+        [ -0.1, -0.78,   0.8, -.1, -0.2]
     ],
     [
-        [-0.07, -0.12,  0.22],
-        [    0,     0,     0],
-        [ -0.1,  -0.1,  -0.2]
+        [-0.07, -0.12,  0.22, -1.12, -0.9],
+        [    0,     0,     0, 1.9, 0.15],
+        [ -0.1,  -0.1,  -0.2, -0.78, .8]
     ]
 ]
 
@@ -60,13 +60,13 @@ goals_straight = np.zeros((3,3,2))
 goals_bent = [
     [
         [0, 0],
-        [.5, .5],
-        [0,0]
+        [0, 0.5],
+        [-.1,0]
     ],
     [
         [0,0],
-        [1,1],
-        [0,0]
+        [0,1],
+        [-0.1,0]
     ]
 ]
 
@@ -93,7 +93,7 @@ def init_k_vals():
 
 
 # Loop to stay standing
-def loop(tf=5, goals=goals_bent):
+def loop(tf=5, goals=goals_walking):
     trajs_loop = [[TrajectoryGen(), TrajectoryGen(), TrajectoryGen()],
              [TrajectoryGen(), TrajectoryGen(), TrajectoryGen()]
              ]
@@ -108,14 +108,14 @@ def loop(tf=5, goals=goals_bent):
         start = rospy.get_time()
         t = 0
 
-        rate = rospy.Rate(1000)  # 1000hz
+        # rate = rospy.Rate(1000)  # 1000hz
 
         # run the controller for the given time
         print("going to waypoint {0}".format((waypoint-1)))
 
         while abs(t) < tf:
             t = control_loop(start, Controller, trajs_loop)
-            rate.sleep()
+            # rate.sleep()
         print("{0} second loop over".format(tf))
     print("all waypoints reached")
 
@@ -146,6 +146,16 @@ def control_loop(start, Controller, trajectory):
 
     # Calc tau from dynamical model
     tau = human.calculate_dynamics(aq)
+
+    max_tau = 50
+
+    for side in range(len(orders)):
+        for key in orders[side]:
+            if tau[orders[side][key]] >= max_tau:
+                tau[orders[side][key]] = max_tau
+            elif tau[orders[side][key]] <= -max_tau:
+                tau[orders[side][key]] = -max_tau
+
     human.update_torque(tau)
     t = rospy.get_time() - start
     return t
@@ -176,7 +186,7 @@ def remove_torques():
         body.set_joint_effort(i,0)
 
 
-def slowly_lower(tf=10):
+def slowly_lower(tf=10, walk_after=False):
     """
     start body above ground then slowly lower until feet are touching (0,0,0)
     release position controller and continue control loop
@@ -185,7 +195,8 @@ def slowly_lower(tf=10):
     set_body(h=h)
     start = rospy.get_time()
     t = 0
-    dh = h/5
+    t_ground = 5
+    dh = h/t_ground
 
     Controller = init_k_vals()  # initialize the controller values
 
@@ -200,7 +211,10 @@ def slowly_lower(tf=10):
     # run the controller for the given time
     print("Starting loop")
     rate = rospy.Rate(1000)  # 1000hz
-    while abs(t) < 6:
+    limit = tf
+    if walk_after:
+        limit = t_ground + .1
+    while abs(t) < limit:
         if h >= 0:
             h = .2 - dh*t
             set_body(h=h)
@@ -213,6 +227,9 @@ def slowly_lower(tf=10):
         rate.sleep()
     print("loop done")
 
-    loop(tf)
+    
+    if walk_after:
+        print("beginning walking")
+        loop(2, goals=goals_walking)
 
 set_body()
