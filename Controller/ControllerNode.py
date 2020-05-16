@@ -68,7 +68,8 @@ class ControllerNode(object):
         tau_msg = JointState()
         traj_msg = Float32MultiArray()
         while 1:
-            tau = self.controller.calc_tau(self.q, self.qd, self.qdd, self.ctrl_list)
+            aq = self.controller.calc_tau(self.q, self.qd, self.qdd, self.ctrl_list)
+            tau = self._model.calculate_dynamics(aq)
             tau_msg.effort = tau.tolist()
             traj_msg.data = self.q
             self.tau.publish(tau_msg)

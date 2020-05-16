@@ -4,7 +4,8 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import JointState
 from ambf_walker.msg import DesiredJoints
-
+from lib.GaitAnalysisToolkit.LearningTools.Runner import TPGMMRunner
+from std_msgs.msg import Float64
 
 class Initialize(smach.State):
 
@@ -12,7 +13,7 @@ class Initialize(smach.State):
 
         smach.State.__init__(self, outcomes=outcomes)
         self._model = model
-        self.rate = rospy.Rate(1000)
+        self.rate = rospy.Rate(100)
         tf = 2.0
         dt = 0.01
         self.hip, self.knee, self.ankle = self._model.stance_trajectory(tf=tf, dt=dt)
@@ -59,19 +60,19 @@ class Initialize(smach.State):
 class Stabilize(smach.State):
     def __init__(self, model, outcomes=['Stabilizing', 'Stabilized']):
         smach.State.__init__(self, outcomes=outcomes)
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(100)
         self._model = model
 
     def execute(self, userdata):
         # Your state execution goes here
         z = self._model.handle.get_pos().z
         print z
-        if z < -0.23:
+        if z < 1.5:
             self._model.handle.set_force(0.0, 0.0, 0.0)
             self.rate.sleep()
             return 'Stabilized'
         else:
-            height = z - 0.0001
+            height = 2.0
             self._model.handle.set_pos(0, 0, height)
             self.rate.sleep()
             return 'Stabilizing'
@@ -82,32 +83,42 @@ class GMRTest(smach.State):
 
     def __init__(self, model, outcomes=["Following", "Followed"]):
         smach.State.__init__(self, outcomes=outcomes)
-        self.rate = rospy.Rate(100)
+        self.rate = rospy.Rate(10)
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        # self.point = rospy.Publisher("set", Float64, queue_size=1)
+        self.lqr = rospy.Publisher("LQR", DesiredJoints, queue_size=1)
         self.msg = DesiredJoints()
+        self.msg_control = DesiredJoints()
         self._model = model
         self.count = 0
-        self.runner = TPGMMRunner.TPGMMRunner("TMGMM" + ".pickle")
+        self.runner = TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/poly" + ".pickle")
 
     def execute(self, userdata):
         # Your state execution goes here
 
-        if self.count < 10:
-
+        if self.count < self.runner.get_length():
+            self.msg.controllers = ["PD", "PD", "PD", "LQR", "PD", "PD", "PD"]
+            self.msg = DesiredJoints()
+            self.msg_control = DesiredJoints()
+            length = len(self._model.q)
             q = self._model.q
             qd = self._model.qd
-            qdd = self._model.qdd
-            self.runner.step(q[0], q[0])
-            xdd = self.runner.xdd
-            self.msg.controllers = ["LQR", "PD", "PD", "PD", "PD", "PD", "PD"]
-            qdd[0] = xdd[0]
-
-            self.count += 1
+            qdd = np.zeros(length)
+            x = self.runner.step(q[3],qd[3])
+            dx = self.runner.dx[0]
+            ddx = self.runner.ddx[0]
             self.msg.q = q
+            self.msg.q[3] = x
             self.msg.qd = qd
             self.msg.qdd = qdd
-            self.rate.sleep()
+            self.msg.qdd[3] = ddx
+            self.count += 1
+            self.lqr.publish(self.msg)
             self.pub.publish(self.msg)
+            self.rate.sleep()
             return "Following"
         else:
+            self.pub.publish(self.msg)
+            self.lqr.publish(self.msg)
             return "Followed"
 

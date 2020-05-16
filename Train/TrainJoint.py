@@ -6,6 +6,9 @@ from lib.GaitAnalysisToolkit.LearningTools.Trainer import TPGMMTrainer, GMMTrain
 from lib.GaitAnalysisToolkit.LearningTools.Runner import  GMMRunner, TPGMMRunner
 from lib.GaitAnalysisToolkit.Session import ViconGaitingTrial as Trial
 from lib.GaitAnalysisToolkit.lib.Vicon import Vicon
+from lib.GaitAnalysisToolkit.lib.GaitCore.Core import Point
+
+
 
 def smooth(y, box_pts):
     box = np.ones(box_pts) / box_pts
@@ -68,9 +71,9 @@ def compare_stair_angles(files, side):
         else:
             joints = trial.vicon.get_model_output().get_left_leg()
         rn = indiecs[file]
-        hip.append(np.array(joints.hip.angle.x[rn[0]:rn[1]]))
-        knee.append(np.array(joints.knee.angle.x[rn[0]:rn[1]]))
-        ankle.append(np.array(joints.ankle.angle.x[rn[0]:rn[1]]))
+        hip.append(-(np.pi/180)*np.array(joints.hip.angle.x[rn[0]:rn[1]]))
+        knee.append(-(np.pi/180)*np.array(joints.knee.angle.x[rn[0]:rn[1]]))
+        ankle.append(-(np.pi/180)*np.array(joints.ankle.angle.x[rn[0]:rn[1]]))
 
     return hip, knee, ankle
 
@@ -89,23 +92,27 @@ def compare_stair_angles(files, side):
 #         ["subject00", "subject02", "Subject03", "Subject04", "Subject05", "Subject06", "Subject07", "Subject08",
 #          "Subject09", "Subject10"])
 
-files = ["/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_00/subject_00 stairconfig1_01.csv",
-         "/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_02/subject_02_stair_config1_03.csv",
-         "/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_03/subject_03_stair_config0_02.csv"]
 
+files =  ["/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_00/subject_00 stairconfig1_01.csv",
+         "/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_03/subject_03_stair_config0_02.csv",
+         "/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_04/subject_04_stair_config1_00.csv",
+         "/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_05/subject_05_stair_config1_00.csv",
+         "/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_06/subject_06 stairclimbing_config1_02.csv",
+         "/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_07/subject_07 stairclimbing_config1_01.csv",
+         "/home/nathanielgoldfarb/Documents/stairclimbing_data/CSVs/subject_08/subject_08_stair_config1_01.csv" ]
 
-side = ["R", "L", "R"]
+side = ["R",  "L", "L", "R", "L", "R", "R"]
 hip, knee, ankle = compare_stair_angles(files, side)
 
 
 
-# trainer = TPGMMTrainer.TPGMMTrainer(hip, "TMGMM", 25, 0.01)
-# bic = trainer.train()
-# runner = TPGMMRunner.TPGMMRunner("TMGMM" + ".pickle")
-# path2 = runner.run()
-# plt.plot(path2,linewidth=4)
-#
+trainer = TPGMMTrainer.TPGMMTrainer(hip, "/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/hip.pickle", 25, 0.01)
+bic = trainer.train()
+runner = TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/hip.pickle")
+path2 = runner.run()
+plt.plot(path2,linewidth=4)
+
 for p in hip:
     plt.plot(p)
-plt.legend(["subject00", "subject02", "Subject03"])
+plt.legend( ["subject00",  "Subject03", "Subject04", "Subject05", "Subject06", "Subject07", "Subject08"])
 plt.show()

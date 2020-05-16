@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import JointState
 from ambf_walker.msg import DesiredJoints
-from StateMachines.States import Initialize, Stabilize
+from StateMachines.States import Initialize, Stabilize, GMRTest
 
 class ExoStateMachine(object):
 
@@ -32,10 +32,10 @@ class ExoStateMachineTest(object):
         with sm:
             smach.StateMachine.add('Initialize', Initialize(model=model),
                                     transitions={'Initializing': 'Initialize',
-                                                  'Initialized': 'Following'})
+                                                  'Initialized': 'Follow'})
 
-            smach.StateMachine.add('Stabilize', Stabilize(model),
+            smach.StateMachine.add('Follow', GMRTest(model),
                                    transitions={'Following': 'Follow',
-                                                'Followed': 'Initialize'})
+                                                'Followed': 'Follow'})
 
         outcome = sm.execute()

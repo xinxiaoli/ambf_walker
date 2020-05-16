@@ -43,18 +43,13 @@ class DynController(object):
             aq = self.pdController.get_tau(e, ed)
 
         if qdd is not None:
-            aq = qdd + aq
+            aq += qdd
 
-        for ii, cnrl in enumerate(controllers):
-            if cnrl == "LQR":
+        for ii, ctrl in enumerate(controllers):
+            if ctrl is "LQR":
                 aq[ii] = qdd[ii]
 
-        tau = self._model.calculate_dynamics(aq)
-        # msg = Float32MultiArray()
-        # msg.data = tau.tolist()
-        # self.pub.publish(msg)
-        # self._model.update_torque(tau)
-        return tau
+        return aq
 
 
 class DynControllerNode(object):
@@ -89,19 +84,22 @@ class DynControllerNode(object):
         :return:
         """
         aq = np.zeros(7)
-        if q is not None and qd is not None:
-            e = q - self._model.q
-            ed = qd - self._model.qd
-            aq = self.pdController.get_tau(e, ed)
+        tau = np.zeros(7)
+        aq[0] = qdd[0]
+        # if q is not None and qd is not None:
+        #     e = q - self._model.q
+        #     ed = qd - self._model.qd
+        #     aq = self.pdController.get_tau(e, ed)
+        #
+        # if qdd is not None:
+        #     aq = qdd + aq
+        #
+        # for ii, cnrl in enumerate(controllers):
+        #     if cnrl == "LQR":
+        #         aq[ii] = qdd[ii]
 
-        if qdd is not None:
-            aq = qdd + aq
-
-        for ii, cnrl in enumerate(controllers):
-            if cnrl == "LQR":
-                aq[ii] = qdd[ii]
-
-        tau = self._model.calculate_dynamics(aq)
+        temp = self._model.calculate_dynamics(aq)
+        #tau[0] = temp[0]
         msg = Float32MultiArray()
         msg.data = tau.tolist()
         self.pub.publish(msg)
