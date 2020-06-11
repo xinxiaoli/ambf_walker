@@ -8,6 +8,7 @@ from threading import Thread
 from lib.GaitCore.Bio import Joint, Leg
 from lib.GaitCore.Core import Point
 from std_msgs.msg import Float32MultiArray
+from sensor_msgs.msg import JointState
 
 class Model(object):
 
@@ -22,6 +23,8 @@ class Model(object):
         self._model = self.dynamic_model(mass, height)
         self._updater = Thread(target=self.update)
         self._enable_control = False
+        self.sub_torque = rospy.Subscriber("joint_torque", JointState, self.torque_cb)
+        self.q_pub = rospy.Publisher("q", Float32MultiArray, queue_size=1)
 
         left_joints = {}
         right_joints = {}
@@ -33,13 +36,18 @@ class Model(object):
                 moment = Point.Point(0, 0, 0)
                 power = Point.Point(0, 0, 0)
                 joint[output] = Joint.Joint(angle, moment, power, force)
-                # joint[output] = core.Newton.Newton(angle, force, moment, power)
 
         self._left_leg = Leg.Leg(left_joints["Hip"], left_joints["Knee"], left_joints["Ankle"])
         self._right_leg = Leg.Leg(right_joints["Hip"], right_joints["Knee"], right_joints["Ankle"])
 
+    def torque_cb(self, tau):
+        self.update_torque(list(tau.effort))
 
     def update_torque(self, tau):
+        """
+
+        :type tau: JointState
+        """
         self.tau = tau
         self._enable_control = True
 
@@ -101,7 +109,7 @@ class Model(object):
         msg_qd = Float32MultiArray()
         msg_q = Float32MultiArray()
         msg_tau = Float32MultiArray()
-
+        q_msg = Float32MultiArray()
         while 1:
             self.q = self.handle.get_all_joint_pos()
             self.qd = self.handle.get_all_joint_vel()
@@ -118,6 +126,11 @@ class Model(object):
             pub_qd.publish(msg_qd)
             pub_q.publish(msg_q)
             pub_tau.publish(msg_tau)
+            q_msg.data = self.q
+            self.q_pub.publish(q_msg)
+            if self._enable_control:
+                self.handle.set_all_joint_effort(self.tau)
+
             rate.sleep()
 
     @abc.abstractmethod
