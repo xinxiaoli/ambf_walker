@@ -118,7 +118,6 @@ class DoublePendulum(Model.Model):
         rate = rospy.Rate(1000)  # 1000hz
         q_msg = Float32MultiArray()
         while 1:
-            print("lsakdjflskjdf")
             self.q = self.handle.get_all_joint_pos()
             self.qd = self.handle.get_all_joint_velocities()
             self._joint_num = self.q.size

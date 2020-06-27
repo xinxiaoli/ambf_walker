@@ -2,9 +2,7 @@ import rospy
 import abc
 from threading import Thread
 from sensor_msgs.msg import JointState
-from ambf_walker.msg import DesiredJoints
 import numpy as np
-import DynController
 from std_msgs.msg import Float32MultiArray
 
 class BaseController(object):
@@ -14,7 +12,6 @@ class BaseController(object):
         self._model = model
         # rospy.init_node('Controller')
         self._updater = Thread(target=self.set_torque)
-        self.sub_set_points = rospy.Subscriber("set_points", DesiredJoints, self.update_set_point)
         self.tau = rospy.Publisher("joint_torque", JointState, queue_size=1)
         self.traj = rospy.Publisher("trajectory", Float32MultiArray, queue_size=1)
         self._enable_control = False
@@ -30,10 +27,9 @@ class BaseController(object):
         :type msg: DesiredJoints
         """
 
-        self.q = np.array(msg.q)
-        self.qd = np.array(msg.qd)
-        self.qdd = np.array(msg.qdd)
-        self.ctrl_list = msg.controllers
+        self.q = np.array(msg.position)
+        self.qd = np.array(msg.velocity)
+        self.qdd = np.array(msg.effort)
         if not self._enable_control:
             self._updater.start()
 
@@ -47,9 +43,7 @@ class BaseController(object):
         tau_msg = JointState()
         traj_msg = Float32MultiArray()
         while 1:
-            aq = self.calc_tau(self.q, self.qd, self.qdd)
-            tau = self._model.calculate_dynamics(aq)
-            tau_msg.effort = tau.tolist()
+            tau_msg.effort = self.calc_tau(self.q, self.qd, self.qdd)
             traj_msg.data = self.q
             self.tau.publish(tau_msg)
             self.traj.publish(traj_msg)
