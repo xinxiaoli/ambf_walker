@@ -4,7 +4,7 @@ from os import sys, path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 
-
+from ambf_walker.msg import DesiredJoints
 from Model import DoublePendulm
 import rospy
 from ambf_client import Client
