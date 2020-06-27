@@ -10,22 +10,19 @@ from lib.GaitCore.Core import Point
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import JointState
 from Utlities import PendPlotter
+from . import Model
 
-class DoublePendulum(object):
+class DoublePendulum(Model.Model):
 
     def __init__(self, client):
-        self._client = client
-        self._q = np.array([])
-        self._qd = np.array([])
-        self.tau = np.array([])
-        self._handle = None
-        self._model = self.dynamic_model()
-        self._updater = Thread(target=self.update)
-        self._enable_control = False
-        self.sub_torque = rospy.Subscriber("joint_torque", JointState, self.torque_cb)
-        self.q_pub = rospy.Publisher("q", Float32MultiArray, queue_size=1)
-        self.plt = PendPlotter.Plotter(self._model)
-
+        super(DoublePendulum, self).__init__(client, 0, 0)
+        self._handle = self._client.get_obj_handle('Sphere')
+        self.q = 2 * [0.0]
+        self.qd = 2 * [0.0]
+        time.sleep(2)
+        self._state = (self._q, self._qd)
+        #self.plt = PendPlotter.Plotter(self)
+        self._updater.start()
 
 
     def torque_cb(self, tau):
@@ -69,8 +66,7 @@ class DoublePendulum(object):
 
     @qd.setter
     def qd(self, value):
-        value[2] *= -1
-        value[5] *= -1
+
         self._qd = np.asarray(value)
 
     @property
@@ -82,7 +78,7 @@ class DoublePendulum(object):
         self._state = np.concatenate(value)
 
     @abc.abstractmethod
-    def dynamic_model(self):
+    def dynamic_model(self, mass, height):
         m1 = 1
         m2 = 1
         l1 = 0.5
@@ -108,9 +104,9 @@ class DoublePendulum(object):
         body1 = rbdl.Body.fromMassComInertia(m1, np.array([0.0, 0.0, -0.35]), I1)
 
         body2 = rbdl.Body.fromMassComInertia(m2, np.array([0.0, 0.0, -0.35]), I2)
-        self.b0 = self.model.AppendBody(rbdl.SpatialTransform(), joint_rot_y, link0)
-        self.b1 = self.model.AppendBody(xtrans_2, joint_rot_y, body1)
-        self.b2 = self.model.AppendBody(xtrans_2, joint_rot_y, body2)
+        self.b0 = model.AppendBody(rbdl.SpatialTransform(), joint_rot_y, link0)
+        self.b1 = model.AppendBody(xtrans_2, joint_rot_y, body1)
+        self.b2 = model.AppendBody(xtrans_2, joint_rot_y, body2)
         model.gravity = np.array([0, 0, -9.81])
         return model
 
@@ -122,14 +118,17 @@ class DoublePendulum(object):
         rate = rospy.Rate(1000)  # 1000hz
         q_msg = Float32MultiArray()
         while 1:
+            print("lsakdjflskjdf")
             self.q = self.handle.get_all_joint_pos()
-            self.qd = self.handle.get_all_joint_vel()
+            self.qd = self.handle.get_all_joint_velocities()
             self._joint_num = self.q.size
             q_msg.data = self.q
             self.q_pub.publish(q_msg)
             if self._enable_control:
                 self.handle.set_all_joint_effort(self.tau)
+
             rate.sleep()
+            #self.plt.update()
 
     @abc.abstractmethod
     def  ambf_to_dyn(self, q):
@@ -137,7 +136,27 @@ class DoublePendulum(object):
 
     @abc.abstractmethod
     def fk(self):
-        pass
+        """
+
+        :param model: model
+        :type model: rbdl.model
+        :return: 2D array of the joint locations
+        """
+
+        x = []
+        y = []
+
+        point_local = np.array([0.0, 0.0, 0.0])
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.b0, point_local)
+        x.append(data[0])
+        y.append(data[2])
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.b1, point_local)
+        x.append(data[0])
+        y.append(data[2])
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.b2, point_local)
+        x.append(data[0])
+        y.append(data[2])
+        return (x, y)
 
     @abc.abstractmethod
     def update_state(self, q, qd):

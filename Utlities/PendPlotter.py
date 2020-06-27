@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 
 import rbdl
 
-from Models import double_pendulm
 
 plt.ion()
 
