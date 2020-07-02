@@ -119,7 +119,7 @@ class DoublePendulum(Model.Model):
         q_msg = Float32MultiArray()
         while 1:
             self.q = self.handle.get_all_joint_pos()
-            self.qd = self.handle.get_all_joint_velocities()
+            self.qd = self.handle.get_all_joint_vel()
             self._joint_num = self.q.size
             q_msg.data = self.q
             self.q_pub.publish(q_msg)
