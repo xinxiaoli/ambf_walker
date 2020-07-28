@@ -17,7 +17,6 @@ def smooth(y, box_pts):
 
 
 def get_stair_ranges(file, side="R"):
-    print file
     trial = Trial.ViconGaitingTrial(vicon_file=file)
     if side == "R":
         m = trial.vicon.markers.get_marker("RTOE")
