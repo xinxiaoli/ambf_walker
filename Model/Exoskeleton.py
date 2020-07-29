@@ -8,10 +8,11 @@ import numpy as np
 import rbdl
 import Model
 import time
-from lib.GaitCore.Core import Point
-from lib.GaitCore.Core import utilities
+from GaitCore.Core import Point
+from GaitCore.Core import utilities
 from std_msgs.msg import Float32MultiArray
 from threading import Thread
+from . import Model
 
 class Exoskeleton(Model.Model):
 
@@ -25,9 +26,9 @@ class Exoskeleton(Model.Model):
         self._updater.start()
 
     def update_torque(self, tau):
-        tau[2] *= -1
-        tau[5] *= -1
-        tau[-1] = 0.0
+        # tau[2] *= -1
+        # tau[5] *= -1
+        # tau[-1] = 0.0
         super(Exoskeleton, self).update_torque(tau)
 
     @property
@@ -40,14 +41,14 @@ class Exoskeleton(Model.Model):
 
     @q.setter
     def q(self, value):
-        value[2] *= -1
-        value[5] *= -1
+        # value[2] *= -1
+        # value[5] *= -1
         self._q = np.array(value)
 
     @qd.setter
     def qd(self, value):
-        value[2] *= -1
-        value[5] *= -1
+        # value[2] *= -1
+        # value[5] *= -1
         self._qd = np.array(value)
 
     @property
@@ -207,11 +208,11 @@ class Exoskeleton(Model.Model):
         return fk
 
 
-    def stance_trajectory(self, tf=2.0, dt=0.01):
+    def stance_trajectory(self, tf=2, dt=0.01):
 
-        hip = utilities.get_traj(0.0, -0.3, 0.0, 0.0, tf, dt)
-        knee = utilities.get_traj(0.0, 0.20, 0.0, 0., tf, dt)
-        ankle = utilities.get_traj(-0.349, 0.157 + 0.1, 0.0, 0.0, tf, dt)
+        hip = get_traj(0.0, -0.3, 0.0, 0.0, tf, dt)
+        knee = get_traj(0.0, 0.20, 0.0, 0., tf, dt)
+        ankle = get_traj(-0.349, 0.157 + 0.1, 0.0, 0.0, tf, dt)
         return hip, knee, ankle
 
 
@@ -223,4 +224,28 @@ class Exoskeleton(Model.Model):
         self.get_right_leg().hip.angle.z = q[3]
         self.get_right_leg().knee.angle.z = q[4]
         self.get_right_leg().ankle.angle.z = q[5]
+
+def get_traj(q0, qf, v0, vf, tf, dt):
+
+    b = np.array([q0, v0, qf, vf]).reshape((-1,1))
+    A = np.array([[1.0, 0.0, 0.0, 0.0],
+                  [0.0, 1.0, 0.0, 0.0],
+                  [1.0, 0.0, tf ** 2, tf ** 3],
+                  [0.0, 0.0, 2 * tf, 3 * tf * 2]])
+
+    x = np.linalg.solve(A, b)
+    q = []
+    qd = []
+    qdd = []
+
+    for t in np.linspace(0, tf, int(tf/dt)):
+        q.append(x[0] + x[1] * t + x[2] * t * t + x[3] * t * t * t)
+        qd.append(x[1] + 2*x[2] * t + 3*x[3] * t * t)
+        qdd.append(2*x[2] + 6*x[3] * t)
+
+    traj = {}
+    traj["q"] = q
+    traj["qd"] = qd
+    traj["qdd"] = qdd
+    return traj
 

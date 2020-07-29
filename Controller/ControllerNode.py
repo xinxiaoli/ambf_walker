@@ -3,9 +3,8 @@ from threading import Thread
 from sensor_msgs.msg import JointState
 from ambf_walker.msg import DesiredJoints
 import numpy as np
-import DynController
 from std_msgs.msg import Float32MultiArray
-
+from . import DynController
 class ControllerNode(object):
 
     def __init__(self, model):
@@ -25,13 +24,13 @@ class ControllerNode(object):
         Kp = np.zeros((7, 7))
         Kd = np.zeros((7, 7))
 
-        Kp_hip = 100.0
-        Kd_hip = 2.0
+        Kp_hip = 50.0
+        Kd_hip = 0.5
 
         Kp_knee = 125.0
         Kd_knee = 1.0
 
-        Kp_ankle = 750.0
+        Kp_ankle = 100.0
         Kd_ankle = 0.4
 
         Kp[0, 0] = Kp_hip
