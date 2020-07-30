@@ -4,9 +4,11 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import JointState
 from ambf_walker.msg import DesiredJoints
-
 from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
-from std_msgs.msg import Float64
+from std_msgs.msg import Float32MultiArray
+from Model import Model
+
+
 
 class Initialize(smach.State):
 
@@ -78,6 +80,84 @@ class Stabilize(smach.State):
             return 'Stabilizing'
 
 
+
+class Listening(smach.State):
+
+    def __init__(self, model, outcomes=["Sending", "Waiting"]):
+        smach.State.__init__(self, outcomes=outcomes,
+                                   input_keys=['count', 'q'],
+                                   output_keys=['count', 'q'])
+
+
+        rospy.Subscriber("Traj", DesiredJoints, callback=self.traj_cb)
+        self._model = model
+        self.have_msg = False
+        self.Rate = rospy.Rate(100)
+        self.q = []
+    def traj_cb(self, msg):
+
+        if not self.have_msg:
+            current_joints = self._model.q
+            potato = []
+            for q, q_d in zip(tuple(current_joints), msg.q):
+                self.q.append(Model.get_traj(q, q_d, 0.0, 0.0, 2.0, 0.01))
+            self.have_msg = True
+
+    def execute(self, userdata):
+        # Your state execution goes here
+        userdata.count = 0
+
+        self.Rate.sleep()
+        if self.have_msg:
+            userdata.q = self.q
+            userdata.count = 0
+            self.have_msg = False
+            return "Sending"
+        else:
+            return "Waiting"
+
+class Follow(smach.State):
+
+    def __init__(self, model, outcomes=['Following', 'Followed']):
+
+        smach.State.__init__(self, outcomes=outcomes,
+                              input_keys=['count', 'q'],
+                              output_keys=['count', 'q'])
+        self._model = model
+        self.rate = rospy.Rate(100)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+
+    def execute(self, userdata):
+
+        q = userdata.q
+        count = userdata.count
+        if count <= len(q[0]["q"]) - 1:
+
+            q_d = np.array([q[0]["q"][count].item(), q[1]["q"][count].item(),
+                          q[2]["q"][count].item(), q[3]["q"][count].item(),
+                          q[4]["q"][count].item(), q[5]["q"][count].item(), 0.0])
+
+            qd_d = np.array([q[0]["qd"][count].item(), q[1]["qd"][count].item(),
+                          q[2]["qd"][count].item(), q[3]["qd"][count].item(),
+                          q[4]["qd"][count].item(), q[5]["qd"][count].item(), 0.0])
+
+            qdd_d = np.array([q[0]["qdd"][count].item(), q[1]["qdd"][count].item(),
+                          q[2]["qdd"][count].item(), q[3]["qdd"][count].item(),
+                          q[4]["qdd"][count].item(), q[5]["qdd"][count].item(), 0.0])
+
+            self.msg.q = q_d
+            self.msg.qd = qd_d
+            self.msg.qdd = qdd_d
+            self.msg.controllers = ["PD", "PD", "PD", "PD", "PD", "PD", "PD"]
+
+            self.pub.publish(self.msg)
+            userdata.count += 1
+            print(userdata.count)
+            self.rate.sleep()
+            return "Following"
+        else:
+            return "Followed"
 
 class GMRTest(smach.State):
 
