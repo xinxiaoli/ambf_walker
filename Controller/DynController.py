@@ -4,9 +4,9 @@ from std_msgs.msg import Float32MultiArray
 from Model import Model
 from . import PDController
 from sensor_msgs.msg import JointState
+from . import ControllerBase
 
-
-class DynController(object):
+class DynController(ControllerBase.BaseController):
 
     def __init__(self, model, kp, kd):
         """
@@ -15,9 +15,8 @@ class DynController(object):
         :param kp:
         :param kd:
         """
-        self._model = model
-        self.pdController = PDController.PDController(kp, kd)
-        self.pub = rospy.Publisher('tau', JointState, queue_size=1)
+        super(DynController, self).__init__(model)
+        self.pdController = PDController.PDController(model, kp, kd)
 
     def set_gains(self, kp, kd):
         """
@@ -29,7 +28,7 @@ class DynController(object):
         self.pdController.kp = kp
         self.pdController.kd = kd
 
-    def calc_tau(self, q=None, qd=None, qdd=None, controllers=None):
+    def calc_tau(self, q=None, qd=None, qdd=None):
         """
 
         :param q:
@@ -37,63 +36,13 @@ class DynController(object):
         :param qdd:
         :return:
         """
-        aq = np.zeros(7)
+        aq = np.zeros(len(q))
         if q is not None and qd is not None:
             e = q - self._model.q
             ed = qd - self._model.qd
-            aq = self.pdController.get_tau(e, ed)
+            aq = self.pdController.calc_tau(e, ed)
             aq += qdd
-        return aq
+        tau = self._model.calculate_dynamics(aq)
+        return tau
 
 
-class DynControllerNode(object):
-
-    def __init__(self, model, kp, kd):
-        """
-
-        :param model:
-        :param kp:
-        :param kd:
-        """
-        self._model = model
-        self.pdController = PDController.PDController(kp, kd)
-
-    def set_gains(self, kp, kd):
-        """
-
-        :param kp:
-        :param kd:
-        :return:
-        """
-        self.pdController.kp = kp
-        self.pdController.kd = kd
-
-    def calc_tau(self, q=None, qd=None, qdd=None, controllers=None):
-        """
-
-        :param q:
-        :param qd:
-        :param qdd:
-        :return:
-        """
-        aq = np.zeros(7)
-        tau = np.zeros(7)
-        aq[0] = qdd[0]
-        # if q is not None and qd is not None:
-        #     e = q - self._model.q
-        #     ed = qd - self._model.qd
-        #     aq = self.pdController.get_tau(e, ed)
-        #
-        # if qdd is not None:
-        #     aq = qdd + aq
-        #
-        # for ii, cnrl in enumerate(controllers):
-        #     if cnrl == "LQR":
-        #         aq[ii] = qdd[ii]
-
-        temp = self._model.calculate_dynamics(aq)
-
-        msg = JointState()
-        msg.effort = tau.tolist()
-        #self.pub.publish(msg)
-        #self._model.update_torque(tau)

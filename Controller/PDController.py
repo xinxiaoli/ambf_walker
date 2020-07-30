@@ -1,15 +1,14 @@
 
 
 import numpy as np
+from . import ControllerBase
 
+class PDController(ControllerBase.BaseController):
 
-class PDController(object):
-
-    def __init__(self, kp, kd):
-
+    def __init__(self, model, kp, kd):
+        super(PDController, self).__init__(model)
         self._kp = kp
         self._kd = kd
-
 
     @property
     def kp(self):
@@ -27,5 +26,5 @@ class PDController(object):
     def kd(self, kd):
         self._kd = kd
 
-    def get_tau(self, e, ed):
-        return self.kp.dot(e) + self.kd.dot(ed)
+    def calc_tau(self, q=None, qd=None, qdd=None):
+        return self.kp.dot(q) + self.kd.dot(qd)
