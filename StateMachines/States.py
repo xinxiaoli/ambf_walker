@@ -95,10 +95,9 @@ class Listening(smach.State):
         self.Rate = rospy.Rate(100)
         self.q = []
     def traj_cb(self, msg):
-
+        self.q = []
         if not self.have_msg:
             current_joints = self._model.q
-            potato = []
             for q, q_d in zip(tuple(current_joints), msg.q):
                 self.q.append(Model.get_traj(q, q_d, 0.0, 0.0, 2.0, 0.01))
             self.have_msg = True
