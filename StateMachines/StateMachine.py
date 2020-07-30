@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import JointState
 from ambf_walker.msg import DesiredJoints
-from StateMachines.States import Initialize, Stabilize, GMRTest, Follow, Listening
+from StateMachines.States import Initialize, Stabilize, GMRTest, Follow, Listening, GoTo
 
 class ExoStateMachine(object):
 
@@ -51,6 +51,24 @@ class ExoStateMachineFollowing(object):
         outcome = sm.execute()
 
 
+
+class ExoStateMachineGoTo(object):
+
+    def __init__(self, model):
+        sm = smach.StateMachine(outcomes=['outcome4'])
+        sm.userdata.counter = 0
+        with sm:
+            smach.StateMachine.add('Initialize', Initialize(model=model),
+                                    transitions={'Initializing': 'Initialize',
+                                                  'Initialized': 'GoTo'}
+                                   )
+
+            smach.StateMachine.add('GoTo', GoTo(model),
+                                   transitions={'Waiting': 'GoTo',
+                                                'Sending': 'GoTo'})
+
+
+        outcome = sm.execute()
 
 class ExoStateMachineTest(object):
 

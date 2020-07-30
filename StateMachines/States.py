@@ -80,6 +80,44 @@ class Stabilize(smach.State):
             return 'Stabilizing'
 
 
+class GoTo(smach.State):
+
+    def __init__(self, model, outcomes=["Sending", "Waiting"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.Subscriber("Traj", DesiredJoints, callback=self.traj_cb)
+        self._model = model
+        self.have_msg = False
+        self.Rate = rospy.Rate(100)
+        self.q = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+
+
+    def traj_cb(self, msg):
+        self.q = DesiredJoints()
+        if not self.have_msg:
+            self.q = msg
+            print("slkjflsak;alskjf;ldsakjf")
+            self.have_msg = True
+
+    def execute(self, userdata):
+        # Your state execution goes here
+        self.Rate.sleep()
+        if self.have_msg:
+            q_d = np.array(list(self.q.q) + [0.0])
+            qd_d = np.array(list(self.q.qd) + [0.0])
+            qdd_d = np.array(list(self.q.qdd) + [0.0])
+            self.msg = DesiredJoints()
+            self.msg.q = q_d
+            self.msg.qd = qd_d
+            self.msg.qdd = qdd_d
+            self.msg.controllers = ["PD", "PD", "PD", "PD", "PD", "PD", "PD"]
+            self.pub.publish(self.msg)
+
+            self.have_msg = False
+            return "Sending"
+        else:
+            return "Waiting"
+
 
 class Listening(smach.State):
 

@@ -15,5 +15,6 @@ _client.connect()
 rate = rospy.Rate(1000)
 LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
 cnrl = ControllerNode.ControllerNode(LARRE)
-machine = StateMachine.ExoStateMachineFollowing(LARRE)
+#machine = StateMachine.ExoStateMachineFollowing(LARRE)
+machine = StateMachine.ExoStateMachineGoTo(LARRE)
 
