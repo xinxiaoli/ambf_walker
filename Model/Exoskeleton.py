@@ -14,7 +14,8 @@ from std_msgs.msg import Float32MultiArray
 from threading import Thread
 from . import Model
 from GaitCore.Bio import Leg, Joint
-
+import rospy
+from ambf_msgs.msg import RigidBodyState
 class Exoskeleton(Model.Model):
 
     def __init__(self, client, mass, height):
@@ -42,7 +43,31 @@ class Exoskeleton(Model.Model):
         self._right_leg = Leg.Leg(right_joints["Hip"], right_joints["Knee"], right_joints["Ankle"])
 
         self._state = (self._q, self._qd)
+        self.subs = []
+        topics = [ "right_thigh", "right_shank","right_foot", "left_thigh", "left_shank", "left_foot"  ]
+        for name in topics:
+
+            self.subs.append(rospy.Subscriber(name, RigidBodyState, self.force_cb, callback_args=name)    )
+
+
         self._updater.start()
+
+
+    def force_cb(self, msg, name):
+        
+        if "right" in name:
+            leg = self._right_leg
+        else:
+            leg = self._left_leg
+
+        point =Point.Point(msg.wrench.force.x, msg.wrench.force.y, msg.wrench.force.z)
+
+        if "thigh" in name:
+            leg.hip.force = point
+        elif "shank" in name:
+            leg.knee.force = point
+        elif "foot" in name:
+            leg.ankle.force = point
 
     def calculate_dynamics(self, qdd):
         tau = np.asarray([0.0] * self._joint_num)
