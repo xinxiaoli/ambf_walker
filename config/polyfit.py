@@ -21,7 +21,7 @@ def coef(b, dt):
 # seed random number generator
 seed(1)
 
-b = np.array([ [-0.3], [0.0], [ -0.6  ], [0.0] ])
+b = np.array([ [-0.3], [0.0], [ 0 ], [0.0] ])
 x = coef(b, 10)
 fit = poly.Polynomial(x.flatten())
 t = np.linspace(0,10,100)
@@ -31,7 +31,7 @@ for i in range(10):
     y = y_prime + gauss(-0.05, 0.05)
     hip.append(y)
 
-b = np.array([ [0.2], [0.0], [ 0.5  ], [0.0] ])
+b = np.array([ [0.2], [0.0], [ 0  ], [0.0] ])
 x = coef(b, 10)
 fit = poly.Polynomial(x.flatten())
 t = np.linspace(0,10,100)
@@ -53,14 +53,10 @@ for i in range(10):
     ankle.append(y)
 
 
-# trainer = TPGMMTrainer.TPGMMTrainer(demo=[hip, knee, ankle,hip, knee, ankle], file_name="poly9", n_rf=5, dt=0.01, reg=[1e-4], poly_degree=[3,3,3,3,3,3])
-# trainer.train()
-runner = TPGMMRunner.TPGMMRunner("poly9")
-runner.step()
-x = runner.x
-dx = runner.dx
-print(np.append(x,[0.0]))
-print(type(dx))
+trainer = TPGMMTrainer.TPGMMTrainer(demo=[hip, knee, ankle,hip, knee, ankle], file_name="gotozero", n_rf=5, dt=0.01, reg=[1e-4], poly_degree=[3,3,3,3,3,3])
+trainer.train()
+runner = TPGMMRunner.TPGMMRunner("gotozero")
+
 
 #path = runner.run()
 

@@ -86,18 +86,47 @@ class Main(smach.State):
 
 class DMP(smach.State):
 
-    def __init__(self, model,outcomes=["Next", "Go"]):
+    def __init__(self, model,outcomes=["stepping", "stepped"]):
         smach.State.__init__(self, outcomes=outcomes)
         self._model = model
         self.runner = self._model.get_runner()
-        self.Rate = rospy.Rate(100)
-        self.q = DesiredJoints()
+        self.rate = rospy.Rate(10)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
 
     def execute(self, userdata):
 
-        count = 0
-        while count < 200:
-            pass
+        count = self.count
+
+        if count == 0:
+            start = []
+            for q in self._model.q[0:6]:
+                start.append(np.array([q]))
+            print(start)
+            print(self.runner.x)
+            self.runner.update_start(start)
+
+        if count < self.runner.get_length():
+            self.runner.step()
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
+            self.msg.q = q
+            self.msg.qd = qd
+            self.msg.qdd = qdd
+
+            self.pub.publish(self.msg)
+            self.count += 1
+            self.rate.sleep()
+            return "stepping"
+        else:
+            self.count = 0
+            return "stepped"
+
 
 
 class GoTo(smach.State):

@@ -16,6 +16,10 @@ from . import Model
 from GaitCore.Bio import Leg, Joint
 import rospy
 from ambf_msgs.msg import RigidBodyState
+from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
+
+
+
 class Exoskeleton(Model.Model):
 
     def __init__(self, client, mass, height):
@@ -229,6 +233,9 @@ class Exoskeleton(Model.Model):
         knee = Model.get_traj(0.0, 0.20, 0.0, 0., tf, dt)
         ankle = Model.get_traj(-0.349, 0.157 + 0.1, 0.0, 0.0, tf, dt)
         return hip, knee, ankle
+
+    def get_runner(self):
+        return TPGMMRunner.TPGMMRunner("/home/nathaniel/catkin_ws/src/ambf_walker/config/gotozero.pickle")
 
 
     def update_state(self, q, qd):

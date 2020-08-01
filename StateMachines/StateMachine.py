@@ -16,8 +16,14 @@ class ExoStateMachine(object):
                                     transitions={'Initializing': 'Initialize',
                                                   'Initialized': 'Main'})
 
-            smach.StateMachine.add('Main', Main(model, ["Poly"]),
-                                   transitions={'Poly': 'Listening'})
+            smach.StateMachine.add('Main', Main(model, ["Poly", "DMP"]),
+                                   transitions={'Poly': 'Listening',
+                                                'DMP': 'DMP'})
+
+            smach.StateMachine.add('DMP', DMP(model),
+                                   transitions={'stepping': 'DMP',
+                                                'stepped': 'Main'},
+                                   remapping={'q': 'q'})
 
             smach.StateMachine.add('Listening', Listening(model),
                                    transitions={'Waiting': 'Listening',
