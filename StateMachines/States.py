@@ -89,6 +89,7 @@ class DMP(smach.State):
     def __init__(self, model,outcomes=["Next", "Go"]):
         smach.State.__init__(self, outcomes=outcomes)
         self._model = model
+        self.runner = self._model.get_runner()
         self.Rate = rospy.Rate(100)
         self.q = DesiredJoints()
 

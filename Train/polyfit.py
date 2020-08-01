@@ -1,5 +1,6 @@
-from lib.GaitAnalysisToolkit.LearningTools.Trainer import TPGMMTrainer, GMMTrainer
-from lib.GaitAnalysisToolkit.LearningTools.Runner import  GMMRunner, TPGMMRunner
+
+from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
+from GaitAnaylsisToolkit.LearningTools.Trainer import TPGMMTrainer
 from random import seed
 from random import gauss
 import numpy as np
@@ -25,20 +26,51 @@ x = coef(b, 10)
 fit = poly.Polynomial(x.flatten())
 t = np.linspace(0,10,100)
 y_prime = fit(t)
-trajs = []
-for i in xrange(10):
-    y = y_prime + gauss(-0.01, 0.01)
-    trajs.append(y)
+hip = []
+for i in range(10):
+    y = y_prime + gauss(-0.05, 0.05)
+    hip.append(y)
 
-trainer = TPGMMTrainer.TPGMMTrainer(trajs, "/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/poly", 25, 0.01)
+b = np.array([ [0.2], [0.0], [ 0.5  ], [0.0] ])
+x = coef(b, 10)
+fit = poly.Polynomial(x.flatten())
+t = np.linspace(0,10,100)
+y_prime = fit(t)
+knee = []
+for i in range(10):
+    y = y_prime + gauss(-0.05, 0.05)
+    knee.append(y)
+
+
+b = np.array([ [0.257], [0.0], [ 0.0 ], [0.0] ])
+x = coef(b, 10)
+fit = poly.Polynomial(x.flatten())
+t = np.linspace(0,10,100)
+y_prime = fit(t)
+ankle = []
+for i in range(10):
+    y = y_prime + gauss(-0.05, 0.05)
+    ankle.append(y)
+
+
+trainer = TPGMMTrainer.TPGMMTrainer(demo=[hip, knee, ankle,hip, knee, ankle], file_name="poly9", n_rf=5, dt=0.01, reg=[1e-4], poly_degree=[3,3,3,3,3,3])
 trainer.train()
-print "hello"
-runner = TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/poly.pickle")
+runner = TPGMMRunner.TPGMMRunner("poly9")
 path = runner.run()
+fig, axs = plt.subplots(3)
 
 
-for p in trajs:
-    plt.plot(p)
+print(path)
+for p in hip:
+    axs[0].plot(p)
+    axs[0].plot(path[:, 0], linewidth=4)
 
-plt.plot(path, linewidth=4)
+for p in knee:
+    axs[1].plot(p)
+    axs[1].plot(path[:, 1], linewidth=4)
+
+for p in ankle:
+    axs[2].plot(p)
+    axs[2].plot(path[:, 2], linewidth=4)
+
 plt.show()
