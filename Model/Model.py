@@ -12,33 +12,17 @@ from sensor_msgs.msg import JointState
 
 class Model(object):
 
-    def __init__(self, client, mass, height):
-        self._mass = mass
-        self._height = height
+    def __init__(self, client):
+
         self._client = client
         self._q = np.array([])
         self._qd = np.array([])
         self.tau = np.array([])
         self._handle = None
-        self._model = self.dynamic_model(mass, height)
         self._updater = Thread(target=self.update)
         self._enable_control = False
         self.sub_torque = rospy.Subscriber("joint_torque", JointState, self.torque_cb)
         self.q_pub = rospy.Publisher("q", Float32MultiArray, queue_size=1)
-
-        left_joints = {}
-        right_joints = {}
-
-        for joint in (left_joints, right_joints):
-            for output in ["Hip", "Knee", "Ankle"]:
-                angle = Point.Point(0, 0, 0)
-                force = Point.Point(0, 0, 0)
-                moment = Point.Point(0, 0, 0)
-                power = Point.Point(0, 0, 0)
-                joint[output] = Joint.Joint(angle, moment, power, force)
-
-        self._left_leg = Leg.Leg(left_joints["Hip"], left_joints["Knee"], left_joints["Ankle"])
-        self._right_leg = Leg.Leg(right_joints["Hip"], right_joints["Knee"], right_joints["Ankle"])
 
     def torque_cb(self, tau):
         self.update_torque(list(tau.effort))
@@ -46,7 +30,7 @@ class Model(object):
     def update_torque(self, tau):
         """
 
-        :type tau: JointState
+        :type tau: List
         """
         self.tau = tau
         self._enable_control = True
@@ -81,8 +65,6 @@ class Model(object):
 
     @qd.setter
     def qd(self, value):
-        value[2] *= -1
-        value[5] *= -1
         self._qd = np.asarray(value)
 
     @property
@@ -94,7 +76,7 @@ class Model(object):
         self._state = np.concatenate(value)
 
     @abc.abstractmethod
-    def dynamic_model(self, total_mass, height):
+    def dynamic_model(self):
         pass
 
     def update(self):
@@ -126,10 +108,9 @@ class Model(object):
     def update_state(self, q, qd):
         self.state = q + qd
 
+    @abc.abstractmethod
     def calculate_dynamics(self, qdd):
-        tau = np.asarray([0.0] * self._joint_num)
-        rbdl.InverseDynamics(self._model, self.q[0:6], self.qd[0:6], qdd[0:6], tau)
-        return tau
+        pass
 
     def get_right_leg(self):
         """
@@ -142,3 +123,28 @@ class Model(object):
         :return:
         """
         return self._left_leg
+
+
+def get_traj(q0, qf, v0, vf, tf, dt):
+
+    b = np.array([q0, v0, qf, vf]).reshape((-1,1))
+    A = np.array([[1.0, 0.0, 0.0, 0.0],
+                  [0.0, 1.0, 0.0, 0.0],
+                  [1.0, 0.0, tf ** 2, tf ** 3],
+                  [0.0, 0.0, 2 * tf, 3 * tf * 2]])
+
+    x = np.linalg.solve(A, b)
+    q = []
+    qd = []
+    qdd = []
+
+    for t in np.linspace(0, tf, int(tf/dt)):
+        q.append(x[0] + x[1] * t + x[2] * t * t + x[3] * t * t * t)
+        qd.append(x[1] + 2*x[2] * t + 3*x[3] * t * t)
+        qdd.append(2*x[2] + 6*x[3] * t)
+
+    traj = {}
+    traj["q"] = q
+    traj["qd"] = qd
+    traj["qdd"] = qdd
+    return traj
