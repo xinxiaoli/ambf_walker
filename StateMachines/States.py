@@ -90,7 +90,7 @@ class DMP(smach.State):
         smach.State.__init__(self, outcomes=outcomes)
         self._model = model
         self.runner = self._model.get_runner()
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(100)
         self.msg = DesiredJoints()
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
@@ -108,7 +108,12 @@ class DMP(smach.State):
             self.runner.update_start(start)
 
         if count < self.runner.get_length():
-            self.runner.step()
+            curr_q = []
+            curr_qd = []
+            for q, qd in zip(self._model.q[0:6],self._model.qd[0:6]):
+                curr_q.append(np.array([q]))
+                curr_qd.append(np.array([-qd]))
+            self.runner.step(curr_q)
             x = self.runner.x
             dx = self.runner.dx
             ddx = self.runner.ddx
