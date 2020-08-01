@@ -53,24 +53,31 @@ for i in range(10):
     ankle.append(y)
 
 
-trainer = TPGMMTrainer.TPGMMTrainer(demo=[hip, knee, ankle,hip, knee, ankle], file_name="poly9", n_rf=5, dt=0.01, reg=[1e-4], poly_degree=[3,3,3,3,3,3])
-trainer.train()
+# trainer = TPGMMTrainer.TPGMMTrainer(demo=[hip, knee, ankle,hip, knee, ankle], file_name="poly9", n_rf=5, dt=0.01, reg=[1e-4], poly_degree=[3,3,3,3,3,3])
+# trainer.train()
 runner = TPGMMRunner.TPGMMRunner("poly9")
-path = runner.run()
-fig, axs = plt.subplots(3)
+runner.step()
+x = runner.x
+dx = runner.dx
+print(np.append(x,[0.0]))
+print(type(dx))
+
+#path = runner.run()
+
+# fig, axs = plt.subplots(3)
 
 
-print(path)
-for p in hip:
-    axs[0].plot(p)
-    axs[0].plot(path[:, 0], linewidth=4)
-
-for p in knee:
-    axs[1].plot(p)
-    axs[1].plot(path[:, 1], linewidth=4)
-
-for p in ankle:
-    axs[2].plot(p)
-    axs[2].plot(path[:, 2], linewidth=4)
-
-plt.show()
+# print(path)
+# for p in hip:
+#     axs[0].plot(p)
+#     axs[0].plot(path[:, 0], linewidth=4)
+#
+# for p in knee:
+#     axs[1].plot(p)
+#     axs[1].plot(path[:, 1], linewidth=4)
+#
+# for p in ankle:
+#     axs[2].plot(p)
+#     axs[2].plot(path[:, 2], linewidth=4)
+#
+# plt.show()
