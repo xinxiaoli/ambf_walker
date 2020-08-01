@@ -7,7 +7,7 @@ from ambf_walker.msg import DesiredJoints
 from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 from std_msgs.msg import Float32MultiArray
 from Model import Model
-
+from std_msgs.msg import Empty,String
 
 
 class Initialize(smach.State):
@@ -55,29 +55,48 @@ class Initialize(smach.State):
             self.msg.controllers = ["PD", "PD", "PD", "PD", "PD", "PD", "PD"]
             self.rate.sleep()
             self.pub.publish(self.msg)
-            return "Initializing"
+            return 'Initializing'
         else:
             return "Initialized"
 
 
-class Stabilize(smach.State):
-    def __init__(self, model, outcomes=['Stabilizing', 'Stabilized']):
+class Main(smach.State):
+
+    def __init__(self, model,outcomes=["Poly"]):
         smach.State.__init__(self, outcomes=outcomes)
-        self.rate = rospy.Rate(100)
+        rospy.Subscriber("Mode", String, callback=self.mode_cb)
         self._model = model
+        self.have_msg = False
+        self.msg = String
+        self.Rate = rospy.Rate(100)
+
+    def mode_cb(self, msg):
+
+        if not self.have_msg:
+            self.msg = msg
+            self.have_msg = True
 
     def execute(self, userdata):
-        # Your state execution goes here
-        z = self._model.handle.get_pos().z
-        if z < 1.5:
-            self._model.handle.set_force(0.0, 0.0, 0.0)
-            self.rate.sleep()
-            return 'Stabilized'
-        else:
-            height = 2.0
-            self._model.handle.set_pos(0, 0, height)
-            self.rate.sleep()
-            return 'Stabilizing'
+
+        rate = rospy.Rate(1000)
+        self.have_msg = False
+        while not self.have_msg:
+            rate.sleep()
+        return self.msg.data
+
+class DMP(smach.State):
+
+    def __init__(self, model,outcomes=["Next", "Go"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        self._model = model
+        self.Rate = rospy.Rate(100)
+        self.q = DesiredJoints()
+
+    def execute(self, userdata):
+
+        count = 0
+        while count < 200:
+            pass
 
 
 class GoTo(smach.State):
@@ -96,7 +115,6 @@ class GoTo(smach.State):
         self.q = DesiredJoints()
         if not self.have_msg:
             self.q = msg
-            print("slkjflsak;alskjf;ldsakjf")
             self.have_msg = True
 
     def execute(self, userdata):
@@ -110,7 +128,6 @@ class GoTo(smach.State):
             self.msg.q = q_d
             self.msg.qd = qd_d
             self.msg.qdd = qdd_d
-            self.msg.controllers = ["PD", "PD", "PD", "PD", "PD", "PD", "PD"]
             self.pub.publish(self.msg)
 
             self.have_msg = False
@@ -122,9 +139,7 @@ class GoTo(smach.State):
 class Listening(smach.State):
 
     def __init__(self, model, outcomes=["Sending", "Waiting"]):
-        smach.State.__init__(self, outcomes=outcomes,
-                                   input_keys=['count', 'q'],
-                                   output_keys=['count', 'q'])
+        smach.State.__init__(self, outcomes=outcomes, output_keys=['q'])
 
 
         rospy.Subscriber("Traj", DesiredJoints, callback=self.traj_cb)
@@ -132,6 +147,7 @@ class Listening(smach.State):
         self.have_msg = False
         self.Rate = rospy.Rate(100)
         self.q = []
+
     def traj_cb(self, msg):
         self.q = []
         if not self.have_msg:
@@ -147,7 +163,6 @@ class Listening(smach.State):
         self.Rate.sleep()
         if self.have_msg:
             userdata.q = self.q
-            userdata.count = 0
             self.have_msg = False
             return "Sending"
         else:
@@ -158,17 +173,18 @@ class Follow(smach.State):
     def __init__(self, model, outcomes=['Following', 'Followed']):
 
         smach.State.__init__(self, outcomes=outcomes,
-                              input_keys=['count', 'q'],
-                              output_keys=['count', 'q'])
+                              input_keys=['q'],
+                              output_keys=['q'])
         self._model = model
         self.rate = rospy.Rate(100)
         self.msg = DesiredJoints()
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
 
     def execute(self, userdata):
 
         q = userdata.q
-        count = userdata.count
+        count = self.count
         if count <= len(q[0]["q"]) - 1:
 
             q_d = np.array([q[0]["q"][count].item(), q[1]["q"][count].item(),
@@ -186,56 +202,13 @@ class Follow(smach.State):
             self.msg.q = q_d
             self.msg.qd = qd_d
             self.msg.qdd = qdd_d
-            self.msg.controllers = ["PD", "PD", "PD", "PD", "PD", "PD", "PD"]
 
             self.pub.publish(self.msg)
-            userdata.count += 1
-            print(userdata.count)
+            self.count += 1
             self.rate.sleep()
             return "Following"
         else:
+            self.count = 0
             return "Followed"
 
-class GMRTest(smach.State):
-
-    def __init__(self, model, outcomes=["Following", "Followed"]):
-        smach.State.__init__(self, outcomes=outcomes)
-        self.rate = rospy.Rate(10)
-        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
-        # self.point = rospy.Publisher("set", Float64, queue_size=1)
-        self.lqr = rospy.Publisher("LQR", DesiredJoints, queue_size=1)
-        self.msg = DesiredJoints()
-        self.msg_control = DesiredJoints()
-        self._model = model
-        self.count = 0
-#        self.runner = TPGMMRunner.TPGMMRunner("/home/nathaniel/catkin_ws/src/ambf_walker/config/poly" + ".pickle")
-
-    def execute(self, userdata):
-        # Your state execution goes here
-
-        if self.count < self.runner.get_length():
-            # self.msg.controllers = ["PD", "PD", "PD", "LQR", "PD", "PD", "PD"]
-            # self.msg = DesiredJoints()
-            # self.msg_control = DesiredJoints()
-            # length = len(self._model.q)
-            # q = self._model.q
-            # qd = self._model.qd
-            # qdd = np.zeros(length)
-            # x = self.runner.step(q[3],qd[3])
-            # dx = self.runner.dx[0]
-            # ddx = self.runner.ddx[0]
-            # self.msg.q = q
-            # self.msg.q[3] = x
-            # self.msg.qd = qd
-            # self.msg.qdd = qdd
-            # self.msg.qdd[3] = ddx
-            # self.count += 1
-            # self.lqr.publish(self.msg)
-            # self.pub.publish(self.msg)
-            self.rate.sleep()
-            return "Following"
-        else:
-            self.pub.publish(self.msg)
-            self.lqr.publish(self.msg)
-            return "Followed"
 
