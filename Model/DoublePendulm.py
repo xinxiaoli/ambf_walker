@@ -15,7 +15,7 @@ from . import Model
 class DoublePendulum(Model.Model):
 
     def __init__(self, client):
-        super(DoublePendulum, self).__init__(client, 0, 0)
+        super(DoublePendulum, self).__init__(client)
         self._handle = self._client.get_obj_handle('Sphere')
         self.q = 2 * [0.0]
         self.qd = 2 * [0.0]
@@ -31,7 +31,7 @@ class DoublePendulum(Model.Model):
     def update_torque(self, tau):
         """
 
-        :type tau: JointState
+        :type tau: list
         """
         self.tau = tau
         self._enable_control = True

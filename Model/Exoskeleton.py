@@ -13,54 +13,69 @@ from GaitCore.Core import utilities
 from std_msgs.msg import Float32MultiArray
 from threading import Thread
 from . import Model
-
+from GaitCore.Bio import Leg, Joint
+import rospy
+from ambf_msgs.msg import RigidBodyState
 class Exoskeleton(Model.Model):
 
     def __init__(self, client, mass, height):
-        super(Exoskeleton, self).__init__(client, mass, height)
-        self._handle = self._client.get_obj_handle('Hip')
+
+        super(Exoskeleton, self).__init__(client)
         self.q = 7 * [0.0]
         self.qd = 7 * [0.0]
+        self._handle = self._client.get_obj_handle('Hip')
         time.sleep(2)
+        self._mass = mass
+        self._height = height
+        self._model = self.dynamic_model()
+        left_joints = {}
+        right_joints = {}
+
+        for joint in (left_joints, right_joints):
+            for output in ["Hip", "Knee", "Ankle"]:
+                angle = Point.Point(0, 0, 0)
+                force = Point.Point(0, 0, 0)
+                moment = Point.Point(0, 0, 0)
+                power = Point.Point(0, 0, 0)
+                joint[output] = Joint.Joint(angle, moment, power, force)
+
+        self._left_leg = Leg.Leg(left_joints["Hip"], left_joints["Knee"], left_joints["Ankle"])
+        self._right_leg = Leg.Leg(right_joints["Hip"], right_joints["Knee"], right_joints["Ankle"])
+
         self._state = (self._q, self._qd)
+        self.subs = []
+        topics = [ "right_thigh", "right_shank","right_foot", "left_thigh", "left_shank", "left_foot"  ]
+        for name in topics:
+
+            self.subs.append(rospy.Subscriber(name, RigidBodyState, self.force_cb, callback_args=name)    )
+
+
         self._updater.start()
 
-    def update_torque(self, tau):
-        # tau[2] *= -1
-        # tau[5] *= -1
-        # tau[-1] = 0.0
-        super(Exoskeleton, self).update_torque(tau)
 
-    @property
-    def q(self):
-        return self._q
+    def force_cb(self, msg, name):
+        
+        if "right" in name:
+            leg = self._right_leg
+        else:
+            leg = self._left_leg
 
-    @property
-    def qd(self):
-        return self._qd
+        point =Point.Point(msg.wrench.force.x, msg.wrench.force.y, msg.wrench.force.z)
 
-    @q.setter
-    def q(self, value):
-        # value[2] *= -1
-        # value[5] *= -1
-        self._q = np.array(value)
+        if "thigh" in name:
+            leg.hip.force = point
+        elif "shank" in name:
+            leg.knee.force = point
+        elif "foot" in name:
+            leg.ankle.force = point
 
-    @qd.setter
-    def qd(self, value):
-        # value[2] *= -1
-        # value[5] *= -1
-        self._qd = np.array(value)
+    def calculate_dynamics(self, qdd):
+        tau = np.asarray([0.0] * self._joint_num)
+        rbdl.InverseDynamics(self._model, self.q[0:6], self.qd[0:6], qdd[0:6], tau)
+        return tau
 
-    @property
-    def state(self):
-        return self._state
-
-    @state.setter
-    def state(self, value):
-        self._state = np.concatenate(value)
-
-    def dynamic_model(self, total_mass, height):
-
+    def dynamic_model(self):
+        # add in mass and height params
         model = rbdl.Model()
         bodies = {}
         mass = {}
@@ -210,14 +225,14 @@ class Exoskeleton(Model.Model):
 
     def stance_trajectory(self, tf=2, dt=0.01):
 
-        hip = get_traj(0.0, -0.3, 0.0, 0.0, tf, dt)
-        knee = get_traj(0.0, 0.20, 0.0, 0., tf, dt)
-        ankle = get_traj(-0.349, 0.157 + 0.1, 0.0, 0.0, tf, dt)
+        hip = Model.get_traj(0.0, -0.3, 0.0, 0.0, tf, dt)
+        knee = Model.get_traj(0.0, 0.20, 0.0, 0., tf, dt)
+        ankle = Model.get_traj(-0.349, 0.157 + 0.1, 0.0, 0.0, tf, dt)
         return hip, knee, ankle
 
 
     def update_state(self, q, qd):
-        self.get_left_leg().hip.angle.z =  q[0]
+        self.get_left_leg().hip.angle.z = q[0]
         self.get_left_leg().knee.angle.z = q[1]
         self.get_left_leg().ankle.angle.z = q[2]
 
@@ -225,27 +240,4 @@ class Exoskeleton(Model.Model):
         self.get_right_leg().knee.angle.z = q[4]
         self.get_right_leg().ankle.angle.z = q[5]
 
-def get_traj(q0, qf, v0, vf, tf, dt):
-
-    b = np.array([q0, v0, qf, vf]).reshape((-1,1))
-    A = np.array([[1.0, 0.0, 0.0, 0.0],
-                  [0.0, 1.0, 0.0, 0.0],
-                  [1.0, 0.0, tf ** 2, tf ** 3],
-                  [0.0, 0.0, 2 * tf, 3 * tf * 2]])
-
-    x = np.linalg.solve(A, b)
-    q = []
-    qd = []
-    qdd = []
-
-    for t in np.linspace(0, tf, int(tf/dt)):
-        q.append(x[0] + x[1] * t + x[2] * t * t + x[3] * t * t * t)
-        qd.append(x[1] + 2*x[2] * t + 3*x[3] * t * t)
-        qdd.append(2*x[2] + 6*x[3] * t)
-
-    traj = {}
-    traj["q"] = q
-    traj["qd"] = qd
-    traj["qdd"] = qdd
-    return traj
 
