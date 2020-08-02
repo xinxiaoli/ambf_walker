@@ -14,7 +14,7 @@ from Controller import DynController
 Kp = np.zeros((7, 7))
 Kd = np.zeros((7, 7))
 
-Kp_hip = 50.0
+Kp_hip = 100.0
 Kd_hip = 0.5
 
 Kp_knee = 125.0

@@ -28,8 +28,8 @@ class Initialize(smach.State):
 
     def execute(self, userdata):
 
-        # self._model.handle.set_rpy(0.25, 0, 0)
-        # self._model.handle.set_pos(0, 0, 2.0)
+        self._model.handle.set_rpy(0.25, 0, 0)
+        self._model.handle.set_pos(0, 0, 1.0)
 
         if self.count <= self.total - 1:
 
@@ -247,3 +247,26 @@ class Follow(smach.State):
             return "Followed"
 
 
+class LowerBody(smach.State):
+
+    def __init__(self, model, outcomes=['Lowering', 'Lowered']):
+
+        smach.State.__init__(self, outcomes=outcomes)
+        self._model = model
+        self.rate = rospy.Rate(1)
+        self.step = 0.00000000001
+        self.final_height = -0.38
+
+    def execute(self, userdata):
+
+        self.rate.sleep()
+        current = self._model.handle.get_pos().z
+
+        if current > self.final_height:
+            self._model.handle.set_pos(0.0,0.0, current-self.step)
+            self._model.handle.set_rpy(0.25, 0, 0)
+            return 'Lowering'
+        else:
+            self._model.handle.set_rpy(0.25, 0, 0)
+            self._model.handle.set_force(0.0, 0.0, 0.0)
+            return "Lowered"

@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import JointState
 from ambf_walker.msg import DesiredJoints
-from StateMachines.States import Initialize,   Follow, Listening, GoTo, Main, DMP
+from StateMachines.States import Initialize,   Follow, Listening, GoTo, Main, DMP, LowerBody
 
 class ExoStateMachine(object):
 
@@ -16,9 +16,14 @@ class ExoStateMachine(object):
                                     transitions={'Initializing': 'Initialize',
                                                   'Initialized': 'Main'})
 
-            smach.StateMachine.add('Main', Main(model, ["Poly", "DMP"]),
+            smach.StateMachine.add('Main', Main(model, ["Poly", "DMP", "Lower"]),
                                    transitions={'Poly': 'Listening',
-                                                'DMP': 'DMP'})
+                                                'DMP': 'DMP',
+                                                'Lower':'LowerBody'})
+
+            smach.StateMachine.add('LowerBody', LowerBody(model),
+                                   transitions={'Lowering': 'LowerBody',
+                                                'Lowered': 'Main'})
 
             smach.StateMachine.add('DMP', DMP(model),
                                    transitions={'stepping': 'DMP',
