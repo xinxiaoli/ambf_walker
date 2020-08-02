@@ -112,17 +112,7 @@ class Model(object):
     def calculate_dynamics(self, qdd):
         pass
 
-    def get_right_leg(self):
-        """
-        :return:
-        """
-        return self._right_leg
 
-    def get_left_leg(self):
-        """
-        :return:
-        """
-        return self._left_leg
 
 
 def get_traj(q0, qf, v0, vf, tf, dt):

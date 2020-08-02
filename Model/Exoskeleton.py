@@ -238,6 +238,10 @@ class Exoskeleton(Model.Model):
         return TPGMMRunner.TPGMMRunner("/home/nathaniel/catkin_ws/src/ambf_walker/config/gotozero.pickle")
 
 
+    def linearize(self):
+        pass
+
+
     def update_state(self, q, qd):
         self.get_left_leg().hip.angle.z = q[0]
         self.get_left_leg().knee.angle.z = q[1]
@@ -246,5 +250,17 @@ class Exoskeleton(Model.Model):
         self.get_right_leg().hip.angle.z = q[3]
         self.get_right_leg().knee.angle.z = q[4]
         self.get_right_leg().ankle.angle.z = q[5]
+
+    def get_right_leg(self):
+        """
+        :return:
+        """
+        return self._right_leg
+
+    def get_left_leg(self):
+        """
+        :return:
+        """
+        return self._left_leg
 
 
