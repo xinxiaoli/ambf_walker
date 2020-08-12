@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import JointState
 from ambf_walker.msg import DesiredJoints
-from StateMachines.States import Initialize, Stabilize, GMRTest, Follow, Listening, GoTo
+from StateMachines.States import Initialize,   Follow, Listening, GoTo, Main, DMP, LowerBody
 
 class ExoStateMachine(object):
 
@@ -14,11 +14,31 @@ class ExoStateMachine(object):
         with sm:
             smach.StateMachine.add('Initialize', Initialize(model=model),
                                     transitions={'Initializing': 'Initialize',
-                                                  'Initialized': 'Stabilize'})
+                                                  'Initialized': 'Main'})
 
-            smach.StateMachine.add('Stabilize', Stabilize(model),
-                                   transitions={'Stabilizing': 'Stabilize',
-                                                'Stabilized': 'outcome4'})
+            smach.StateMachine.add('Main', Main(model, ["Poly", "DMP", "Lower"]),
+                                   transitions={'Poly': 'Listening',
+                                                'DMP': 'DMP',
+                                                'Lower':'LowerBody'})
+
+            smach.StateMachine.add('LowerBody', LowerBody(model),
+                                   transitions={'Lowering': 'LowerBody',
+                                                'Lowered': 'Main'})
+
+            smach.StateMachine.add('DMP', DMP(model),
+                                   transitions={'stepping': 'DMP',
+                                                'stepped': 'Main'},
+                                   remapping={'q': 'q'})
+
+            smach.StateMachine.add('Listening', Listening(model),
+                                   transitions={'Waiting': 'Listening',
+                                                'Sending': 'Follow'},
+                                   remapping={'q': 'q'})
+
+            smach.StateMachine.add('Follow', Follow(model),
+                                   transitions={'Following': 'Follow',
+                                                'Followed': 'Main'},
+                                   remapping={'q': 'q'})
 
         outcome = sm.execute()
 
