@@ -53,7 +53,6 @@ class Exoskeleton(Model.Model):
 
             self.subs.append(rospy.Subscriber(name, RigidBodyState, self.force_cb, callback_args=name)    )
 
-
         self._updater.start()
 
 
@@ -180,6 +179,8 @@ class Exoskeleton(Model.Model):
         # constraint_set_left.Bind(model)
         # constraint_set_both.Bind(model)
 
+        x = []
+        y = []
         return model
 
     def fk(self):

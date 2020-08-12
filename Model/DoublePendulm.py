@@ -5,8 +5,8 @@ import rbdl
 import time
 import rospy
 from threading import Thread
-from lib.GaitCore.Bio import Joint, Leg
-from lib.GaitCore.Core import Point
+from GaitCore.Bio import Joint, Leg
+from GaitCore.Core import Point
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import JointState
 from Utlities import PendPlotter

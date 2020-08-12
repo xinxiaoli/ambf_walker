@@ -23,6 +23,18 @@ Kd_knee = 1.0
 Kp_ankle = 100.0
 Kd_ankle = 0.4
 
+
+# Kp_hip = 150.0
+# Kd_hip = 0.5
+#
+# Kp_knee = 175.0
+# Kd_knee = 1.0
+#
+# Kp_ankle = 100.0
+# Kd_ankle = 0.4
+
+
+
 Kp[0, 0] = Kp_hip
 Kd[0, 0] = Kd_hip
 Kp[1, 1] = Kp_knee
