@@ -170,7 +170,7 @@ def get_traj(q0, qf, v0, vf, tf, dt):
 
 def runge_integrator(model, y, h, tau):
 
-    k1 = rhs(model, y,tau)
+    k1 = rhs(model, y, tau)
     k2 = rhs(model, y + 0.5 * h * k1,tau)
     k3 = rhs(model, y + 0.5 * h * k2,tau)
     k4 = rhs(model, y + h * k3,tau)
@@ -185,7 +185,6 @@ def rhs(model, y,tau):
     Q = np.zeros(model.q_size)
     QDot = np.zeros(model.qdot_size)
     QDDot = np.zeros(model.qdot_size)
-    Tau = np.zeros(model.qdot_size)
     Tau = tau
     for i in range(0, dim):
         Q[i] = y[i]
