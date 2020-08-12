@@ -16,6 +16,10 @@ from . import Model
 from GaitCore.Bio import Leg, Joint
 import rospy
 from ambf_msgs.msg import RigidBodyState
+from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
+
+
+
 class Exoskeleton(Model.Model):
 
     def __init__(self, client, mass, height):
@@ -48,7 +52,6 @@ class Exoskeleton(Model.Model):
         for name in topics:
 
             self.subs.append(rospy.Subscriber(name, RigidBodyState, self.force_cb, callback_args=name)    )
-
 
         self._updater.start()
 
@@ -176,6 +179,8 @@ class Exoskeleton(Model.Model):
         # constraint_set_left.Bind(model)
         # constraint_set_both.Bind(model)
 
+        x = []
+        y = []
         return model
 
     def fk(self):
@@ -225,10 +230,17 @@ class Exoskeleton(Model.Model):
 
     def stance_trajectory(self, tf=2, dt=0.01):
 
-        hip = Model.get_traj(0.0, -0.3, 0.0, 0.0, tf, dt)
+        hip = Model.get_traj(0.0, -0.2, 0.0, 0.0, tf, dt)
         knee = Model.get_traj(0.0, 0.20, 0.0, 0., tf, dt)
-        ankle = Model.get_traj(-0.349, 0.157 + 0.1, 0.0, 0.0, tf, dt)
+        ankle = Model.get_traj(-0.349, -0.1, 0.0, 0.0, tf, dt)
         return hip, knee, ankle
+
+    def get_runner(self):
+        return TPGMMRunner.TPGMMRunner("/home/nathaniel/catkin_ws/src/ambf_walker/config/gotozero.pickle")
+
+
+    def linearize(self):
+        pass
 
 
     def update_state(self, q, qd):
@@ -239,5 +251,17 @@ class Exoskeleton(Model.Model):
         self.get_right_leg().hip.angle.z = q[3]
         self.get_right_leg().knee.angle.z = q[4]
         self.get_right_leg().ankle.angle.z = q[5]
+
+    def get_right_leg(self):
+        """
+        :return:
+        """
+        return self._right_leg
+
+    def get_left_leg(self):
+        """
+        :return:
+        """
+        return self._left_leg
 
 

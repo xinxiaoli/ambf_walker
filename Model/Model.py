@@ -112,18 +112,36 @@ class Model(object):
     def calculate_dynamics(self, qdd):
         pass
 
-    def get_right_leg(self):
-        """
-        :return:
-        """
-        return self._right_leg
 
-    def get_left_leg(self):
-        """
-        :return:
-        """
-        return self._left_leg
+def runge_integrator(model, t, y, h, tau):
 
+    k1 = rhs(model, y,tau)
+    k2 = rhs(model, y + 0.5 * h * k1,tau)
+    k3 = rhs(model, y + 0.5 * h * k2,tau)
+    k4 = rhs(model, y + h * k3,tau)
+
+    return 1 / 6. * (k1 + 2. * k2 + 2. * k3 + k4)
+
+
+def rhs(model, y, tau):
+
+    dim = model.dof_count
+    res = np.zeros(dim * 2)
+    Q = np.zeros(model.q_size)
+    QDot = np.zeros(model.qdot_size)
+    QDDot = np.zeros(model.qdot_size)
+    Tau = np.zeros(model.qdot_size)
+    Tau[0] = tau
+    for i in range(0, dim):
+        Q[i] = y[i]
+        QDot[i] = y[i + dim]
+
+    rbdl.ForwardDynamics(model, Q, QDot, Tau, QDDot)
+    for i in range(0, dim):
+        res[i] = QDot[i]
+        res[i + dim] = QDDot[i]
+
+    return res
 
 def get_traj(q0, qf, v0, vf, tf, dt):
 
@@ -148,3 +166,34 @@ def get_traj(q0, qf, v0, vf, tf, dt):
     traj["qd"] = qd
     traj["qdd"] = qdd
     return traj
+
+
+def runge_integrator(model, y, h, tau):
+
+    k1 = rhs(model, y, tau)
+    k2 = rhs(model, y + 0.5 * h * k1,tau)
+    k3 = rhs(model, y + 0.5 * h * k2,tau)
+    k4 = rhs(model, y + h * k3,tau)
+
+    return y + h / 6. * (k1 + 2. * k2 + 2. * k3 + k4)
+
+
+def rhs(model, y,tau):
+
+    dim = model.dof_count
+    res = np.zeros(dim * 2)
+    Q = np.zeros(model.q_size)
+    QDot = np.zeros(model.qdot_size)
+    QDDot = np.zeros(model.qdot_size)
+    Tau = tau
+    for i in range(0, dim):
+        Q[i] = y[i]
+        QDot[i] = y[i + dim]
+
+    rbdl.ForwardDynamics(model, Q, QDot, Tau, QDDot)
+
+    for i in range(0, dim):
+        res[i] = QDot[i]
+        res[i + dim] = QDDot[i]
+
+    return res
