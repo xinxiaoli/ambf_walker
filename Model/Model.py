@@ -197,3 +197,40 @@ def rhs(model, y,tau):
         res[i + dim] = QDDot[i]
 
     return res
+
+
+def finite_differences(model, y, u, h=0.01):
+    """ calculate gradient of plant dynamics using finite differences
+    x np.array: the state of the system
+    u np.array: the control signal
+    """
+
+    dof = u.shape[0]
+    num_states = model.q_size*2
+
+    A = np.zeros((num_states, num_states))
+    B = np.zeros((num_states, dof))
+
+    eps = 1e-4 # finite differences epsilon
+    for ii in range(num_states):
+        # calculate partial differential w.r.t. x
+        inc_x = y.copy()
+        inc_x[ii] += eps
+        state_inc = runge_integrator(model, inc_x, h, u)
+        dec_x = y.copy()
+        dec_x[ii] -= eps
+        state_dec = runge_integrator(model, dec_x, h, u)
+        print((state_inc - state_dec) / (2 * eps))
+        A[:, ii] = (state_inc - state_dec) / (2 * eps)
+
+    for ii in range(dof):
+        # calculate partial differential w.r.t. u
+        inc_u = u.copy()
+        inc_u[ii] += eps
+        state_inc = runge_integrator(self.model, y, h, inc_u)
+        dec_u = u.copy()
+        dec_u[ii] -= eps
+        state_dec = runge_integrator(self.model, y, h, dec_u)
+        B[:, ii] = (state_inc - state_dec) / (2 * eps)
+
+    return A, B
