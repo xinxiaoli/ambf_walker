@@ -114,6 +114,7 @@ class DMP(smach.State):
                 curr_q.append(np.array([q]))
                 curr_qd.append(np.array([-qd]))
             self.runner.step()
+
             x = self.runner.x
             dx = self.runner.dx
             ddx = self.runner.ddx

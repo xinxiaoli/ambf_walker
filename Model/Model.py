@@ -227,10 +227,10 @@ def finite_differences(model, y, u, h=0.01):
         # calculate partial differential w.r.t. u
         inc_u = u.copy()
         inc_u[ii] += eps
-        state_inc = runge_integrator(self.model, y, h, inc_u)
+        state_inc = runge_integrator(model, y, h, inc_u)
         dec_u = u.copy()
         dec_u[ii] -= eps
-        state_dec = runge_integrator(self.model, y, h, dec_u)
+        state_dec = runge_integrator(model, y, h, dec_u)
         B[:, ii] = (state_inc - state_dec) / (2 * eps)
 
     return A, B
