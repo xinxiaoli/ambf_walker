@@ -10,7 +10,7 @@ from Controller import ControllerNode
 from Model import Exoskeleton
 import rospy
 from ambf_client import Client
-from Controller import DynController
+from Controller import DynController, MPController
 Kp = np.zeros((7, 7))
 Kd = np.zeros((7, 7))
 
@@ -54,8 +54,10 @@ _client = Client()
 _client.connect()
 rate = rospy.Rate(1000)
 LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
-controller = DynController.DynController(LARRE, Kp, Kd)
+Dyn = DynController.DynController(LARRE, Kp, Kd)
+
+controllers = {'Dyn':Dyn}
 cnrl = ControllerNode.ControllerNode(LARRE, controller)
-#machine = StateMachine.ExoStateMachineFollowing(LARRE)
+
 machine = StateMachine.ExoStateMachine(LARRE)
 

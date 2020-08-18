@@ -8,7 +8,7 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 from std_msgs.msg import Float32MultiArray
 from Model import Model
 from std_msgs.msg import Empty,String
-
+from Controller import MPController
 
 class Initialize(smach.State):
 
@@ -52,7 +52,7 @@ class Initialize(smach.State):
             self.msg.q = q
             self.msg.qd = qd
             self.msg.qdd = qdd
-            self.msg.controllers = ["PD", "PD", "PD", "PD", "PD", "PD", "PD"]
+            self.msg.controller = "Dyn"
             self.rate.sleep()
             self.pub.publish(self.msg)
             return 'Initializing'
@@ -124,7 +124,7 @@ class DMP(smach.State):
             self.msg.q = q
             self.msg.qd = qd
             self.msg.qdd = qdd
-
+            self.msg.controller = "Dyn"
             self.pub.publish(self.msg)
             self.count += 1
             self.rate.sleep()
@@ -164,6 +164,7 @@ class GoTo(smach.State):
             self.msg.q = q_d
             self.msg.qd = qd_d
             self.msg.qdd = qdd_d
+            self.msg.controller = "Dyn"
             self.pub.publish(self.msg)
 
             self.have_msg = False
@@ -271,3 +272,29 @@ class LowerBody(smach.State):
             self._model.handle.set_rpy(0.25, 0, 0)
             self._model.handle.set_force(0.0, 0.0, 0.0)
             return "Lowered"
+
+
+
+
+class MPC(smach.State):
+
+    def __init__(self, model, outcomes=["MPCing", "MPCed"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        self._model = model
+
+        self.runner = self._model.get_runner()
+        self.cnrl = MPController.MPController(self._model, self.runner)
+        self.rate = rospy.Rate(100)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
+
+    def execute(self, userdata):
+
+        if self.count < 1:
+            self.cnrl.run_iLQR()
+            self.count += 1
+            return "MPCing"
+        else:
+            self.count = 0
+            return "MPCed"

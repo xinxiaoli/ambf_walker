@@ -7,10 +7,10 @@ from std_msgs.msg import Float32MultiArray
 from . import DynController
 class ControllerNode(object):
 
-    def __init__(self, model, controller):
+    def __init__(self, model, controllers):
 
         self._model = model
-        self._controller  = controller
+        self._controllers = controllers
         self._updater = Thread(target=self.set_torque)
         self.sub_set_points = rospy.Subscriber("set_points", DesiredJoints, self.update_set_point)
         self.tau_pub = rospy.Publisher("joint_torque", JointState, queue_size=1)
@@ -58,7 +58,8 @@ class ControllerNode(object):
         self.q = np.array(msg.q)
         self.qd = np.array(msg.qd)
         self.qdd = np.array(msg.qdd)
-        self.ctrl_list = msg.controllers
+        self.controller = self._controllers[msg.controller]
+
         if not self._enable_control:
             self._updater.start()
 
