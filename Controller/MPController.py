@@ -10,6 +10,7 @@ from . import ControllerBase
 from GaitAnaylsisToolkit.LearningTools.Models import ModelBase
 import rbdl
 import copy
+
 class MPController(ControllerBase.BaseController):
 
     def __init__(self, model, runner):
@@ -25,11 +26,13 @@ class MPController(ControllerBase.BaseController):
         super(MPController, self).__init__(model)
         self.rbdl_model = self._model._model
         self.initilzie()
-        self.K, self.tau, self.J_ = self.run_iLQR()
+        self.u = np.array([0, 0, 0, 0, 0, 0, 0])
+        self.K2, self.tau, self.J_ = self.run_iLQR()
 
     def initilzie(self):
         count = 0
         self.u = []
+        self.K = []
         A_ = []
         b_ = []
         J = 0
@@ -43,6 +46,7 @@ class MPController(ControllerBase.BaseController):
 
         while count < self._runner.get_length():
             self._runner.step()
+            self.K.append(self._runner.K)
             u_raw = np.array(self._runner.ddx)
             tau.append(u_raw)
             u = np.array([q[0] for q in u_raw])
@@ -113,20 +117,17 @@ class MPController(ControllerBase.BaseController):
         :return:
         """
 
-        aq = np.zeros(len(q))
-        x = self._runner.get_start()
-        v0 = np.zeros(len(x)).reshape((-1, 1))
-        x_ = np.concatenate((q, qd))
-        expData = self._runner.get_expData()
-        u = self.K[self.step].dot(np.vstack((expData[:, self.step].reshape((-1, 1)), v0)) - x_)
+        if self.step == int(qdd[0]):
+            aq = np.zeros(len(q))
+            x = self._runner.get_start()
+            v0 = np.zeros(len(x)).reshape((-1, 1))
+            x_ = np.append(self._model.q[0:6], self._model.qd[0:6]).reshape((-1,1))
+            expData = self._runner.get_expData()
+            self.u = self.K[self.step].dot(np.vstack((expData[:, self.step].reshape((-1, 1)), v0)) - x_)
+            self.step += 1
+            self.u = self.u.tolist()
 
-        # if q is not None and qd is not None:
-        #     e = q - self._model.q
-        #     ed = qd - self._model.qd
-        #     aq = self.pdController.calc_tau(e, ed)
-        #     aq += qdd
-        tau = u #self._model.calculate_dynamics(aq)
-        return tau
+        return self.u
 
 
 def solve_riccati_mat(expSigma, A=None, B=None, dt=0.01, reg=1e-5):

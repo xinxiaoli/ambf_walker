@@ -57,8 +57,9 @@ LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
 runner = LARRE.get_runner()
 mpc = MPController.MPController(LARRE, runner)
-controllers = {'Dyn':Dyn,
-               "MPC":mpc}
+controllers = {'Dyn': Dyn,
+               "MPC": mpc}
+
 cnrl = ControllerNode.ControllerNode(LARRE, controllers)
 
 machine = StateMachine.ExoStateMachine(LARRE)

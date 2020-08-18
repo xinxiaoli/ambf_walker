@@ -9,6 +9,8 @@ from std_msgs.msg import Float32MultiArray
 from Model import Model
 from std_msgs.msg import Empty,String
 from Controller import MPController
+from ambf_walker.srv import DesiredJoints_srvRequest, DesiredJoints_srv
+
 
 class Initialize(smach.State):
 
@@ -132,7 +134,6 @@ class DMP(smach.State):
         else:
             self.count = 0
             return "stepped"
-
 
 
 class GoTo(smach.State):
@@ -274,15 +275,12 @@ class LowerBody(smach.State):
             return "Lowered"
 
 
-
-
 class MPC(smach.State):
 
     def __init__(self, model, outcomes=["MPCing", "MPCed"]):
         smach.State.__init__(self, outcomes=outcomes)
         self._model = model
-
-
+        self.runner = model.get_runner()
         self.rate = rospy.Rate(100)
         self.msg = DesiredJoints()
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
@@ -290,9 +288,17 @@ class MPC(smach.State):
 
     def execute(self, userdata):
 
-        if self.count < 1:
+        msg = DesiredJoints()
+        msg.controller = "MPC"
+        rospy.wait_for_service('joint_test')
+        send = rospy.ServiceProxy('joint_test', DesiredJoints_srv)
+        while self.count < self.runner.get_length():
+            msg.qdd = [self.count]
+            send([], [], [self.count], "MPC")
+            #self.pub.publish(msg)
+            print("sending: " + str(self.count))
+            self.rate.sleep()
             self.count += 1
-            return "MPCing"
-        else:
-            self.count = 0
-            return "MPCed"
+
+        return "MPCed"
+        return "MPCing"
