@@ -55,9 +55,11 @@ _client.connect()
 rate = rospy.Rate(1000)
 LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
-
-controllers = {'Dyn':Dyn}
-cnrl = ControllerNode.ControllerNode(LARRE, controller)
+runner = LARRE.get_runner()
+mpc = MPController.MPController(LARRE, runner)
+controllers = {'Dyn':Dyn,
+               "MPC":mpc}
+cnrl = ControllerNode.ControllerNode(LARRE, controllers)
 
 machine = StateMachine.ExoStateMachine(LARRE)
 

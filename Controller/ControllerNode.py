@@ -11,6 +11,7 @@ class ControllerNode(object):
 
         self._model = model
         self._controllers = controllers
+        self.controller = self._controllers["Dyn"]
         self._updater = Thread(target=self.set_torque)
         self.sub_set_points = rospy.Subscriber("set_points", DesiredJoints, self.update_set_point)
         self.tau_pub = rospy.Publisher("joint_torque", JointState, queue_size=1)
@@ -71,7 +72,7 @@ class ControllerNode(object):
         error_msg = Float32MultiArray()
 
         while 1:
-            tau = self._controller.calc_tau(self.q, self.qd, self.qdd)
+            tau = self.controller.calc_tau(self.q, self.qd, self.qdd)
             error_msg.data = abs(self.q - self._model.q)
             tau_msg.effort = tau.tolist()
             traj_msg.data = self.q

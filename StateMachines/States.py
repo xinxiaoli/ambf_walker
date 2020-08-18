@@ -239,7 +239,7 @@ class Follow(smach.State):
             self.msg.q = q_d
             self.msg.qd = qd_d
             self.msg.qdd = qdd_d
-
+            self.msg.controller = "Dyn"
             self.pub.publish(self.msg)
             self.count += 1
             self.rate.sleep()
@@ -282,8 +282,7 @@ class MPC(smach.State):
         smach.State.__init__(self, outcomes=outcomes)
         self._model = model
 
-        self.runner = self._model.get_runner()
-        self.cnrl = MPController.MPController(self._model, self.runner)
+
         self.rate = rospy.Rate(100)
         self.msg = DesiredJoints()
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
@@ -292,7 +291,6 @@ class MPC(smach.State):
     def execute(self, userdata):
 
         if self.count < 1:
-            self.cnrl.run_iLQR()
             self.count += 1
             return "MPCing"
         else:
