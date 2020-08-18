@@ -125,7 +125,8 @@ class MPController(ControllerBase.BaseController):
             expData = self._runner.get_expData()
             self.u = self.K[self.step].dot(np.vstack((expData[:, self.step].reshape((-1, 1)), v0)) - x_)
             self.step += 1
-            self.u = self.u.tolist()
+            self.u = np.append(self.u,[0.0])
+            print(self.u)
 
         return self.u
 
