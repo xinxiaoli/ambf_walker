@@ -149,7 +149,7 @@ class MPController(ControllerBase.BaseController):
         """
 
         aq = np.zeros(7)
-        if self.step == int(qdd[0]):
+        if self.step < self.max_steps: # int(qdd[0]):
             v0 = np.zeros(len(self._x)).reshape((-1, 1))
             x_ = np.append(self._x, self._dx).reshape((-1, 1))
             expData = self._runner.get_expData()
@@ -157,11 +157,12 @@ class MPController(ControllerBase.BaseController):
             #self.u = np.append(self.u, [0.0])
             self._dx = self._dx + self.u * 0.01
             self._x = self._x + self._dx * 0.01
-            e = np.append(self._x, [0.0]) - self._model.q
-            ed = np.append(self._dx, [0.0]) - self._model.qd
-            aq = self.pdController.calc_tau(e, ed)
-            self.tau = self._model.calculate_dynamics(aq)
             self.step += 1
+
+        e = np.append(self._x, [0.0]) - self._model.q
+        ed = np.append(self._dx, [0.0]) - self._model.qd
+        aq = self.pdController.calc_tau(e, ed)
+        self.tau = self._model.calculate_dynamics(aq)
 
         return self.tau
 
