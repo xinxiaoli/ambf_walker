@@ -117,13 +117,8 @@ class DMP(smach.State):
             self.runner.update_start(start)
 
         if count < self.runner.get_length():
-            curr_q = []
-            curr_qd = []
-            for q, qd in zip(self._model.q[0:6],self._model.qd[0:6]):
-                curr_q.append(np.array([q]))
-                curr_qd.append(np.array([-qd]))
-            self.runner.step()
 
+            self.runner.step()
             x = self.runner.x
             dx = self.runner.dx
             ddx = self.runner.ddx
