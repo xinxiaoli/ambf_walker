@@ -21,7 +21,7 @@ def coef(b, dt):
 # seed random number generator
 seed(1)
 
-b = np.array([ [-0.3], [0.], [ -0.7 ], [0.0] ])
+b = np.array([ [-0.2], [0.], [ -0.7 ], [0.0] ])
 x = coef(b, 10)
 fit = poly.Polynomial(x.flatten())
 t = np.linspace(0,10,100)
@@ -42,7 +42,7 @@ for i in range(10):
     knee.append(y)
 
 
-b = np.array([ [0.257], [0.0], [ 0.0 ], [0.0] ])
+b = np.array([ [-0.1], [0.0], [-0.1 ], [0.0] ])
 x = coef(b, 10)
 fit = poly.Polynomial(x.flatten())
 t = np.linspace(0,10,100)

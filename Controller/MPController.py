@@ -10,6 +10,8 @@ from . import ControllerBase
 from GaitAnaylsisToolkit.LearningTools.Models import ModelBase
 import rbdl
 import copy
+import time
+
 
 class MPController(ControllerBase.BaseController):
 
@@ -83,19 +85,23 @@ class MPController(ControllerBase.BaseController):
             u = np.array([q[0] for q in u_raw])
             y = Model.runge_integrator(self.rbdl_model, y, 0.01, u)
             A, b = Model.finite_differences(self.rbdl_model, y, u, h=0.01)
+            J += np.dot(np.dot(y.reshape((-1, 1)).T, (P[count])), y.reshape((-1, 1)))
             A_.append(A)
             b_.append(b)
             count += 1
 
         self.A = A_
         self.b = b_
+        self.J = J
 
     def run_iLQR(self):
         A = self.A
         b = self.b
         eps = 1.0
-        J = 1000000000000
-        while eps > 0.01:
+        J = self.J
+        print(J)
+        while eps > 0.001:
+
             P, K = self.back_pass(A, b)
             A, b, J_, tau = self.foward_pass(K, P)
             eps = abs(J-J_)/J
@@ -147,13 +153,17 @@ class MPController(ControllerBase.BaseController):
         :param qdd:
         :return:
         """
-        #self.K2_, self.tau_, self.J_ = self.run_iLQR()
+        # t = time.process_time()
+        # self.K2_, self.tau_, self.J_ = self.run_iLQR()
+        # elapsed_time = time.process_time() - t
+        # print(elapsed_time)
+
         aq = np.zeros(7)
-        if self.step < self.max_steps: # int(qdd[0]):
+        if self.step == int(qdd[0]):
             v0 = np.zeros(len(self._x)).reshape((-1, 1))
             x_ = np.append(self._x, self._dx).reshape((-1, 1))
             expData = self._runner.get_expData()
-            self.u = self.K2[self.step].dot(np.vstack((expData[:, self.step].reshape((-1, 1)), v0)) - x_)
+            self.u = self.K[self.step].dot(np.vstack((expData[:, self.step].reshape((-1, 1)), v0)) - x_)
             #self.u = np.append(self.u, [0.0])
             self._dx = self._dx + self.u * 0.01
             self._x = self._x + self._dx * 0.01
@@ -163,7 +173,7 @@ class MPController(ControllerBase.BaseController):
         ed = np.append(self._dx, [0.0]) - self._model.qd
         aq = self.pdController.calc_tau(e, ed)
         self.tau = self._model.calculate_dynamics(aq)
-
+        print(self.step < self.max_steps)
         return self.tau
 
 

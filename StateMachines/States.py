@@ -129,7 +129,7 @@ class DMP(smach.State):
             # self.msg.qd = qd
             # self.msg.qdd = qdd
             # self.msg.controller = "Dyn"
-            #self.pub.publish(self.msg)
+            # self.pub.publish(self.msg)
             self.send(q, qd, qdd, "Dyn")
             self.count += 1
             self.rate.sleep()
@@ -303,12 +303,20 @@ class MPC(smach.State):
         msg = DesiredJoints()
         msg.controller = "MPC"
 
-        while self.count < self.runner.get_length():
+        if self.count < self.runner.get_length():
+
+            self.runner.step()
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
             msg.qdd = [self.count]
-            self.send([], [], [self.count], "MPC")
+            self.send(q, qd, [self.count], "MPC")
             #self.pub.publish(msg)
             self.rate.sleep()
             self.count += 1
-
-        return "MPCed"
-        return "MPCing"
+            return "MPCing"
+        else:
+            return "MPCed"

@@ -62,11 +62,11 @@ class ControllerNode(object):
 
         while 1:
             tau = self.controller.calc_tau(self.q, self.qd, self.qdd)
-            #error_msg.data = abs(self.q - self._model.q)
+            error_msg.data = abs(self.q - self._model.q)
             tau_msg.effort = tau.tolist()
-            #traj_msg.data = self.q
+            traj_msg.data = self.q
             self.tau_pub.publish(tau_msg)
-            #self.traj_pub.publish(traj_msg)
-            #self.error_pub.publish(error_msg)
+            self.traj_pub.publish(traj_msg)
+            self.error_pub.publish(error_msg)
             rate.sleep()
 
