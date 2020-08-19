@@ -147,7 +147,7 @@ class MPController(ControllerBase.BaseController):
         :param qdd:
         :return:
         """
-
+        #self.K2_, self.tau_, self.J_ = self.run_iLQR()
         aq = np.zeros(7)
         if self.step < self.max_steps: # int(qdd[0]):
             v0 = np.zeros(len(self._x)).reshape((-1, 1))
