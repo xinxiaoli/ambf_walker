@@ -312,7 +312,6 @@ class MPC(smach.State):
             msg.qdd = [self.count]
             self.send([], [], [self.count], "MPC")
             #self.pub.publish(msg)
-            print("sending: " + str(self.count))
             self.rate.sleep()
             self.count += 1
 

@@ -35,7 +35,6 @@ class ControllerNode(object):
         :type msg: DesiredJoints
         """
         self.lock.acquire()
-        print("potato " + msg.controller)
         self.controller = self._controllers[msg.controller]
         self.q = np.array(msg.q)
         self.qd = np.array(msg.qd)
@@ -51,7 +50,6 @@ class ControllerNode(object):
         joints.qd = msg.qd
         joints.qdd = msg.qdd
         joints.controller = msg.controller
-        print(msg.controller)
         good = self.update_set_point(joints)
         return DesiredJointsCmdResponse(good)
 
