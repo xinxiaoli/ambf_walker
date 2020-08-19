@@ -6,7 +6,7 @@ from ambf_walker.msg import DesiredJoints
 import numpy as np
 from std_msgs.msg import Float32MultiArray
 from . import DynController
-from ambf_walker.srv import DesiredJoints_srv, DesiredJoints_srvResponse
+from ambf_walker.srv import DesiredJointsCmd, DesiredJointsCmdResponse
 
 
 class ControllerNode(object):
@@ -22,7 +22,7 @@ class ControllerNode(object):
         self.tau_pub = rospy.Publisher("joint_torque", JointState, queue_size=1)
         self.traj_pub = rospy.Publisher("trajectory", Float32MultiArray, queue_size=1)
         self.error_pub = rospy.Publisher("Error", Float32MultiArray, queue_size=1)
-        self.service = rospy.Service('joint_test', DesiredJoints_srv, self.handle_joints)
+        self.service = rospy.Service('joint_cmd', DesiredJointsCmd, self.joint_cmd_server)
         self._enable_control = False
         self.ctrl_list = []
         self.q = np.array([])
@@ -70,12 +70,12 @@ class ControllerNode(object):
         if not self._enable_control:
             self._updater.start()
 
-    def handle_joints(self, msg):
+    def joint_cmd_server(self, msg):
         joints = DesiredJoints()
         joints.qdd = msg.qdd
         joints.controller = msg.controller
         self.update_set_point(joints)
-        return DesiredJoints_srvResponse()
+        return DesiredJointsCmdResponse()
 
     def set_torque(self):
         self._enable_control = True

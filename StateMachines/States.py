@@ -9,7 +9,7 @@ from std_msgs.msg import Float32MultiArray
 from Model import Model
 from std_msgs.msg import Empty,String
 from Controller import MPController
-from ambf_walker.srv import DesiredJoints_srvRequest, DesiredJoints_srv
+from ambf_walker.srv import DesiredJointsCmdRequest, DesiredJointsCmd
 
 
 class Initialize(smach.State):
@@ -290,8 +290,8 @@ class MPC(smach.State):
 
         msg = DesiredJoints()
         msg.controller = "MPC"
-        rospy.wait_for_service('joint_test')
-        send = rospy.ServiceProxy('joint_test', DesiredJoints_srv)
+        rospy.wait_for_service('joint_cmd')
+        send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         while self.count < self.runner.get_length():
             msg.qdd = [self.count]
             send([], [], [self.count], "MPC")

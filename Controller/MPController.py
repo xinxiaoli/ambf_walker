@@ -28,6 +28,37 @@ class MPController(ControllerBase.BaseController):
         self.initilzie()
         self.u = np.array([0, 0, 0, 0, 0, 0, 0])
         self.K2, self.tau, self.J_ = self.run_iLQR()
+        self._x = self._runner.get_start()
+        self._dx = np.zeros(len(self._x)).reshape((-1, 1))
+        self._ddx = np.zeros(len(self._x)).reshape((-1, 1))
+
+        Kp = np.zeros((7, 7))
+        Kd = np.zeros((7, 7))
+
+        Kp_hip = 100.0
+        Kd_hip = 0.5
+
+        Kp_knee = 125.0
+        Kd_knee = 1.0
+
+        Kp_ankle = 100.0
+        Kd_ankle = 0.4
+
+        Kp[0, 0] = Kp_hip
+        Kd[0, 0] = Kd_hip
+        Kp[1, 1] = Kp_knee
+        Kd[1, 1] = Kd_knee
+        Kp[2, 2] = Kp_ankle
+        Kd[2, 2] = Kd_ankle
+
+        Kp[3, 3] = Kp_hip
+        Kd[3, 3] = Kd_hip
+        Kp[4, 4] = Kp_knee
+        Kd[4, 4] = Kd_knee
+        Kp[5, 5] = Kp_ankle
+        Kd[5, 5] = Kd_ankle
+
+        self.pdController = PDController.PDController(model, Kp, Kd)
 
     def initilzie(self):
         count = 0
@@ -116,19 +147,26 @@ class MPController(ControllerBase.BaseController):
         :param qdd:
         :return:
         """
-
+        self._x = self._runner.get_start()
+        aq = np.zeros(7)
         if self.step == int(qdd[0]):
             aq = np.zeros(len(q))
-            x = self._runner.get_start()
-            v0 = np.zeros(len(x)).reshape((-1, 1))
+
+            v0 = np.zeros(len(self._x)).reshape((-1, 1))
             x_ = np.append(self._model.q[0:6], self._model.qd[0:6]).reshape((-1,1))
             expData = self._runner.get_expData()
             self.u = self.K[self.step].dot(np.vstack((expData[:, self.step].reshape((-1, 1)), v0)) - x_)
             self.step += 1
             self.u = np.append(self.u,[0.0])
-            print(self.u)
+            self._dx = self._dx + self._ddx * 0.01
+            self._x = self._x + self._dx * 0.01
+            e = np.append(self._x, [0.0]) - self._model.q
+            ed = np.append(self._dx, [0.0]) - self._model.qd
+            aq = self.pdController.calc_tau(e, ed)
 
-        return self.u
+            self.tau = self._model.calculate_dynamics(aq)
+
+        return self.tau
 
 
 def solve_riccati_mat(expSigma, A=None, B=None, dt=0.01, reg=1e-5):

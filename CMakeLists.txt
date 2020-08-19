@@ -33,7 +33,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_service_files(
   FILES
-  DesiredJoints_srv.srv
+  DesiredJointsCmd.srv
 )
 
 ## Generate added messages and services with any dependencies listed here
