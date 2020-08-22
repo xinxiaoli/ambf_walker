@@ -22,12 +22,12 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 
 class Exoskeleton(Model.Model):
 
-    def __init__(self, client, mass, height):
+    def __init__(self, client, joints, mass, height):
 
-        super(Exoskeleton, self).__init__(client)
-        self.q = 7 * [0.0]
-        self.qd = 7 * [0.0]
+        super(Exoskeleton, self).__init__(client,joint_names=joints)
         self._handle = self._client.get_obj_handle('Hip')
+
+
         time.sleep(2)
         self._mass = mass
         self._height = height
@@ -244,13 +244,13 @@ class Exoskeleton(Model.Model):
 
 
     def update_state(self, q, qd):
-        self.get_left_leg().hip.angle.z = q[0]
-        self.get_left_leg().knee.angle.z = q[1]
-        self.get_left_leg().ankle.angle.z = q[2]
+        self.get_left_leg.hip.angle.z = q[0]
+        self.get_left_leg.knee.angle.z = q[1]
+        self.get_left_leg.ankle.angle.z = q[2]
 
-        self.get_right_leg().hip.angle.z = q[3]
-        self.get_right_leg().knee.angle.z = q[4]
-        self.get_right_leg().ankle.angle.z = q[5]
+        self.get_right_leg.hip.angle.z = q[3]
+        self.get_right_leg.knee.angle.z = q[4]
+        self.get_right_leg.ankle.angle.z = q[5]
 
     def get_right_leg(self):
         """

@@ -23,6 +23,8 @@ class MPController(ControllerBase.BaseController):
         :param kd:
         """
         self._runner = runner
+        self.expData = self._runner.get_expData()
+
         self.max_steps = 0
         self.step = 0
         super(MPController, self).__init__(model)
@@ -34,6 +36,8 @@ class MPController(ControllerBase.BaseController):
         self._dx = np.zeros(len(self._x)).reshape((-1, 1))
         self._ddx = np.zeros(len(self._x)).reshape((-1, 1))
 
+        self._kp = 50.0
+        self._kc = 10.0
         Kp = np.zeros((7, 7))
         Kd = np.zeros((7, 7))
 
@@ -81,9 +85,14 @@ class MPController(ControllerBase.BaseController):
             self._runner.step()
             self.K.append(self._runner.K)
             u_raw = np.array(self._runner.ddx)
+            x_raw = np.array(self._runner.x)
+            xd_raw = np.array(self._runner.dx)
             tau.append(u_raw)
             u = np.array([q[0] for q in u_raw])
-            y = Model.runge_integrator(self.rbdl_model, y, 0.01, u)
+            x = np.array([q[0] for q in x_raw])
+            xd = np.array([q[0] for q in xd_raw])
+            y = np.concatenate((x, xd))
+            #y2 = Model.runge_integrator(self.rbdl_model, y, 0.01, u)
             A, b = Model.finite_differences(self.rbdl_model, y, u, h=0.01)
             J += np.dot(np.dot(y.reshape((-1, 1)).T, (P[count])), y.reshape((-1, 1)))
             A_.append(A)
@@ -114,7 +123,6 @@ class MPController(ControllerBase.BaseController):
         h = 0.01
         A_ = []
         b_ = []
-        expData = self._runner.get_expData()
         x = self._runner.get_start()
         v0 = np.zeros(len(x)).reshape((-1, 1))
         J = 0
@@ -123,7 +131,7 @@ class MPController(ControllerBase.BaseController):
 
         while count < self.max_steps:
             # add ut here
-            u = K[count].dot(np.vstack((expData[:, count].reshape((-1,1)), v0)) - y).flatten()
+            u = K[count].dot(np.vstack((self.expData[:, count].reshape((-1,1)), v0)) - y).flatten()
             # u = np.zeros(self.rbdl_model.qdot_size)
             y = Model.runge_integrator(self.rbdl_model, y.flatten(), h, u)
             A, b = Model.finite_differences(self.rbdl_model, y, u)
@@ -145,7 +153,7 @@ class MPController(ControllerBase.BaseController):
         K = ric["K"]
         return P, K
 
-    def calc_tau(self, q=None, qd=None, qdd=None):
+    def calc_tau(self, q=None, qd=None, qdd=None, other=None):
         """
 
         :param q:
@@ -159,21 +167,25 @@ class MPController(ControllerBase.BaseController):
         # print(elapsed_time)
 
         aq = np.zeros(7)
-        if self.step == int(qdd[0]):
+        if self.step == int(other[0]):
             v0 = np.zeros(len(self._x)).reshape((-1, 1))
             x_ = np.append(self._x, self._dx).reshape((-1, 1))
-            expData = self._runner.get_expData()
-            self.u = self.K[self.step].dot(np.vstack((expData[:, self.step].reshape((-1, 1)), v0)) - x_)
-            #self.u = np.append(self.u, [0.0])
+            #x_ = np.append(q[0:6], qd[0:6]).reshape((-1, 1))
+
+            #K = np.append(np.eye(6) * self._kp, np.eye(6) * self._kc, 1)
+            #self.u = K.dot(np.vstack((self.expData[:, self.step].reshape((-1, 1)), v0)) - x_)
+            self.u = self.K2[self.step].dot(np.vstack((self.expData[:, self.step].reshape((-1, 1)), v0)) - x_)
+
             self._dx = self._dx + self.u * 0.01
             self._x = self._x + self._dx * 0.01
             self.step += 1
+            self.u = np.append(self.u, [0.0])
+
 
         e = np.append(self._x, [0.0]) - self._model.q
         ed = np.append(self._dx, [0.0]) - self._model.qd
         aq = self.pdController.calc_tau(e, ed)
-        self.tau = self._model.calculate_dynamics(aq)
-        print(self.step < self.max_steps)
+        self.tau =  self.u #self._model.calculate_dynamics(qdd)
         return self.tau
 
 

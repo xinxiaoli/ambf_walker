@@ -12,13 +12,14 @@ from sensor_msgs.msg import JointState
 
 class Model(object):
 
-    def __init__(self, client):
+    def __init__(self, client, joint_names=[]):
 
         self._client = client
         self._q = np.array([])
         self._qd = np.array([])
         self.tau = np.array([])
         self._handle = None
+        self._joint_names = joint_names
         self._updater = Thread(target=self.update)
         self._enable_control = False
         self.sub_torque = rospy.Subscriber("joint_torque", JointState, self.torque_cb)
@@ -57,7 +58,12 @@ class Model(object):
 
     @q.setter
     def q(self, value):
-        self._q = np.asarray(value)
+        my_joints = []
+        joints = self.handle.get_joint_names()
+        for joint in self._joint_names:
+            if joint in joints:
+                my_joints.append(value[joints.index(joint)])
+        self._q = np.asarray(my_joints)
 
     @property
     def qd(self):
@@ -65,7 +71,12 @@ class Model(object):
 
     @qd.setter
     def qd(self, value):
-        self._qd = np.asarray(value)
+        my_joints = []
+        joints = self.handle.get_joint_names()
+        for joint in self._joint_names:
+            if joint in joints:
+                my_joints.append(value[joints.index(joint)])
+        self._qd = np.asarray(my_joints)
 
     @property
     def state(self):

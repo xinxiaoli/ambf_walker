@@ -59,7 +59,7 @@ class Initialize(smach.State):
             # self.msg.qdd = qdd
             # self.msg.controller = "Dyn"
             # self.pub.publish(self.msg)
-            self.send(q, qd, qdd, "Dyn")
+            self.send(q, qd, qdd, "Dyn", [])
             self.rate.sleep()
 
             return 'Initializing'
@@ -130,7 +130,7 @@ class DMP(smach.State):
             # self.msg.qdd = qdd
             # self.msg.controller = "Dyn"
             # self.pub.publish(self.msg)
-            self.send(q, qd, qdd, "Dyn")
+            self.send(q, qd, qdd,"Dyn",[])
             self.count += 1
             self.rate.sleep()
             return "stepping"
@@ -250,7 +250,7 @@ class Follow(smach.State):
             msg.qd = qd_d
             msg.qdd = qdd_d
             msg.controller = "Dyn"
-            self.send(q_d, qd_d, qdd_d, "Dyn")
+            self.send(q_d, qd_d, qdd_d,"Dyn", [])
             #self.pub.publish(self.msg)
             self.count += 1
             self.rate.sleep()
@@ -312,8 +312,8 @@ class MPC(smach.State):
             q = np.append(x, [0.0])
             qd = np.append(dx, [0.0])
             qdd = np.append(ddx, [0.0])
-            msg.qdd = [self.count]
-            self.send(q, qd, [self.count], "MPC")
+            msg.qdd = qdd #[self.count]
+            self.send(q, qd, qdd, "MPC", [self.count])
             #self.pub.publish(msg)
             self.rate.sleep()
             self.count += 1
