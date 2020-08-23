@@ -19,7 +19,8 @@ class Model(object):
         self._qd = np.array([])
         self.tau = np.array([])
         self._handle = None
-        self._joint_names = joint_names
+        self._joints_names = []
+        self._selected_joint_names = joint_names
         self._updater = Thread(target=self.update)
         self._enable_control = False
         self.sub_torque = rospy.Subscriber("joint_torque", JointState, self.torque_cb)
@@ -59,10 +60,10 @@ class Model(object):
     @q.setter
     def q(self, value):
         my_joints = []
-        joints = self.handle.get_joint_names()
-        for joint in self._joint_names:
-            if joint in joints:
-                my_joints.append(value[joints.index(joint)])
+        self._joints_names = self.handle.get_joint_names()
+        for joint in self._selected_joint_names:
+            if joint in self._joints_names:
+                my_joints.append(value[self._joints_names.index(joint)])
         self._q = np.asarray(my_joints)
 
     @property
@@ -72,10 +73,10 @@ class Model(object):
     @qd.setter
     def qd(self, value):
         my_joints = []
-        joints = self.handle.get_joint_names()
-        for joint in self._joint_names:
-            if joint in joints:
-                my_joints.append(value[joints.index(joint)])
+        self._joints_names = self.handle.get_joint_names()
+        for joint in self._selected_joint_names:
+            if joint in self._joints_names:
+                my_joints.append(value[self._joints_names.index(joint)])
         self._qd = np.asarray(my_joints)
 
     @property
@@ -104,7 +105,11 @@ class Model(object):
             q_msg.data = self.q
             self.q_pub.publish(q_msg)
             if self._enable_control:
-                self.handle.set_all_joint_effort(self.tau)
+                joints_idx = []
+                for joint in self._selected_joint_names:
+                    if joint in self._joints_names:
+                        joints_idx.append(self._joints_names.index(joint))
+                self.handle.set_all_joint_effort(self.tau, joints_idx)
             rate.sleep()
 
     @abc.abstractmethod
