@@ -72,6 +72,9 @@ class Main(smach.State):
     def __init__(self, model,outcomes=["Poly"]):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.Subscriber("Mode", String, callback=self.mode_cb)
+        rospy.wait_for_service('joint_cmd')
+
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.have_msg = False
         self.msg = String
@@ -89,6 +92,7 @@ class Main(smach.State):
         self.have_msg = False
         while not self.have_msg:
             rate.sleep()
+
         return self.msg.data
 
 class DMP(smach.State):
@@ -340,7 +344,7 @@ class LQR(smach.State):
         msg = DesiredJoints()
         msg.controller = "MPC"
 
-        if self.count < self.runner.get_length():
+        if self.count < self.runner.get_length()-1:
 
             self.runner.step()
             x = self.runner.x
@@ -356,4 +360,9 @@ class LQR(smach.State):
             self.count += 1
             return "LQRing"
         else:
+            # while 1:
+            #     q = [-0.7, 0.5, -0.2, -0.7, 0.5, -0.2, 0.0]
+            #     qd = [0.0]*7
+            #     qdd = [0.0]*7
+            #     self.send(q, qd, qdd, "Dyn", [self.count])
             return "LQRed"

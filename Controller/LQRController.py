@@ -9,7 +9,7 @@ from ilqr import iLQR, RecedingHorizonController
 from ilqr.cost import QRCost, PathQRCost, PathQsRCost
 from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 from ilqr.dynamics import AutoDiffDynamics, BatchAutoDiffDynamics, FiniteDiffDynamics
-
+import matplotlib.pyplot as plt
 
 class LQRController(ControllerBase.BaseController):
 
@@ -34,7 +34,7 @@ class LQRController(ControllerBase.BaseController):
             print("iteration", iteration_count, info, J_opt)
 
         def f(x, u, i):
-            y = Model.runge_integrator(self.model.get_rbdl_model(), x, 0.01, u)
+            y = Model.runge_integrator(self._model.get_rbdl_model(), x, 0.01, u)
 
             return np.array(y)
 
@@ -71,6 +71,8 @@ class LQRController(ControllerBase.BaseController):
         J_hist = []
         ilqr = iLQR(dynamics, cost2, 99)
         self.xs, self.us = ilqr.fit(x0, us_init, on_iteration=on_iteration)
+        plt.plot(self.xs[:,0])
+        plt.show()
 
     def calc_tau(self, q=None, qd=None, qdd=None, other=None ):
         """
@@ -80,5 +82,7 @@ class LQRController(ControllerBase.BaseController):
         :param qdd:
         :return:
         """
-        tau = self.us[other[0]]
+        print(other)
+        tau = np.append(self.us[int(other[0])], [0.0])
+        print(tau)
         return tau

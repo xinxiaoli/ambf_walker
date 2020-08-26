@@ -19,7 +19,6 @@ class Model(object):
         self._qd = np.array([])
         self.tau = np.array([])
         self._handle = None
-        self._model = None
         self._joints_names = []
         self._selected_joint_names = joint_names
         self._updater = Thread(target=self.update)

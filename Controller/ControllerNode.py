@@ -27,6 +27,7 @@ class ControllerNode(object):
         self.q = np.array([])
         self.qd = np.array([])
         self.qdd = np.array([])
+        self.other = np.array([])
 
     def update_set_point(self, msg):
         """
