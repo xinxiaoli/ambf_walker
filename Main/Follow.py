@@ -53,7 +53,7 @@ Kd[5, 5] = Kd_ankle
 _client = Client()
 _client.connect()
 rate = rospy.Rate(1000)
-joints = ['Hip-Leftthigh', 'Leftthigh-Leftshank', 'Leftshank-Leftfoot', 'Hip-Rightthigh', 'Rightthigh-Rightshank', 'Rightshank-Rightfoot', 'Hip-Cylinder']
+joints = ['Body-LeftThigh', 'LeftThigh-LeftShank', 'LeftShank-LeftFoot', 'Body-RightThigh', 'RightThigh-RightShank', 'RightShank-RightFoot', 'Body-Crutches']
 LARRE = Exoskeleton.Exoskeleton(_client,joints, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
 runner = LARRE.get_runner()
