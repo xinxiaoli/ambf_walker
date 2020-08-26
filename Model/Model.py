@@ -19,6 +19,7 @@ class Model(object):
         self._qd = np.array([])
         self.tau = np.array([])
         self._handle = None
+        self._model = None
         self._joints_names = []
         self._selected_joint_names = joint_names
         self._updater = Thread(target=self.update)
@@ -36,6 +37,9 @@ class Model(object):
         """
         self.tau = tau
         self._enable_control = True
+
+    def get_rbdl_model(self):
+        return self._model
 
     @property
     def enable_control(self):
@@ -164,8 +168,8 @@ def get_traj(q0, qf, v0, vf, tf, dt):
     b = np.array([q0, v0, qf, vf]).reshape((-1,1))
     A = np.array([[1.0, 0.0, 0.0, 0.0],
                   [0.0, 1.0, 0.0, 0.0],
-                  [1.0, 0.0, tf ** 2, tf ** 3],
-                  [0.0, 0.0, 2 * tf, 3 * tf * 2]])
+                  [1.0, tf, tf ** 2, tf ** 3],
+                  [0.0, 1.0, 2 * tf, 3 * tf * 2]])
 
     x = np.linalg.solve(A, b)
     q = []

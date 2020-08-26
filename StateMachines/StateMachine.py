@@ -36,6 +36,11 @@ class ExoStateMachine(object):
                                                 'MPCed': 'Main'},
                                    remapping={'q': 'q'})
 
+            smach.StateMachine.add('MPC', MPC(model),
+                                   transitions={'MPCing': 'MPC',
+                                                'MPCed': 'Main'},
+                                   remapping={'q': 'q'})
+
             smach.StateMachine.add('Listening', Listening(model),
                                    transitions={'Waiting': 'Listening',
                                                 'Sending': 'Follow'},
