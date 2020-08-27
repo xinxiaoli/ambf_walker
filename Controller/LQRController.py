@@ -22,6 +22,7 @@ class LQRController(ControllerBase.BaseController):
         """
         super(LQRController, self).__init__(model)
         self.runner = runner
+        self.x = []
         self.setup()
 
     def setup(self):
@@ -44,10 +45,12 @@ class LQRController(ControllerBase.BaseController):
         x_path = []
         u_path = []
         count = 0
+        N = self.runner.get_length()
         while count < self.runner.get_length():
             count += 1
             self.runner.step()
             u_path.append(self.runner.ddx.flatten().tolist())
+            self.x.append(self.runner.x.flatten())
             x = self.runner.x.flatten().tolist() + self.runner.dx.flatten().tolist()
             x_path.append(x)
 
@@ -66,13 +69,32 @@ class LQRController(ControllerBase.BaseController):
         cost2 = PathQsRCost(Q, R, x_path=x_path, u_path=u_path)
         #
         # # Random initial action path.
-        us_init = np.random.uniform(-1, 1, (99, dynamics.action_size))
+        us_init = np.random.uniform(-1, 1, (N-1, dynamics.action_size))
         #
         J_hist = []
-        ilqr = iLQR(dynamics, cost2, 99)
+        ilqr = iLQR(dynamics, cost2, N-1)
         self.xs, self.us = ilqr.fit(x0, us_init, on_iteration=on_iteration)
-        plt.plot(self.xs[:,0])
-        plt.show()
+
+        # max_bounds = 0.1
+        # min_bounds = -0.1
+        # diff = (max_bounds - min_bounds) / 2.0
+        # mean = (max_bounds + min_bounds) / 2.0
+        # self.us[:, 0] = diff * np.tanh(self.us[:, 0]) + mean
+        # self.us[:, 3] = diff * np.tanh(self.us[:, 3]) + mean
+        #
+        # max_bounds = 1.0
+        # min_bounds = -1.0
+        # diff = (max_bounds - min_bounds) / 2.0
+        # mean = (max_bounds + min_bounds) / 2.0
+        # self.us[:, 1] = diff * np.tanh(self.us[:, 1]) + mean
+        # self.us[:, 4] = diff * np.tanh(self.us[:, 4]) + mean
+        #
+        # max_bounds = 0.77
+        # min_bounds = -0.77
+        # diff = (max_bounds - min_bounds) / 2.0
+        # mean = (max_bounds + min_bounds) / 2.0
+        # self.us[:, 2] = diff * np.tanh(self.us[:, 2]) + mean
+        # self.us[:, 5] = diff * np.tanh(self.us[:, 5]) + mean
 
     def calc_tau(self, q=None, qd=None, qdd=None, other=None ):
         """
@@ -82,7 +104,8 @@ class LQRController(ControllerBase.BaseController):
         :param qdd:
         :return:
         """
-        print(other)
-        tau = np.append(self.us[int(other[0])], [0.0])
-        print(tau)
+        #print(self.us[int(other[0])])
+
+        #tau = self._model.calculate_dynamics( np.append(self.us[int(other[0])], [0.0]) )
+        tau = self._model.grav( self.x[(int(other[0]))]) + np.append(self.us[int(other[0])], [0.0])
         return tau

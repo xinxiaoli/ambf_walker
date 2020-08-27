@@ -77,6 +77,12 @@ class Exoskeleton(Model.Model):
         rbdl.InverseDynamics(self._model, self.q[0:6], self.qd[0:6], qdd[0:6], tau)
         return tau
 
+    def grav(self, q ):
+        tau = np.asarray([0.0] * self._joint_num)
+        qd = qdd = np.asarray([0.0] * self._joint_num)
+        rbdl.InverseDynamics(self._model, q, qd, qdd, tau)
+        return tau
+
     def dynamic_model(self):
         # add in mass and height params
         model = rbdl.Model()

@@ -341,8 +341,6 @@ class LQR(smach.State):
 
     def execute(self, userdata):
 
-        msg = DesiredJoints()
-        msg.controller = "MPC"
 
         if self.count < self.runner.get_length()-1:
 
@@ -353,9 +351,15 @@ class LQR(smach.State):
             q = np.append(x, [0.0])
             qd = np.append(dx, [0.0])
             qdd = np.append(ddx, [0.0])
-            msg.qdd = [self.count]
-            self.send(q, qd, qdd, "LQR", [self.count])
+            msg = DesiredJoints()
+            # msg.q = q
+            # msg.qd = qd
+            # msg.qdd = qdd
+            # msg.controller = "LQR"
+            # msg.other = [self.count]
+            # self.pub.publish(msg)
 
+            self.send(q, qd, qdd, "LQR", [self.count])
             self.rate.sleep()
             self.count += 1
             return "LQRing"

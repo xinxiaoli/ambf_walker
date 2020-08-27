@@ -46,10 +46,9 @@ joints = ['Hip-Leftthigh', 'Leftthigh-Leftshank', 'Leftshank-Leftfoot', 'Hip-Rig
 LARRE = Exoskeleton.Exoskeleton(_client,joints, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
 
-mpc = MPController.MPController(LARRE, LARRE.get_runner())
+#mpc = MPController.MPController(LARRE, LARRE.get_runner())
 lqr = LQRController.LQRController(LARRE, LARRE.get_runner())
 controllers = {'Dyn': Dyn,
-               "MPC": mpc,
                "LQR":lqr}
 
 cnrl = ControllerNode.ControllerNode(LARRE, controllers)
