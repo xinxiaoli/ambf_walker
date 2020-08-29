@@ -54,12 +54,12 @@ class Initialize(smach.State):
                             self.ankle["qdd"][self.count].item(), 0.0])
 
             self.count += 1
-            # self.msg.q = q
-            # self.msg.qd = qd
-            # self.msg.qdd = qdd
-            # self.msg.controller = "Dyn"
-            # self.pub.publish(self.msg)
-            self.send(q, qd, qdd, "Dyn", [])
+            self.msg.q = q
+            self.msg.qd = qd
+            self.msg.qdd = qdd
+            self.msg.controller = "Dyn"
+            self.pub.publish(self.msg)
+            #self.send(q, qd, qdd, "Dyn", [])
             self.rate.sleep()
 
             return 'Initializing'
@@ -129,12 +129,12 @@ class DMP(smach.State):
             q = np.append(x, [0.0])
             qd = np.append(dx, [0.0])
             qdd = np.append(ddx, [0.0])
-            # self.msg.q = q
-            # self.msg.qd = qd
-            # self.msg.qdd = qdd
-            # self.msg.controller = "Dyn"
-            # self.pub.publish(self.msg)
-            self.send(q, qd, qdd,"Dyn",[])
+            self.msg.q = q
+            self.msg.qd = qd
+            self.msg.qdd = qdd
+            self.msg.controller = "Dyn"
+            self.pub.publish(self.msg)
+            #self.send(q, qd, qdd,"Dyn",[])
             self.count += 1
             self.rate.sleep()
             return "stepping"
@@ -200,7 +200,7 @@ class Listening(smach.State):
         if not self.have_msg:
             current_joints = self._model.q
             for q, q_d in zip(tuple(current_joints), msg.q):
-                self.q.append(Model.get_traj(q, q_d, 0.0, 0.0, 2.0, 0.01))
+                self.q.append(Model.get_traj(q, q_d, 0.0, 0.0, 1.0, 0.01))
             self.have_msg = True
 
     def execute(self, userdata):
@@ -254,8 +254,8 @@ class Follow(smach.State):
             msg.qd = qd_d
             msg.qdd = qdd_d
             msg.controller = "Dyn"
-            self.send(q_d, qd_d, qdd_d,"Dyn", [])
-            #self.pub.publish(self.msg)
+            #self.send(q_d, qd_d, qdd_d,"Dyn", [])
+            self.pub.publish(msg)
             self.count += 1
             self.rate.sleep()
             return "Following"
