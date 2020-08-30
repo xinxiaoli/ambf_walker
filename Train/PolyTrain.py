@@ -27,8 +27,8 @@ fit = poly.Polynomial(x.flatten())
 t = np.linspace(0,10,count)
 y_prime = fit(t)
 hip = []
-for i in range(10):
-    y = y_prime + gauss(-0.001, 0.001)
+for i in range(1):
+    y = y_prime #+ gauss(-0.001, 0.001)
     hip.append(y)
 
 b = np.array([ [0.2], [0.0], [0.5], [0.0] ])
@@ -37,8 +37,8 @@ fit = poly.Polynomial(x.flatten())
 t = np.linspace(0, 10, count)
 y_prime = fit(t)
 knee = []
-for i in range(10):
-    y = y_prime + gauss(-0.001, 0.001)
+for i in range(1):
+    y = y_prime #+ gauss(-0.001, 0.001)
     knee.append(y)
 
 
@@ -48,8 +48,8 @@ fit = poly.Polynomial(x.flatten())
 t = np.linspace(0,10,count)
 y_prime = fit(t)
 ankle = []
-for i in range(10):
-    y = y_prime + gauss(-0.001, 0.001)
+for i in range(1):
+    y = y_prime #+ gauss(-0.001, 0.001)
     ankle.append(y)
 
 

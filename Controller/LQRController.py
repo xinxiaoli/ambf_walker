@@ -21,7 +21,8 @@ class LQRController(ControllerBase.BaseController):
         :param kd:
         """
         super(LQRController, self).__init__(model)
-        self.runner = runner
+        self.runner =  TPGMMRunner.TPGMMRunner("/home/nathaniel/catkin_ws/src/ambf_walker/Train/gotozero.pickle")
+
         self.x = []
         self.setup()
 
@@ -64,7 +65,7 @@ class LQRController(ControllerBase.BaseController):
         x0 = x_path[0]
         x_path = np.array(x_path)
         u_path = np.array(u_path)
-        R = 0.00005 * np.eye(dynamics.action_size)
+        R = 0.1 * np.eye(dynamics.action_size)
         #
         cost2 = PathQsRCost(Q, R, x_path=x_path, u_path=u_path)
         #
