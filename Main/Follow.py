@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python
 import sys
 # from os import sys, path
@@ -23,7 +21,6 @@ Kd_knee = 1.0
 Kp_ankle = 100.0
 Kd_ankle = 0.4
 
-
 # Kp_hip = 150.0
 # Kd_hip = 0.5
 #
@@ -32,8 +29,6 @@ Kd_ankle = 0.4
 #
 # Kp_ankle = 100.0
 # Kd_ankle = 0.4
-
-
 
 Kp[0, 0] = Kp_hip
 Kd[0, 0] = Kd_hip
@@ -54,7 +49,7 @@ _client = Client()
 _client.connect()
 rate = rospy.Rate(1000)
 joints = ['Body-LeftThigh', 'LeftThigh-LeftShank', 'LeftShank-LeftFoot', 'Body-RightThigh', 'RightThigh-RightShank', 'RightShank-RightFoot', 'Body-Crutches']
-LARRE = Exoskeleton.Exoskeleton(_client,joints, 56, 1.56)
+LARRE = Exoskeleton.Exoskeleton(_client, joints, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
 runner = LARRE.get_runner()
 mpc = MPController.MPController(LARRE, runner)
