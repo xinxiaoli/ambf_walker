@@ -64,6 +64,12 @@ class Exoskeleton(Model.Model):
         self._leg_sensor_cb = message_filters.TimeSynchronizer(self._leg_sensor_ls, 1)
         self._leg_sensor_cb.registerCallback(self.leg_sensor_callback)
 
+        self._left_foot_sensor1 = Point.Point(0, 0, 0)
+        self._left_foot_sensor2 = Point.Point(0, 0, 0)
+        self._left_foot_sensor3 = Point.Point(0, 0, 0)
+        self._right_foot_sensor1 = Point.Point(0, 0, 0)
+        self._right_foot_sensor2 = Point.Point(0, 0, 0)
+        self._right_foot_sensor3 = Point.Point(0, 0, 0)
         self._left_foot_sensor1_sub = message_filters.Subscriber("/ambf/env/SensorLeftFoot1Tab/State", RigidBodyState)
         self._left_foot_sensor2_sub = message_filters.Subscriber("/ambf/env/SensorLeftFoot2Tab/State", RigidBodyState)
         self._left_foot_sensor3_sub = message_filters.Subscriber("/ambf/env/SensorLeftFoot3Tab/State", RigidBodyState)
