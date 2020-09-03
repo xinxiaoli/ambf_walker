@@ -310,23 +310,11 @@ class Exoskeleton(Model.Model):
         return self._left_leg
 
     def get_leg_sensors(self):
-        leg_sensors = {}
-        leg_sensors["flt"] = self._left_leg.hip.force
-        leg_sensors["blt"] = self._left_leg.hip.force
-        leg_sensors["fls"] = self._left_leg.knee.force
-        leg_sensors["bls"] = self._left_leg.knee.force
-        leg_sensors["frt"] = self._right_leg.hip.force
-        leg_sensors["brt"] = self._right_leg.hip.force
-        leg_sensors["frs"] = self._right_leg.knee.force
-        leg_sensors["brs"] = self._right_leg.knee.force
-        return leg_sensors
+        left_leg_sensors = [self._left_leg.hip.force, self._left_leg.hip.force, self._left_leg.knee.force, self._left_leg.knee.force]
+        right_leg_sensors = [self._right_leg.hip.force, self._right_leg.hip.force, self._right_leg.knee.force, self._right_leg.knee.force]
+        return left_leg_sensors, right_leg_sensors
 
     def get_foot_sensors(self):
-        foot_sensors = {}
-        foot_sensors["lf1"] = self._left_foot_sensor1
-        foot_sensors["lf2"] = self._left_foot_sensor2
-        foot_sensors["lf3"] = self._left_foot_sensor3
-        foot_sensors["rf1"] = self._right_foot_sensor1
-        foot_sensors["rf2"] = self._right_foot_sensor2
-        foot_sensors["rf3"] = self._right_foot_sensor3
-        return foot_sensors
+        left_foot_sensors = [self._left_foot_sensor1, self._left_foot_sensor2, self._left_foot_sensor3]
+        right_foot_sensors = [self._right_foot_sensor1, self._right_foot_sensor2, self._right_foot_sensor3]
+        return left_foot_sensors, right_foot_sensors
