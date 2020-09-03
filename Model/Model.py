@@ -113,7 +113,7 @@ class Model(object):
             rate.sleep()
 
     @abc.abstractmethod
-    def  ambf_to_dyn(self, q):
+    def ambf_to_dyn(self, q):
         pass
 
     @abc.abstractmethod

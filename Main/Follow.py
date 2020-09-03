@@ -21,15 +21,6 @@ Kd_knee = 1.0
 Kp_ankle = 100.0
 Kd_ankle = 0.4
 
-# Kp_hip = 150.0
-# Kd_hip = 0.5
-#
-# Kp_knee = 175.0
-# Kd_knee = 1.0
-#
-# Kp_ankle = 100.0
-# Kd_ankle = 0.4
-
 Kp[0, 0] = Kp_hip
 Kd[0, 0] = Kd_hip
 Kp[1, 1] = Kp_knee
@@ -48,7 +39,8 @@ Kd[5, 5] = Kd_ankle
 _client = Client()
 _client.connect()
 rate = rospy.Rate(1000)
-joints = ['Body-LeftThigh', 'LeftThigh-LeftShank', 'LeftShank-LeftFoot', 'Body-RightThigh', 'RightThigh-RightShank', 'RightShank-RightFoot', 'Body-Crutches']
+joints = ['Hip-RobLeftThigh', 'RobLeftThigh-RobLeftShank', 'RobLeftShank-RobLeftFoot', 'Hip-RobRightThigh',
+          'RobRightThigh-RobRightShank', 'RobRightShank-RobRightFoot', 'Hip-Crutches']
 LARRE = Exoskeleton.Exoskeleton(_client, joints, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
 runner = LARRE.get_runner()
@@ -59,4 +51,3 @@ controllers = {'Dyn': Dyn,
 cnrl = ControllerNode.ControllerNode(LARRE, controllers)
 
 machine = StateMachine.ExoStateMachine(LARRE)
-
