@@ -97,6 +97,7 @@ class Exoskeleton(Model.Model):
         force_brs = Point.Point(brs.wrench.force.x, brs.wrench.force.y, brs.wrench.force.z)
 
         # Not sure how to circumvent the immutable attribute below
+        # Cannot change force attribute to an array of two Point.Point()
 
         # left_leg.hip.force = force_flt
         # left_leg.knee.force = force_fls
