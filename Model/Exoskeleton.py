@@ -23,7 +23,6 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 class Exoskeleton(Model.Model):
 
     def __init__(self, client, joints, mass, height):
-
         super(Exoskeleton, self).__init__(client, joint_names=joints)
         self._handle = self._client.get_obj_handle('Hip')
         # Update to current
@@ -85,7 +84,6 @@ class Exoskeleton(Model.Model):
         self._updater.start()
 
     def leg_sensor_callback(self, flt, blt, fls, bls, frt, brt, frs, brs):
-
         left_leg = self._left_leg
         right_leg = self._right_leg
 
@@ -98,10 +96,12 @@ class Exoskeleton(Model.Model):
         force_frs = Point.Point(frs.wrench.force.x, frs.wrench.force.y, frs.wrench.force.z)
         force_brs = Point.Point(brs.wrench.force.x, brs.wrench.force.y, brs.wrench.force.z)
 
-        left_leg.hip.force = force_flt
-        left_leg.knee.force = force_fls
-        right_leg.hip.force = force_frt
-        right_leg.knee.force = force_frs
+        # Not sure how to circumvent the immutable attribute below
+
+        # left_leg.hip.force = force_flt
+        # left_leg.knee.force = force_fls
+        # right_leg.hip.force = force_frt
+        # right_leg.knee.force = force_frs
 
         # self._left_leg.hip.force = force_flt
         # self._left_leg.knee.force = force_fls
@@ -109,7 +109,6 @@ class Exoskeleton(Model.Model):
         # self._right_leg.knee.force = force_frs
 
     def foot_sensor_callback(self, lf1, lf2, lf3, rf1, rf2, rf3):
-
         force_lf1 = Point.Point(lf1.wrench.force.x, lf1.wrench.force.y, lf1.wrench.force.z)
         force_lf2 = Point.Point(lf2.wrench.force.x, lf2.wrench.force.y, lf2.wrench.force.z)
         force_lf3 = Point.Point(lf3.wrench.force.x, lf3.wrench.force.y, lf3.wrench.force.z)
@@ -234,7 +233,6 @@ class Exoskeleton(Model.Model):
         return model
 
     def fk(self):
-
         fk = {}
 
         point_local = np.array([0.0, 0.0, 0.0])
@@ -278,7 +276,6 @@ class Exoskeleton(Model.Model):
         return fk
 
     def stance_trajectory(self, tf=2, dt=0.01):
-
         hip = Model.get_traj(0.0, -0.2, 0.0, 0.0, tf, dt)
         knee = Model.get_traj(0.0, 0.20, 0.0, 0., tf, dt)
         ankle = Model.get_traj(-0.349, -0.1, 0.0, 0.0, tf, dt)
@@ -291,7 +288,6 @@ class Exoskeleton(Model.Model):
         pass
 
     def update_state(self, q, qd):
-
         self.get_left_leg.hip.angle.z = q[0]
         self.get_left_leg.knee.angle.z = q[1]
         self.get_left_leg.ankle.angle.z = q[2]
@@ -312,15 +308,24 @@ class Exoskeleton(Model.Model):
         """
         return self._left_leg
 
+    def get_leg_sensors(self):
+        leg_sensors = {}
+        leg_sensors["flt"] = self._left_leg.hip.force
+        leg_sensors["blt"] = self._left_leg.hip.force
+        leg_sensors["fls"] = self._left_leg.knee.force
+        leg_sensors["bls"] = self._left_leg.knee.force
+        leg_sensors["frt"] = self._right_leg.hip.force
+        leg_sensors["brt"] = self._right_leg.hip.force
+        leg_sensors["frs"] = self._right_leg.knee.force
+        leg_sensors["brs"] = self._right_leg.knee.force
+        return leg_sensors
+
     def get_foot_sensors(self):
-
-        foot_sensor = {}
-
-        foot_sensor["left1"] = self._left_foot_sensor1
-        foot_sensor["left2"] = self._left_foot_sensor2
-        foot_sensor["left3"] = self._left_foot_sensor3
-        foot_sensor["right1"] = self._right_foot_sensor1
-        foot_sensor["right2"] = self._right_foot_sensor2
-        foot_sensor["right3"] = self._right_foot_sensor3
-
-        return foot_sensor
+        foot_sensors = {}
+        foot_sensors["lf1"] = self._left_foot_sensor1
+        foot_sensors["lf2"] = self._left_foot_sensor2
+        foot_sensors["lf3"] = self._left_foot_sensor3
+        foot_sensors["rf1"] = self._right_foot_sensor1
+        foot_sensors["rf2"] = self._right_foot_sensor2
+        foot_sensors["rf3"] = self._right_foot_sensor3
+        return foot_sensors
