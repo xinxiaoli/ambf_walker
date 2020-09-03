@@ -81,8 +81,8 @@ class Model(object):
 
     @qd.setter
     def qd(self, value):
-        value[2] *= -1
-        value[5] *= -1
+        # value[1] *= -1
+        # value[9] *= -1
         self._qd = np.asarray(value)
 
     @property
@@ -103,19 +103,38 @@ class Model(object):
         :return:
         """
         rate = rospy.Rate(1000)  # 1000hz
+        pub_qd = rospy.Publisher('qd', Float32MultiArray, queue_size=1)
+        pub_q = rospy.Publisher('q', Float32MultiArray, queue_size=1)
+        pub_tau = rospy.Publisher('tau', Float32MultiArray, queue_size=1)
+        msg_qd = Float32MultiArray()
+        msg_q = Float32MultiArray()
+        msg_tau = Float32MultiArray()
         q_msg = Float32MultiArray()
         while 1:
             self.q = self.handle.get_all_joint_pos()
             self.qd = self.handle.get_all_joint_vel()
             self._joint_num = self.q.size
+
+            msg_tau.data = self.tau
+            if self._enable_control:
+                self.handle.set_all_joint_effort(self.tau)
+            else:
+                msg_tau.data = self.q * 0
+
+            msg_qd.data = self.qd
+            msg_q.data = self.q
+            pub_qd.publish(msg_qd)
+            pub_q.publish(msg_q)
+            pub_tau.publish(msg_tau)
             q_msg.data = self.q
             self.q_pub.publish(q_msg)
             if self._enable_control:
                 self.handle.set_all_joint_effort(self.tau)
+
             rate.sleep()
 
     @abc.abstractmethod
-    def  ambf_to_dyn(self, q):
+    def ambf_to_dyn(self, q):
         pass
 
     @abc.abstractmethod

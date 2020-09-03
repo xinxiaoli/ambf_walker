@@ -1,2 +1,7 @@
 .idea*
 *.pyc
+/venv/*
+**/*.STL
+*.yaml
+*.yaml.old
+*.blend1

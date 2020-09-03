@@ -14,8 +14,8 @@ def get_traj(q0, qf, v0, vf, tf, dt):
     b = np.array([q0, v0, qf, vf]).reshape((-1,1))
     A = np.array([[1.0, 0.0, 0.0, 0.0],
                   [0.0, 1.0, 0.0, 0.0],
-                  [1.0, 0.0, tf ** 2, tf ** 3],
-                  [0.0, 0.0, 2 * tf, 3 * tf * 2]])
+                  [1.0, tf, tf ** 2, tf ** 3],
+                  [0.0, 1.0, 2 * tf, 3 * tf ** 2]])
 
     x = np.linalg.solve(A, b)
     q = []
