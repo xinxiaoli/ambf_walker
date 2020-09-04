@@ -12,5 +12,5 @@ joints = ['Hip-RobLeftThigh', 'RobLeftThigh-RobLeftShank', 'RobLeftShank-RobLeft
 Exo = Exoskeleton.Exoskeleton(_client, joints, 56, 1.56)
 
 while True:
-    left_foot_sensors, right_foot_sensors = Exo.get_foot_sensors()
-    print(left_foot_sensors[0])
+    left_leg_sensors, right_leg_sensors = Exo.get_leg_sensors()
+    print(left_leg_sensors[0])
