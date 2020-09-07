@@ -8,9 +8,10 @@ import numpy as np
 import rbdl
 import Model
 import time
-from lib.GaitCore.Core import Point
+from GaitCore.Core import Point
 from std_msgs.msg import Float32MultiArray
 from threading import Thread
+
 
 class Human(Model.Model):
 
@@ -30,18 +31,11 @@ class Human(Model.Model):
         self._state = np.concatenate(value)
 
     def dynamic_model(self, total_mass, height):
-
         model = rbdl.Model()
-
         return model
 
     def fk(self):
-
         fk = {}
-
-
-
 
     def update_state(self, q, qd):
         pass
-

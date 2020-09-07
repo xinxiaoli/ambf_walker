@@ -103,6 +103,8 @@ class Exoskeleton(Model.Model):
 
         # Leg forces are named tuples? Currently immutable, and not equivalent to sensor readout regardless
 
+        # self._left_leg.hip.force = force_flt
+
         self._left_thigh_sensorF = force_flt
         self._left_thigh_sensorB = force_blt
         self._left_shank_sensorF = force_fls
