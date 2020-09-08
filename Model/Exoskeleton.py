@@ -47,15 +47,15 @@ class Exoskeleton(Model.Model):
 
         self._state = (self._q, self._qd)
 
-        # Attempt at setting up sensor subs
-        self._left_thigh_sensorF = Point.Point(0, 0, 0)
-        self._left_thigh_sensorB = Point.Point(0, 0, 0)
-        self._left_shank_sensorF = Point.Point(0, 0, 0)
-        self._left_shank_sensorB = Point.Point(0, 0, 0)
-        self._right_thigh_sensorF = Point.Point(0, 0, 0)
-        self._right_thigh_sensorB = Point.Point(0, 0, 0)
-        self._right_shank_sensorF = Point.Point(0, 0, 0)
-        self._right_shank_sensorB = Point.Point(0, 0, 0)
+        # START ATTEMPT
+        # self._left_thigh_sensorF = Point.Point(0, 0, 0)
+        # self._left_thigh_sensorB = Point.Point(0, 0, 0)
+        # self._left_shank_sensorF = Point.Point(0, 0, 0)
+        # self._left_shank_sensorB = Point.Point(0, 0, 0)
+        # self._right_thigh_sensorF = Point.Point(0, 0, 0)
+        # self._right_thigh_sensorB = Point.Point(0, 0, 0)
+        # self._right_shank_sensorF = Point.Point(0, 0, 0)
+        # self._right_shank_sensorB = Point.Point(0, 0, 0)
         self._left_thigh_sensorF_sub = message_filters.Subscriber("/ambf/env/FrontSensorLeftThigh/State", RigidBodyState)
         self._left_thigh_sensorB_sub = message_filters.Subscriber("/ambf/env/BackSensorLeftThigh/State", RigidBodyState)
         self._left_shank_sensorF_sub = message_filters.Subscriber("/ambf/env/FrontSensorLeftShank/State", RigidBodyState)
@@ -87,7 +87,7 @@ class Exoskeleton(Model.Model):
                                 self._right_foot_sensor1_sub, self._right_foot_sensor2_sub, self._right_foot_sensor3_sub]
         self._foot_sensor_cb = message_filters.TimeSynchronizer(self._foot_sensor_ls, 1)
         self._foot_sensor_cb.registerCallback(self.foot_sensor_callback)
-        # End attempt
+        # END ATTEMPT
 
         self._updater.start()
 
@@ -101,18 +101,19 @@ class Exoskeleton(Model.Model):
         force_frs = Point.Point(frs.wrench.force.x, frs.wrench.force.y, frs.wrench.force.z)
         force_brs = Point.Point(brs.wrench.force.x, brs.wrench.force.y, brs.wrench.force.z)
 
-        # Leg forces are named tuples? Currently immutable, and not equivalent to sensor readout regardless
+        self._left_leg.hip.force = force_flt
+        self._left_leg.knee.force = force_fls
+        self._right_leg.hip.force = force_frt
+        self._right_leg.knee.force = force_frs
 
-        # self._left_leg.hip.force = force_flt
-
-        self._left_thigh_sensorF = force_flt
-        self._left_thigh_sensorB = force_blt
-        self._left_shank_sensorF = force_fls
-        self._left_shank_sensorB = force_bls
-        self._right_thigh_sensorF = force_frt
-        self._right_thigh_sensorB = force_brt
-        self._right_shank_sensorF = force_frs
-        self._right_shank_sensorB = force_brs
+        # self._left_thigh_sensorF = force_flt
+        # self._left_thigh_sensorB = force_blt
+        # self._left_shank_sensorF = force_fls
+        # self._left_shank_sensorB = force_bls
+        # self._right_thigh_sensorF = force_frt
+        # self._right_thigh_sensorB = force_brt
+        # self._right_shank_sensorF = force_frs
+        # self._right_shank_sensorB = force_brs
 
     def foot_sensor_callback(self, lf1, lf2, lf3, rf1, rf2, rf3):
         force_lf1 = Point.Point(lf1.wrench.force.x, lf1.wrench.force.y, lf1.wrench.force.z)
@@ -315,10 +316,8 @@ class Exoskeleton(Model.Model):
         return self._left_leg
 
     def get_leg_sensors(self):
-        left_leg_sensors = [self._left_thigh_sensorF, self._left_thigh_sensorB,
-                            self._left_shank_sensorF, self._left_shank_sensorB]
-        right_leg_sensors = [self._right_thigh_sensorF, self._right_thigh_sensorB,
-                             self._right_shank_sensorF, self._right_shank_sensorB]
+        left_leg_sensors = [self._left_leg.hip.force, self._left_leg.knee.force]
+        right_leg_sensors = [self._right_leg.hip.force, self._right_leg.knee.force]
         return left_leg_sensors, right_leg_sensors
 
     def get_foot_sensors(self):
