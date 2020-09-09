@@ -12,18 +12,7 @@ from Controller import DynController, MPController, LQRController
 Kp = np.zeros((7, 7))
 Kd = np.zeros((7, 7))
 #
-# Kp_hip = 100.0
-# Kd_hip = 0.5
-#
-# Kp_knee = 125.0
-# Kd_knee = 1.0
-#
-# Kp_ankle = 100.0
-# Kd_ankle = 0.4
-
-
-
-Kp_hip = 250.0
+Kp_hip = 100.0
 Kd_hip = 0.5
 
 Kp_knee = 125.0
@@ -31,6 +20,10 @@ Kd_knee = 1.0
 
 Kp_ankle = 100.0
 Kd_ankle = 0.4
+
+
+
+
 
 Kp[0, 0] = Kp_hip
 Kd[0, 0] = Kd_hip
