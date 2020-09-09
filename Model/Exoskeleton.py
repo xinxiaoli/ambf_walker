@@ -27,7 +27,7 @@ class Exoskeleton(Model.Model):
         self._handle = self._client.get_obj_handle('Hip')
         # Update to current
 
-        time.sleep(2)
+        time.sleep(4)
         self._mass = mass
         self._height = height
         self._model = self.dynamic_model()
