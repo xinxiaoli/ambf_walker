@@ -37,6 +37,9 @@ class Model(object):
         self.tau = tau
         self._enable_control = True
 
+    def get_rbdl_model(self):
+        return self._model
+
     @property
     def enable_control(self):
         return self._enable_control
@@ -109,7 +112,7 @@ class Model(object):
                 for joint in self._selected_joint_names:
                     if joint in self._joints_names:
                         joints_idx.append(self._joints_names.index(joint))
-                self.handle.set_all_joint_effort(self.tau, joints_idx)
+                self.handle.set_multiple_joint_effort(self.tau, joints_idx)
             rate.sleep()
 
     @abc.abstractmethod
@@ -164,8 +167,8 @@ def get_traj(q0, qf, v0, vf, tf, dt):
     b = np.array([q0, v0, qf, vf]).reshape((-1,1))
     A = np.array([[1.0, 0.0, 0.0, 0.0],
                   [0.0, 1.0, 0.0, 0.0],
-                  [1.0, 0.0, tf ** 2, tf ** 3],
-                  [0.0, 0.0, 2 * tf, 3 * tf * 2]])
+                  [1.0, tf, tf ** 2, tf ** 3],
+                  [0.0, 1.0, 2 * tf, 3 * tf * 2]])
 
     x = np.linalg.solve(A, b)
     q = []

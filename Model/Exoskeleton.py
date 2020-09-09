@@ -135,6 +135,12 @@ class Exoskeleton(Model.Model):
         rbdl.InverseDynamics(self._model, self.q[0:6], self.qd[0:6], qdd[0:6], tau)
         return tau
 
+    def grav(self, q ):
+        tau = np.asarray([0.0] * self._joint_num)
+        qd = qdd = np.asarray([0.0] * self._joint_num)
+        rbdl.InverseDynamics(self._model, q, qd, qdd, tau)
+        return tau
+
     def dynamic_model(self):
         # add in mass and height params
         model = rbdl.Model()
@@ -251,7 +257,8 @@ class Exoskeleton(Model.Model):
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_foot, point_local)
         fk["left_ankle"] = Point.Point(data[0], data[1], data[2])
 
-        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_thigh, point_local)
+        data = rbdl.CalcBodyToBaseCoordinates\
+            (self._model, self.q, self.right_thigh, point_local)
         fk["right_hip"] = Point.Point(data[0], data[1], data[2])
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_shank, point_local)
         fk["right_knee"] = Point.Point(data[0], data[1], data[2])
