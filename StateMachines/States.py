@@ -8,6 +8,8 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 from std_msgs.msg import Float32MultiArray
 from Model import Model
 from std_msgs.msg import Empty,String
+from Controller import MPController
+from ambf_walker.srv import DesiredJointsCmdRequest, DesiredJointsCmd
 
 
 class Initialize(smach.State):
@@ -15,6 +17,9 @@ class Initialize(smach.State):
     def __init__(self, model, outcomes=['Initializing', 'Initialized']):
 
         smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.rate = rospy.Rate(100)
         tf = 2.0
@@ -52,9 +57,11 @@ class Initialize(smach.State):
             self.msg.q = q
             self.msg.qd = qd
             self.msg.qdd = qdd
-            self.msg.controllers = ["PD", "PD", "PD", "PD", "PD", "PD", "PD"]
-            self.rate.sleep()
+            self.msg.controller = "Dyn"
             self.pub.publish(self.msg)
+            #self.send(q, qd, qdd, "Dyn", [])
+            self.rate.sleep()
+
             return 'Initializing'
         else:
             return "Initialized"
@@ -65,6 +72,9 @@ class Main(smach.State):
     def __init__(self, model,outcomes=["Poly"]):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.Subscriber("Mode", String, callback=self.mode_cb)
+        rospy.wait_for_service('joint_cmd')
+
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.have_msg = False
         self.msg = String
@@ -82,12 +92,15 @@ class Main(smach.State):
         self.have_msg = False
         while not self.have_msg:
             rate.sleep()
+
         return self.msg.data
 
 class DMP(smach.State):
 
     def __init__(self, model,outcomes=["stepping", "stepped"]):
         smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.runner = self._model.get_runner()
         self.rate = rospy.Rate(100)
@@ -108,11 +121,7 @@ class DMP(smach.State):
             self.runner.update_start(start)
 
         if count < self.runner.get_length():
-            curr_q = []
-            curr_qd = []
-            for q, qd in zip(self._model.q[0:6],self._model.qd[0:6]):
-                curr_q.append(np.array([q]))
-                curr_qd.append(np.array([-qd]))
+
             self.runner.step()
             x = self.runner.x
             dx = self.runner.dx
@@ -123,8 +132,9 @@ class DMP(smach.State):
             self.msg.q = q
             self.msg.qd = qd
             self.msg.qdd = qdd
-
+            self.msg.controller = "Dyn"
             self.pub.publish(self.msg)
+            #self.send(q, qd, qdd,"Dyn",[])
             self.count += 1
             self.rate.sleep()
             return "stepping"
@@ -133,12 +143,13 @@ class DMP(smach.State):
             return "stepped"
 
 
-
 class GoTo(smach.State):
 
     def __init__(self, model, outcomes=["Sending", "Waiting"]):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.Subscriber("Traj", DesiredJoints, callback=self.traj_cb)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.have_msg = False
         self.Rate = rospy.Rate(100)
@@ -159,10 +170,11 @@ class GoTo(smach.State):
             q_d = np.array(list(self.q.q) + [0.0])
             qd_d = np.array(list(self.q.qd) + [0.0])
             qdd_d = np.array(list(self.q.qdd) + [0.0])
-            self.msg = DesiredJoints()
-            self.msg.q = q_d
-            self.msg.qd = qd_d
-            self.msg.qdd = qdd_d
+            msg = DesiredJoints()
+            msg.q = q_d
+            msg.qd = qd_d
+            msg.qdd = qdd_d
+            msg.controller = "Dyn"
             self.pub.publish(self.msg)
 
             self.have_msg = False
@@ -188,7 +200,7 @@ class Listening(smach.State):
         if not self.have_msg:
             current_joints = self._model.q
             for q, q_d in zip(tuple(current_joints), msg.q):
-                self.q.append(Model.get_traj(q, q_d, 0.0, 0.0, 2.0, 0.01))
+                self.q.append(Model.get_traj(q, q_d, 0.0, 0.0, 1.0, 0.01))
             self.have_msg = True
 
     def execute(self, userdata):
@@ -210,15 +222,19 @@ class Follow(smach.State):
         smach.State.__init__(self, outcomes=outcomes,
                               input_keys=['q'],
                               output_keys=['q'])
+
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.rate = rospy.Rate(100)
-        self.msg = DesiredJoints()
+
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
 
     def execute(self, userdata):
 
         q = userdata.q
+        msg = DesiredJoints()
         count = self.count
         if count <= len(q[0]["q"]) - 1:
 
@@ -234,11 +250,12 @@ class Follow(smach.State):
                           q[2]["qdd"][count].item(), q[3]["qdd"][count].item(),
                           q[4]["qdd"][count].item(), q[5]["qdd"][count].item(), 0.0])
 
-            self.msg.q = q_d
-            self.msg.qd = qd_d
-            self.msg.qdd = qdd_d
-
-            self.pub.publish(self.msg)
+            msg.q = q_d
+            msg.qd = qd_d
+            msg.qdd = qdd_d
+            msg.controller = "Dyn"
+            #self.send(q_d, qd_d, qdd_d,"Dyn", [])
+            self.pub.publish(msg)
             self.count += 1
             self.rate.sleep()
             return "Following"
@@ -270,3 +287,86 @@ class LowerBody(smach.State):
             self._model.handle.set_rpy(0.25, 0, 0)
             self._model.handle.set_force(0.0, 0.0, 0.0)
             return "Lowered"
+
+
+class MPC(smach.State):
+
+    def __init__(self, model, outcomes=["MPCing", "MPCed"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self._model = model
+        self.runner = model.get_runner()
+        self.rate = rospy.Rate(100)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
+
+    def execute(self, userdata):
+
+        msg = DesiredJoints()
+        msg.controller = "MPC"
+
+        if self.count < self.runner.get_length():
+
+            self.runner.step()
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
+            msg.qdd = qdd #[self.count]
+            self.send(q, qd, qdd, "MPC", [self.count])
+            #self.pub.publish(msg)
+            self.rate.sleep()
+            self.count += 1
+            return "MPCing"
+        else:
+            return "MPCed"
+
+
+class LQR(smach.State):
+
+    def __init__(self, model, outcomes=["LQRing", "LQRed"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self._model = model
+        self.runner = model.get_runner()
+        self.rate = rospy.Rate(100)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
+
+    def execute(self, userdata):
+
+
+        if self.count < self.runner.get_length()-1:
+
+            self.runner.step()
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
+            msg = DesiredJoints()
+            # msg.q = q
+            # msg.qd = qd
+            # msg.qdd = qdd
+            # msg.controller = "LQR"
+            # msg.other = [self.count]
+            # self.pub.publish(msg)
+
+            self.send(q, qd, qdd, "LQR", [self.count])
+            self.rate.sleep()
+            self.count += 1
+            return "LQRing"
+        else:
+            # while 1:
+            #     q = [-0.7, 0.5, -0.2, -0.7, 0.5, -0.2, 0.0]
+            #     qd = [0.0]*7
+            #     qdd = [0.0]*7
+            #     self.send(q, qd, qdd, "Dyn", [self.count])
+            return "LQRed"

@@ -1,0 +1,7 @@
+float64[] q
+float64[] qd
+float64[] qdd
+string controller
+float64[] other
+---
+bool success

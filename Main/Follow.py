@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python
 import sys
 # from os import sys, path
@@ -10,10 +8,10 @@ from Controller import ControllerNode
 from Model import Exoskeleton
 import rospy
 from ambf_client import Client
-from Controller import DynController
+from Controller import DynController, MPController, LQRController
 Kp = np.zeros((7, 7))
 Kd = np.zeros((7, 7))
-
+#
 Kp_hip = 100.0
 Kd_hip = 0.5
 
@@ -24,14 +22,6 @@ Kp_ankle = 100.0
 Kd_ankle = 0.4
 
 
-# Kp_hip = 150.0
-# Kd_hip = 0.5
-#
-# Kp_knee = 175.0
-# Kd_knee = 1.0
-#
-# Kp_ankle = 100.0
-# Kd_ankle = 0.4
 
 
 
@@ -53,9 +43,18 @@ Kd[5, 5] = Kd_ankle
 _client = Client()
 _client.connect()
 rate = rospy.Rate(1000)
-LARRE = Exoskeleton.Exoskeleton(_client, 56, 1.56)
-controller = DynController.DynController(LARRE, Kp, Kd)
-cnrl = ControllerNode.ControllerNode(LARRE, controller)
-#machine = StateMachine.ExoStateMachineFollowing(LARRE)
-machine = StateMachine.ExoStateMachine(LARRE)
+joints = ['Hip-RobLeftThigh', 'RobLeftThigh-RobLeftShank', 'RobLeftShank-RobLeftFoot', 'Hip-RobRightThigh',
+          'RobRightThigh-RobRightShank', 'RobRightShank-RobRightFoot', 'Hip-Crutches']
+LARRE = Exoskeleton.Exoskeleton(_client, joints, 56, 1.56)
+Dyn = DynController.DynController(LARRE, Kp, Kd)
 
+#mpc = MPController.MPController(LARRE, LARRE.get_runner())
+# lqr = LQRController.LQRController(LARRE, LARRE.get_runner())
+# controllers = {'Dyn': Dyn,
+#                "LQR":lqr}
+
+# lqr = LQRController.LQRController(LARRE, LARRE.get_runner())
+controllers = {'Dyn': Dyn}
+cnrl = ControllerNode.ControllerNode(LARRE, controllers)
+
+machine = StateMachine.ExoStateMachine(LARRE)

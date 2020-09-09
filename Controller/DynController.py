@@ -28,7 +28,7 @@ class DynController(ControllerBase.BaseController):
         self.pdController.kp = kp
         self.pdController.kd = kd
 
-    def calc_tau(self, q=None, qd=None, qdd=None):
+    def calc_tau(self, q=None, qd=None, qdd=None, other=None):
         """
 
         :param q:
