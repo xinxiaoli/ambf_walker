@@ -18,6 +18,7 @@ class Model(object):
         self._q = np.array([])
         self._qd = np.array([])
         self.tau = np.array([])
+        self._state = np.array([])
         self._handle = None
         self._joints_names = []
         self._selected_joint_names = joint_names
@@ -104,6 +105,7 @@ class Model(object):
         while 1:
             self.q = self.handle.get_all_joint_pos()
             self.qd = self.handle.get_all_joint_vel()
+            self.state = (self.q, self.qd)
             self._joint_num = self.q.size
             q_msg.data = self.q
             self.q_pub.publish(q_msg)
