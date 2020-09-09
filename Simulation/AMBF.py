@@ -22,7 +22,7 @@ class AMBF(object):
 
     @property
     def time(self):
-     return self._time
+        return self._time
 
     @time.setter
     def time(self, value):

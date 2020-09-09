@@ -1,4 +1,3 @@
-
 import abc
 import numpy as np
 import rbdl
@@ -9,6 +8,7 @@ from GaitCore.Bio import Joint, Leg
 from GaitCore.Core import Point
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import JointState
+
 
 class Model(object):
 
@@ -116,7 +116,7 @@ class Model(object):
             rate.sleep()
 
     @abc.abstractmethod
-    def  ambf_to_dyn(self, q):
+    def ambf_to_dyn(self, q):
         pass
 
     @abc.abstractmethod

@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python
 import sys
 # from os import sys, path
@@ -42,8 +40,9 @@ Kd[5, 5] = Kd_ankle
 _client = Client()
 _client.connect()
 rate = rospy.Rate(1000)
-joints = ['Hip-Leftthigh', 'Leftthigh-Leftshank', 'Leftshank-Leftfoot', 'Hip-Rightthigh', 'Rightthigh-Rightshank', 'Rightshank-Rightfoot', 'Hip-Cylinder']
-LARRE = Exoskeleton.Exoskeleton(_client,joints, 56, 1.56)
+joints = ['Hip-RobLeftThigh', 'RobLeftThigh-RobLeftShank', 'RobLeftShank-RobLeftFoot', 'Hip-RobRightThigh',
+          'RobRightThigh-RobRightShank', 'RobRightShank-RobRightFoot', 'Hip-Crutches']
+LARRE = Exoskeleton.Exoskeleton(_client, joints, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
 
 #mpc = MPController.MPController(LARRE, LARRE.get_runner())
@@ -54,4 +53,3 @@ controllers = {'Dyn': Dyn,
 cnrl = ControllerNode.ControllerNode(LARRE, controllers)
 
 machine = StateMachine.ExoStateMachine(LARRE)
-
