@@ -135,6 +135,12 @@ class Exoskeleton(Model.Model):
         rbdl.InverseDynamics(self._model, self.q[0:6], self.qd[0:6], qdd[0:6], tau)
         return tau
 
+    def grav(self, q ):
+        tau = np.asarray([0.0] * self._joint_num)
+        qd = qdd = np.asarray([0.0] * self._joint_num)
+        rbdl.InverseDynamics(self._model, q, qd, qdd, tau)
+        return tau
+
     def dynamic_model(self):
         # add in mass and height params
         model = rbdl.Model()
@@ -251,7 +257,8 @@ class Exoskeleton(Model.Model):
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_foot, point_local)
         fk["left_ankle"] = Point.Point(data[0], data[1], data[2])
 
-        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_thigh, point_local)
+        data = rbdl.CalcBodyToBaseCoordinates\
+            (self._model, self.q, self.right_thigh, point_local)
         fk["right_hip"] = Point.Point(data[0], data[1], data[2])
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_shank, point_local)
         fk["right_knee"] = Point.Point(data[0], data[1], data[2])
@@ -289,12 +296,12 @@ class Exoskeleton(Model.Model):
         return hip, knee, ankle
 
     def get_runner(self):
-        return TPGMMRunner.TPGMMRunner("/home/csbales/catkin_ws/src/ambf_walker/config/gotozero.pickle")
+        return TPGMMRunner.TPGMMRunner("/home/nathaniel/catkin_ws/src/ambf_walker/config/gotozero.pickle")
 
     def linearize(self):
         pass
 
-    def update_state(self, q, qd):
+    def state(self, q, qd ):
         self.get_left_leg.hip.angle.z = q[0]
         self.get_left_leg.knee.angle.z = q[1]
         self.get_left_leg.ankle.angle.z = q[2]

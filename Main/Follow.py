@@ -8,7 +8,7 @@ from Controller import ControllerNode
 from Model import Exoskeleton
 import rospy
 from ambf_client import Client
-from Controller import DynController, MPController
+from Controller import DynController, MPController, LQRController
 Kp = np.zeros((7, 7))
 Kd = np.zeros((7, 7))
 
@@ -20,6 +20,7 @@ Kd_knee = 1.0
 
 Kp_ankle = 100.0
 Kd_ankle = 0.4
+
 
 Kp[0, 0] = Kp_hip
 Kd[0, 0] = Kd_hip
@@ -43,10 +44,11 @@ joints = ['Hip-RobLeftThigh', 'RobLeftThigh-RobLeftShank', 'RobLeftShank-RobLeft
           'RobRightThigh-RobRightShank', 'RobRightShank-RobRightFoot', 'Hip-Crutches']
 LARRE = Exoskeleton.Exoskeleton(_client, joints, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
-runner = LARRE.get_runner()
-mpc = MPController.MPController(LARRE, runner)
+
+#mpc = MPController.MPController(LARRE, LARRE.get_runner())
+lqr = LQRController.LQRController(LARRE, LARRE.get_runner())
 controllers = {'Dyn': Dyn,
-               "MPC": mpc}
+               "LQR":lqr}
 
 cnrl = ControllerNode.ControllerNode(LARRE, controllers)
 

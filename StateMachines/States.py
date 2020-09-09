@@ -54,12 +54,12 @@ class Initialize(smach.State):
                             self.ankle["qdd"][self.count].item(), 0.0])
 
             self.count += 1
-            # self.msg.q = q
-            # self.msg.qd = qd
-            # self.msg.qdd = qdd
-            # self.msg.controller = "Dyn"
-            # self.pub.publish(self.msg)
-            self.send(q, qd, qdd, "Dyn", [])
+            self.msg.q = q
+            self.msg.qd = qd
+            self.msg.qdd = qdd
+            self.msg.controller = "Dyn"
+            self.pub.publish(self.msg)
+            #self.send(q, qd, qdd, "Dyn", [])
             self.rate.sleep()
 
             return 'Initializing'
@@ -72,6 +72,9 @@ class Main(smach.State):
     def __init__(self, model,outcomes=["Poly"]):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.Subscriber("Mode", String, callback=self.mode_cb)
+        rospy.wait_for_service('joint_cmd')
+
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.have_msg = False
         self.msg = String
@@ -89,6 +92,7 @@ class Main(smach.State):
         self.have_msg = False
         while not self.have_msg:
             rate.sleep()
+
         return self.msg.data
 
 class DMP(smach.State):
@@ -125,12 +129,12 @@ class DMP(smach.State):
             q = np.append(x, [0.0])
             qd = np.append(dx, [0.0])
             qdd = np.append(ddx, [0.0])
-            # self.msg.q = q
-            # self.msg.qd = qd
-            # self.msg.qdd = qdd
-            # self.msg.controller = "Dyn"
-            # self.pub.publish(self.msg)
-            self.send(q, qd, qdd,"Dyn",[])
+            self.msg.q = q
+            self.msg.qd = qd
+            self.msg.qdd = qdd
+            self.msg.controller = "Dyn"
+            self.pub.publish(self.msg)
+            #self.send(q, qd, qdd,"Dyn",[])
             self.count += 1
             self.rate.sleep()
             return "stepping"
@@ -196,7 +200,7 @@ class Listening(smach.State):
         if not self.have_msg:
             current_joints = self._model.q
             for q, q_d in zip(tuple(current_joints), msg.q):
-                self.q.append(Model.get_traj(q, q_d, 0.0, 0.0, 2.0, 0.01))
+                self.q.append(Model.get_traj(q, q_d, 0.0, 0.0, 1.0, 0.01))
             self.have_msg = True
 
     def execute(self, userdata):
@@ -250,8 +254,8 @@ class Follow(smach.State):
             msg.qd = qd_d
             msg.qdd = qdd_d
             msg.controller = "Dyn"
-            self.send(q_d, qd_d, qdd_d,"Dyn", [])
-            #self.pub.publish(self.msg)
+            #self.send(q_d, qd_d, qdd_d,"Dyn", [])
+            self.pub.publish(msg)
             self.count += 1
             self.rate.sleep()
             return "Following"
@@ -320,3 +324,49 @@ class MPC(smach.State):
             return "MPCing"
         else:
             return "MPCed"
+
+
+class LQR(smach.State):
+
+    def __init__(self, model, outcomes=["LQRing", "LQRed"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self._model = model
+        self.runner = model.get_runner()
+        self.rate = rospy.Rate(100)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
+
+    def execute(self, userdata):
+
+
+        if self.count < self.runner.get_length()-1:
+
+            self.runner.step()
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
+            msg = DesiredJoints()
+            # msg.q = q
+            # msg.qd = qd
+            # msg.qdd = qdd
+            # msg.controller = "LQR"
+            # msg.other = [self.count]
+            # self.pub.publish(msg)
+
+            self.send(q, qd, qdd, "LQR", [self.count])
+            self.rate.sleep()
+            self.count += 1
+            return "LQRing"
+        else:
+            # while 1:
+            #     q = [-0.7, 0.5, -0.2, -0.7, 0.5, -0.2, 0.0]
+            #     qd = [0.0]*7
+            #     qdd = [0.0]*7
+            #     self.send(q, qd, qdd, "Dyn", [self.count])
+            return "LQRed"
