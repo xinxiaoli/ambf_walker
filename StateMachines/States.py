@@ -370,3 +370,42 @@ class LQR(smach.State):
             #     qdd = [0.0]*7
             #     self.send(q, qd, qdd, "Dyn", [self.count])
             return "LQRed"
+
+
+class Temp(smach.State):
+
+    def __init__(self, model, outcomes=["Temping", "Temped"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self._model = model
+        self.runner = model.get_runner()
+        self.rate = rospy.Rate(100)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        file = "/home/nathaniel/PycharmProjects/linearize_model/test.npy"
+        with open(file, 'rb') as f:
+            self.us = np.load(f)
+
+        self.count = 0
+
+    def execute(self, userdata):
+
+
+        if self.count < self.runner.get_length()-1:
+
+            self.runner.step()
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append( self.us[self.count], [0.0])
+            msg = DesiredJoints()
+            self.send(q, qd, qdd, "Temp", [self.count])
+            self.rate.sleep()
+            self.count += 1
+            return "Temping"
+        else:
+            self.count = 0
+            return "Temped"
