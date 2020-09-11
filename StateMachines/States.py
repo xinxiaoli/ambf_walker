@@ -393,7 +393,7 @@ class Temp(smach.State):
 
 
         if self.count < self.runner.get_length()-1:
-
+            print(self.count)
             self.runner.step()
             x = self.runner.x
             dx = self.runner.dx
