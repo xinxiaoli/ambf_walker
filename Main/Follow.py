@@ -9,6 +9,7 @@ from Model import Exoskeleton
 import rospy
 from ambf_client import Client
 from Controller import DynController, MPController, LQRController, TempController
+
 Kp = np.zeros((7, 7))
 Kd = np.zeros((7, 7))
 #
@@ -20,10 +21,6 @@ Kd_knee = 1.0
 
 Kp_ankle = 100.0
 Kd_ankle = 0.4
-
-
-
-
 
 Kp[0, 0] = Kp_hip
 Kd[0, 0] = Kd_hip
