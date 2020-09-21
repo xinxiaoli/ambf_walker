@@ -1,6 +1,7 @@
 import abc
 import numpy as np
 import rbdl
+
 import time
 import rospy
 from threading import Thread
@@ -78,7 +79,6 @@ class Model(object):
     def qd(self, value):
         my_joints = []
         self._joints_names = self.handle.get_joint_names()
-        print(self.handle.get_joint_names())
         for joint in self._selected_joint_names:
             if joint in self._joints_names:
                 my_joints.append(value[self._joints_names.index(joint)])
