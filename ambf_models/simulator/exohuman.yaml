@@ -156,7 +156,7 @@ namespace: /ambf/env/
 BODY FrontSensorLeftShank:
   name: FrontSensorLeftShank
   mesh: FrontSensorLeftShank.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -219,7 +219,7 @@ BODY FrontSensorLeftShank:
 BODY FrontSensorLeftShankBase:
   name: FrontSensorLeftShankBase
   mesh: FrontSensorLeftShankBase.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -282,7 +282,7 @@ BODY FrontSensorLeftShankBase:
 BODY FrontSensorLeftShankTab:
   name: FrontSensorLeftShankTab
   mesh: FrontSensorLeftShankTab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -345,7 +345,7 @@ BODY FrontSensorLeftShankTab:
 BODY FrontSensorLeftShankLeg:
   name: FrontSensorLeftShankLeg
   mesh: FrontSensorLeftShankLeg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -408,7 +408,7 @@ BODY FrontSensorLeftShankLeg:
 BODY BackSensorLeftShank:
   name: BackSensorLeftShank
   mesh: BackSensorLeftShank.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -471,7 +471,7 @@ BODY BackSensorLeftShank:
 BODY BackSensorLeftShankBase:
   name: BackSensorLeftShankBase
   mesh: BackSensorLeftShankBase.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -534,7 +534,7 @@ BODY BackSensorLeftShankBase:
 BODY BackSensorLeftShankTab:
   name: BackSensorLeftShankTab
   mesh: BackSensorLeftShankTab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -597,7 +597,7 @@ BODY BackSensorLeftShankTab:
 BODY BackSensorLeftShankLeg:
   name: BackSensorLeftShankLeg
   mesh: BackSensorLeftShankLeg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -660,7 +660,7 @@ BODY BackSensorLeftShankLeg:
 BODY BackSensorLeftThigh:
   name: BackSensorLeftThigh
   mesh: BackSensorLeftThigh.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -723,7 +723,7 @@ BODY BackSensorLeftThigh:
 BODY BackSensorLeftThighBase:
   name: BackSensorLeftThighBase
   mesh: BackSensorLeftThighBase.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -786,7 +786,7 @@ BODY BackSensorLeftThighBase:
 BODY BackSensorLeftThighTab:
   name: BackSensorLeftThighTab
   mesh: BackSensorLeftThighTab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -849,7 +849,7 @@ BODY BackSensorLeftThighTab:
 BODY BackSensorLeftThighLeg:
   name: BackSensorLeftThighLeg
   mesh: BackSensorLeftThighLeg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -912,7 +912,7 @@ BODY BackSensorLeftThighLeg:
 BODY BackSensorRightShank:
   name: BackSensorRightShank
   mesh: BackSensorRightShank.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -975,7 +975,7 @@ BODY BackSensorRightShank:
 BODY BackSensorRightShankBase:
   name: BackSensorRightShankBase
   mesh: BackSensorRightShankBase.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1038,7 +1038,7 @@ BODY BackSensorRightShankBase:
 BODY BackSensorRightShankTab:
   name: BackSensorRightShankTab
   mesh: BackSensorRightShankTab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1101,7 +1101,7 @@ BODY BackSensorRightShankTab:
 BODY BackSensorRightShankLeg:
   name: BackSensorRightShankLeg
   mesh: BackSensorRightShankLeg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1164,7 +1164,7 @@ BODY BackSensorRightShankLeg:
 BODY BackSensorRightThigh:
   name: BackSensorRightThigh
   mesh: BackSensorRightThigh.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1227,7 +1227,7 @@ BODY BackSensorRightThigh:
 BODY BackSensorRightThighBase:
   name: BackSensorRightThighBase
   mesh: BackSensorRightThighBase.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1290,7 +1290,7 @@ BODY BackSensorRightThighBase:
 BODY BackSensorRightThighTab:
   name: BackSensorRightThighTab
   mesh: BackSensorRightThighTab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1353,7 +1353,7 @@ BODY BackSensorRightThighTab:
 BODY BackSensorRightThighLeg:
   name: BackSensorRightThighLeg
   mesh: BackSensorRightThighLeg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2033,7 +2033,7 @@ BODY Hip:
 BODY FrontSensorRightShank:
   name: FrontSensorRightShank
   mesh: FrontSensorRightShank.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2096,7 +2096,7 @@ BODY FrontSensorRightShank:
 BODY FrontSensorRightShankBase:
   name: FrontSensorRightShankBase
   mesh: FrontSensorRightShankBase.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2159,7 +2159,7 @@ BODY FrontSensorRightShankBase:
 BODY FrontSensorRightShankTab:
   name: FrontSensorRightShankTab
   mesh: FrontSensorRightShankTab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2222,7 +2222,7 @@ BODY FrontSensorRightShankTab:
 BODY FrontSensorRightShankLeg:
   name: FrontSensorRightShankLeg
   mesh: FrontSensorRightShankLeg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2285,7 +2285,7 @@ BODY FrontSensorRightShankLeg:
 BODY FrontSensorLeftThigh:
   name: FrontSensorLeftThigh
   mesh: FrontSensorLeftThigh.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2348,7 +2348,7 @@ BODY FrontSensorLeftThigh:
 BODY FrontSensorLeftThighBase:
   name: FrontSensorLeftThighBase
   mesh: FrontSensorLeftThighBase.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2411,7 +2411,7 @@ BODY FrontSensorLeftThighBase:
 BODY FrontSensorLeftThighTab:
   name: FrontSensorLeftThighTab
   mesh: FrontSensorLeftThighTab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2474,7 +2474,7 @@ BODY FrontSensorLeftThighTab:
 BODY FrontSensorLeftThighLeg:
   name: FrontSensorLeftThighLeg
   mesh: FrontSensorLeftThighLeg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2537,7 +2537,7 @@ BODY FrontSensorLeftThighLeg:
 BODY FrontSensorRightThigh:
   name: FrontSensorRightThigh
   mesh: FrontSensorRightThigh.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2600,7 +2600,7 @@ BODY FrontSensorRightThigh:
 BODY FrontSensorRightThighBase:
   name: FrontSensorRightThighBase
   mesh: FrontSensorRightThighBase.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2663,7 +2663,7 @@ BODY FrontSensorRightThighBase:
 BODY FrontSensorRightThighTab:
   name: FrontSensorRightThighTab
   mesh: FrontSensorRightThighTab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2726,7 +2726,7 @@ BODY FrontSensorRightThighTab:
 BODY FrontSensorRightThighLeg:
   name: FrontSensorRightThighLeg
   mesh: FrontSensorRightThighLeg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -2978,7 +2978,7 @@ BODY RobLeftFoot:
 BODY SensorLeftFoot1:
   name: SensorLeftFoot1
   mesh: SensorLeftFoot1.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3041,7 +3041,7 @@ BODY SensorLeftFoot1:
 BODY SensorLeftFoot1Base:
   name: SensorLeftFoot1Base
   mesh: SensorLeftFoot1Base.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3104,7 +3104,7 @@ BODY SensorLeftFoot1Base:
 BODY SensorLeftFoot1Tab:
   name: SensorLeftFoot1Tab
   mesh: SensorLeftFoot1Tab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3167,7 +3167,7 @@ BODY SensorLeftFoot1Tab:
 BODY SensorLeftFoot1Leg:
   name: SensorLeftFoot1Leg
   mesh: SensorLeftFoot1Leg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3230,7 +3230,7 @@ BODY SensorLeftFoot1Leg:
 BODY SensorLeftFoot2:
   name: SensorLeftFoot2
   mesh: SensorLeftFoot2.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3293,7 +3293,7 @@ BODY SensorLeftFoot2:
 BODY SensorLeftFoot2Base:
   name: SensorLeftFoot2Base
   mesh: SensorLeftFoot2Base.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3356,7 +3356,7 @@ BODY SensorLeftFoot2Base:
 BODY SensorLeftFoot2Tab:
   name: SensorLeftFoot2Tab
   mesh: SensorLeftFoot2Tab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3419,7 +3419,7 @@ BODY SensorLeftFoot2Tab:
 BODY SensorLeftFoot2Leg:
   name: SensorLeftFoot2Leg
   mesh: SensorLeftFoot2Leg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3482,7 +3482,7 @@ BODY SensorLeftFoot2Leg:
 BODY SensorRightFoot2:
   name: SensorRightFoot2
   mesh: SensorRightFoot2.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3545,7 +3545,7 @@ BODY SensorRightFoot2:
 BODY SensorRightFoot2Base:
   name: SensorRightFoot2Base
   mesh: SensorRightFoot2Base.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3608,7 +3608,7 @@ BODY SensorRightFoot2Base:
 BODY SensorRightFoot2Tab:
   name: SensorRightFoot2Tab
   mesh: SensorRightFoot2Tab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3671,7 +3671,7 @@ BODY SensorRightFoot2Tab:
 BODY SensorRightFoot2Leg:
   name: SensorRightFoot2Leg
   mesh: SensorRightFoot2Leg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3734,7 +3734,7 @@ BODY SensorRightFoot2Leg:
 BODY SensorRightFoot1:
   name: SensorRightFoot1
   mesh: SensorRightFoot1.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3797,7 +3797,7 @@ BODY SensorRightFoot1:
 BODY SensorRightFoot1Base:
   name: SensorRightFoot1Base
   mesh: SensorRightFoot1Base.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3860,7 +3860,7 @@ BODY SensorRightFoot1Base:
 BODY SensorRightFoot1Tab:
   name: SensorRightFoot1Tab
   mesh: SensorRightFoot1Tab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3923,7 +3923,7 @@ BODY SensorRightFoot1Tab:
 BODY SensorRightFoot1Leg:
   name: SensorRightFoot1Leg
   mesh: SensorRightFoot1Leg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -3986,7 +3986,7 @@ BODY SensorRightFoot1Leg:
 BODY SensorLeftFoot3:
   name: SensorLeftFoot3
   mesh: SensorLeftFoot3.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -4049,7 +4049,7 @@ BODY SensorLeftFoot3:
 BODY SensorLeftFoot3Base_001:
   name: SensorLeftFoot3Base_001
   mesh: SensorLeftFoot3Base_001.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -4112,7 +4112,7 @@ BODY SensorLeftFoot3Base_001:
 BODY SensorLeftFoot3Tab:
   name: SensorLeftFoot3Tab
   mesh: SensorLeftFoot3Tab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -4175,7 +4175,7 @@ BODY SensorLeftFoot3Tab:
 BODY SensorLeftFoot3Leg:
   name: SensorLeftFoot3Leg
   mesh: SensorLeftFoot3Leg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -4238,7 +4238,7 @@ BODY SensorLeftFoot3Leg:
 BODY SensorRightFoot3:
   name: SensorRightFoot3
   mesh: SensorRightFoot3.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -4301,7 +4301,7 @@ BODY SensorRightFoot3:
 BODY SensorRightFoot3Base:
   name: SensorRightFoot3Base
   mesh: SensorRightFoot3Base.STL
-  mass: 0.1
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -4364,7 +4364,7 @@ BODY SensorRightFoot3Base:
 BODY SensorRightFoot3Tab:
   name: SensorRightFoot3Tab
   mesh: SensorRightFoot3Tab.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
@@ -4427,7 +4427,7 @@ BODY SensorRightFoot3Tab:
 BODY SensorRightFoot3Leg:
   name: SensorRightFoot3Leg
   mesh: SensorRightFoot3Leg.STL
-  mass: 1.0
+  mass: 0.0001
   collision margin: 0.001
   scale: 1.0
   location:
