@@ -8,12 +8,9 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 from std_msgs.msg import Float32MultiArray
 from Model import Model
 from std_msgs.msg import Empty,String
-from Controller import MPController
+
 from ambf_walker.srv import DesiredJointsCmdRequest, DesiredJointsCmd
-from ilqr import iLQR, RecedingHorizonController
-from ilqr.cost import QRCost, PathQRCost, PathQsRCost
-from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
-from ilqr.dynamics import AutoDiffDynamics, BatchAutoDiffDynamics, FiniteDiffDynamics
+
 
 class Initialize(smach.State):
 
