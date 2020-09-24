@@ -10,7 +10,10 @@ from Model import Model
 from std_msgs.msg import Empty,String
 
 from ambf_walker.srv import DesiredJointsCmdRequest, DesiredJointsCmd
-
+from ilqr.controller import RecedingHorizonController
+from ilqr.cost import PathQsRCost
+from ilqr import iLQR
+from ilqr.dynamics import FiniteDiffDynamics
 
 class Initialize(smach.State):
 
@@ -328,7 +331,7 @@ class MPC(smach.State):
 
 class MPC2(smach.State):
 
-    def __init__(self, model, outcomes=["MPCing", "MPCed"]):
+    def __init__(self, model, outcomes=["MPC2ing", "MPC2ed"]):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.wait_for_service('joint_cmd')
         self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
@@ -339,58 +342,23 @@ class MPC2(smach.State):
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
 
-    def setup(self):
-
-        J_hist = []
-
-        def on_iteration(iteration_count, xs, us, J_opt, accepted, converged):
-            J_hist.append(J_opt)
-            info = "converged" if converged else ("accepted" if accepted else "failed")
-            print("iteration", iteration_count, info, J_opt)
-
-        def f(x, u, i):
-            y = Model.runge_integrator(self._model.get_rbdl_model(), x, 0.01, u)
-            return np.array(y)
-
-        dynamics = FiniteDiffDynamics(f, 12, 6)
-
-        x_path = []
-        u_path = []
-        count = 0
-        N = self.runner.get_length()
-        while count < self.runner.get_length():
-            count += 1
-            self.runner.step()
-            u_path.append(self.runner.ddx.flatten().tolist())
-            self.x.append(self.runner.x.flatten())
-            x = self.runner.x.flatten().tolist() + self.runner.dx.flatten().tolist()
-            x_path.append(x)
-
-        u_path = u_path[:-1]
-        expSigma = self.runner.get_expSigma()
-        size = expSigma[0].shape[0]
-        Q = [np.zeros((size * 2, size * 2))] * len(expSigma)
-        for ii in range(len(expSigma) - 2, -1, -1):
-            Q[ii][:size, :size] = np.linalg.pinv(expSigma[ii])
-
-        x0 = x_path[0]
-        x_path = np.array(x_path)
-        self.u_path = np.array(u_path)
-        R = 0.1 * np.eye(dynamics.action_size)
-        #
-        cost2 = PathQsRCost(Q, R, x_path=x_path, u_path=self.u_path)
-        #
-        # # Random initial action path.
-        ilqr2 = iLQR(dynamics, cost2, N - 1)
-
-        self.cntrl = RecedingHorizonController(x0, ilqr2)
-
     def execute(self, userdata):
 
         msg = DesiredJoints()
         msg.controller = "MPC"
 
-        for  xs, us in self.cntrl(self.u_path):
+        if self.count < self.runner.get_length():
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
+            self.send(q, qd, qdd, "MPC", [self.count])
+            return "MPC2ing"
+        else:
+            return "MPC2ed"
+
             pass
 
 class LQR(smach.State):
@@ -447,10 +415,10 @@ class Temp(smach.State):
         self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.runner = model.get_runner()
-        self.rate = rospy.Rate(100)
+        self.rate = rospy.Rate(1000)
         self.msg = DesiredJoints()
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
-        file = "/home/nathanielgoldfarb/linearize_model/test.npy"
+        file = "/home/nathanielgoldfarb/linearize_model/torque.npy"
         with open(file, 'rb') as f:
             self.us = np.load(f)
 
@@ -468,7 +436,6 @@ class Temp(smach.State):
             q = np.append(x, [0.0])
             qd = np.append(dx, [0.0])
             qdd = np.append( self.us[self.count], [0.0])
-            msg = DesiredJoints()
             self.send(q, qd, qdd, "Temp", [self.count])
             self.rate.sleep()
             self.count += 1

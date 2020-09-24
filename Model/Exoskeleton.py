@@ -152,7 +152,7 @@ class Exoskeleton(Model.Model):
         bodies["left"] = {}
         segments = ["thigh", "shank", "foot"]
 
-        mass["hip"] = 2.37
+        mass["hip"] = 0.01 #2.37
         mass["right_thigh"] = 2.11
         mass["left_thigh"] = 2.11
         mass["right_shank"] = 1.28
@@ -160,6 +160,7 @@ class Exoskeleton(Model.Model):
         mass["right_foot"] = 0.86
         mass["left_foot"] = 0.86
         parent_dist = {}
+
         parent_dist["hip"] = np.array([0.0, 0.0, 0.0])
 
         parent_dist["left_thigh"] = np.array([0.237, -0.124, -0.144])

@@ -16,11 +16,11 @@ class ExoStateMachine(object):
                                     transitions={'Initializing': 'Initialize',
                                                   'Initialized': 'Main'})
 
-            smach.StateMachine.add('Main', Main(model, ["Poly", "DMP", "Lower", "MPC", "LQR", "Temp"]),
+            smach.StateMachine.add('Main', Main(model, ["Poly", "DMP", "Lower", "MPC2", "LQR", "Temp"]),
                                    transitions={'Poly': 'Listening',
                                                 'DMP': 'DMP',
                                                 'Lower':'LowerBody',
-                                                'MPC':'MPC',
+                                                'MPC2':'MPC2',
                                                 "LQR":"LQR",
                                                 "Temp":"Temp"})
 
@@ -33,9 +33,9 @@ class ExoStateMachine(object):
                                                 'stepped': 'Main'},
                                    remapping={'q': 'q'})
 
-            smach.StateMachine.add('MPC', MPC(model),
-                                   transitions={'MPCing': 'MPC',
-                                                'MPCed': 'Main'},
+            smach.StateMachine.add('MPC2', MPC2(model),
+                                   transitions={'MPC2ing': 'MPC2',
+                                                'MPC2ed': 'Main'},
                                    remapping={'q': 'q'})
 
             smach.StateMachine.add('LQR', LQR(model),
