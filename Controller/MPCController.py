@@ -24,7 +24,7 @@ class MPCController(ControllerBase.BaseController):
         self.runner = TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/Train/gotozero.pickle")
         self.pub = rospy.Publisher("MPC_points", Float32MultiArray, queue_size=1,latch=True)
         self.x = []
-        self.setup()
+        #self.setup()
 
     def setup(self):
 
@@ -35,8 +35,13 @@ class MPCController(ControllerBase.BaseController):
             info = "converged" if converged else ("accepted" if accepted else "failed")
             print("iteration", iteration_count, info, J_opt)
 
-        def f(x, u, i):
-            y = Model.runge_integrator(self._model.get_rbdl_model(), x, 0.01, u)
+        def f(x, us, i):
+            max_bounds = 8.0
+            min_bounds = -8.0
+            diff = (max_bounds - min_bounds) / 2.0
+            mean = (max_bounds + min_bounds) / 2.0
+            us = diff * np.tanh(us) + mean
+            y = Model.runge_integrator(self._model.get_rbdl_model(), x, 0.01, us)
             return np.array(y)
 
         dynamics = FiniteDiffDynamics(f, 12, 6)
@@ -62,12 +67,20 @@ class MPCController(ControllerBase.BaseController):
 
         x0 = x_path[0]
         x_path = np.array(x_path)
-        self.u_path = np.array(u_path)
+        us_path = np.array(u_path)
+
+        us_init = np.random.uniform(-1, 1, (N - 1, dynamics.action_size))
         R = 0.1 * np.eye(dynamics.action_size)
-        #
-        cost2 = PathQsRCost(Q, R, x_path=x_path, u_path=self.u_path)
-        #
-        # # Random initial action path.
+
+        cost = PathQsRCost(Q, R, x_path=x_path, u_path=us_path)
+        ilqr = iLQR(dynamics, cost, N - 1)
+
+        xs, self.us = ilqr.fit(x0, us_init, on_iteration=on_iteration)
+
+        R = 0.5 * np.eye(dynamics.action_size)
+
+        cost2 = PathQsRCost(Q, R, x_path=x_path, u_path=self.us)
+
         ilqr2 = iLQR(dynamics, cost2, N - 1)
 
         self.cntrl = RecedingHorizonController(x0, ilqr2)
@@ -84,9 +97,9 @@ class MPCController(ControllerBase.BaseController):
         #print(self.us[int(other[0])])
 
         #tau = self._model.calculate_dynamics( np.append(self.us[int(other[0])], [0.0]) )
-        # tau = self._model.grav( self.x[(int(other[0]))]) + np.append(self.us[int(other[0])], [0.0])
-        self.cntrl.set_state( np.append(self._model.q[0:6],  self._model.qd[0:6]) )
-        xs2, us2 = self.cntrl.get_control_step(us_init=self.u_path)
+        #tau = self._model.grav( self.x[(int(other[0]))]) + np.append(self.us[int(other[0])], [0.0])
+        #self.cntrl.set_state( np.append(self._model.q[0:6],  self._model.qd[0:6]) )
+        xs2, us2 = self.cntrl.get_control_step(us_init=self.us)
         msg = Float32MultiArray()
         msg.data = xs2[0]
         self.pub.publish(msg)

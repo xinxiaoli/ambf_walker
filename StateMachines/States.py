@@ -368,42 +368,24 @@ class LQR(smach.State):
         rospy.wait_for_service('joint_cmd')
         self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
-        self.runner = model.get_runner()
         self.rate = rospy.Rate(100)
-        self.msg = DesiredJoints()
+        file = "/home/nathanielgoldfarb/linearize_model/test.npy"
+        with open(file, 'rb') as f:
+            self.us2 = np.load(f)
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
 
     def execute(self, userdata):
 
-
-        if self.count < self.runner.get_length()-1:
-
-            self.runner.step()
-            x = self.runner.x
-            dx = self.runner.dx
-            ddx = self.runner.ddx
-            q = np.append(x, [0.0])
-            qd = np.append(dx, [0.0])
-            qdd = np.append(ddx, [0.0])
-            msg = DesiredJoints()
-            # msg.q = q
-            # msg.qd = qd
-            # msg.qdd = qdd
-            # msg.controller = "LQR"
-            # msg.other = [self.count]
-            # self.pub.publish(msg)
-
-            self.send(q, qd, qdd, "LQR", [self.count])
+        if self.count < 200:
+            q = np.array(7*[0.0])
+            qd = np.array(7*[0.0])
+            qdd = np.append(self.us2[self.count], [0.0])
+            self.send(q, qd, qdd, "Temp", [self.count])
             self.rate.sleep()
             self.count += 1
             return "LQRing"
         else:
-            # while 1:
-            #     q = [-0.7, 0.5, -0.2, -0.7, 0.5, -0.2, 0.0]
-            #     qd = [0.0]*7
-            #     qdd = [0.0]*7
-            #     self.send(q, qd, qdd, "Dyn", [self.count])
             return "LQRed"
 
 
@@ -413,33 +395,88 @@ class Temp(smach.State):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.wait_for_service('joint_cmd')
         self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self.runner = TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/Train/gotozero.pickle")
         self._model = model
         self.runner = model.get_runner()
         self.rate = rospy.Rate(1000)
-        self.msg = DesiredJoints()
-        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
-        file = "/home/nathanielgoldfarb/linearize_model/torque.npy"
-        with open(file, 'rb') as f:
-            self.us = np.load(f)
+        #self.setup()
 
-        self.count = 0
+    def setup(self):
+
+        J_hist = []
+
+        def on_iteration(iteration_count, xs, us, J_opt, accepted, converged):
+            J_hist.append(J_opt)
+            info = "converged" if converged else ("accepted" if accepted else "failed")
+            print("iteration", iteration_count, info, J_opt)
+
+        max_bounds = 8.0
+        min_bounds = -8.0
+        def f(x, u, i):
+            diff = (max_bounds - min_bounds) / 2.0
+            mean = (max_bounds + min_bounds) / 2.0
+            u = diff * np.tanh(u) + mean
+            y = Model.runge_integrator(self._model.get_rbdl_model(), x, 0.01, u)
+            return np.array(y)
+
+        dynamics = FiniteDiffDynamics(f, 12, 6)
+
+        x_path = []
+        u_path = []
+        count = 0
+        N = self.runner.get_length()
+        while count < self.runner.get_length():
+            count += 1
+            self.runner.step()
+            u_path.append(self.runner.ddx.flatten().tolist())
+            x = self.runner.x.flatten().tolist() + self.runner.dx.flatten().tolist()
+            x_path.append(x)
+
+        u_path = u_path[:-1]
+        expSigma = self.runner.get_expSigma()
+        size = expSigma[0].shape[0]
+        Q = [np.zeros((size * 2, size * 2))] * len(expSigma)
+        for ii in range(len(expSigma) - 2, -1, -1):
+            Q[ii][:size, :size] = np.linalg.pinv(expSigma[ii])
+
+        x0 = x_path[0]
+        x_path = np.array(x_path)
+        self.u_path = np.array(u_path)
+        R = 0.1 * np.eye(dynamics.action_size)
+        #
+        cost2 = PathQsRCost(Q, R, x_path=x_path, u_path=self.u_path)
+        #
+        # # Random initial action path.
+        ilqr2 = iLQR(dynamics, cost2, N - 1)
+
+        self.cntrl = RecedingHorizonController(x0, ilqr2)
 
     def execute(self, userdata):
-
-
-        if self.count < self.runner.get_length()-1:
-            print(self.count)
-            self.runner.step()
-            x = self.runner.x
-            dx = self.runner.dx
-            ddx = self.runner.ddx
-            q = np.append(x, [0.0])
-            qd = np.append(dx, [0.0])
-            qdd = np.append( self.us[self.count], [0.0])
-            self.send(q, qd, qdd, "Temp", [self.count])
+        count = 0
+        for xs2, us2 in self.cntrl.control(self.u_path):
+            q = np.array([0.0]*7)
+            qd = np.array([0.0]*7)
+            qdd = np.append(us2, [0.0])
+            print(qdd)
+            self.send(q, qd, qdd, "Temp", [count])
             self.rate.sleep()
-            self.count += 1
-            return "Temping"
-        else:
-            self.count = 0
-            return "Temped"
+            count += 1
+            print(count)
+
+
+        # if self.count < self.runner.get_length()-1:
+        #     print(self.count)
+        #     self.runner.step()
+        #     x = self.runner.x
+        #     dx = self.runner.dx
+        #     ddx = self.runner.ddx
+        #     q = np.append(x, [0.0])
+        #     qd = np.append(dx, [0.0])
+        #     qdd = np.append( self.us[self.count], [0.0])
+        #     self.send(q, qd, qdd, "Temp", [self.count])
+        #     self.rate.sleep()
+        #     self.count += 1
+        #     return "Temping"
+        # else:
+        #     self.count = 0
+        #    return "Temped"

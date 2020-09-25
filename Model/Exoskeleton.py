@@ -152,7 +152,7 @@ class Exoskeleton(Model.Model):
         bodies["left"] = {}
         segments = ["thigh", "shank", "foot"]
 
-        mass["hip"] = 0.01 #2.37
+        mass["hip"] = 2.37
         mass["right_thigh"] = 2.11
         mass["left_thigh"] = 2.11
         mass["right_shank"] = 1.28
@@ -200,7 +200,7 @@ class Exoskeleton(Model.Model):
         xtrans.E = np.eye(3)
 
         self.hip = model.AddBody(0, xtrans, rbdl.Joint.fromJointType("JointTypeFixed"), hip_body,"hip")
-        joint_rot_z =  rbdl.Joint.fromJointType("JointTypeRevoluteX")
+        joint_rot_z = rbdl.Joint.fromJointType("JointTypeRevoluteX")
 
         xtrans.r = parent_dist["left_thigh"]
         self.left_thigh = model.AddBody(self.hip, xtrans, joint_rot_z, bodies["left_thigh"], "left_thigh")
@@ -258,8 +258,7 @@ class Exoskeleton(Model.Model):
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_foot, point_local)
         fk["left_ankle"] = Point.Point(data[0], data[1], data[2])
 
-        data = rbdl.CalcBodyToBaseCoordinates\
-            (self._model, self.q, self.right_thigh, point_local)
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_thigh, point_local)
         fk["right_hip"] = Point.Point(data[0], data[1], data[2])
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_shank, point_local)
         fk["right_knee"] = Point.Point(data[0], data[1], data[2])
