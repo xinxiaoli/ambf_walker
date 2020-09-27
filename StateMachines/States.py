@@ -14,6 +14,7 @@ from ilqr.controller import RecedingHorizonController
 from ilqr.cost import PathQsRCost
 from ilqr import iLQR
 from ilqr.dynamics import FiniteDiffDynamics
+from GaitAnaylsisToolkit.LearningTools.Runner import GMMRunner
 
 class Initialize(smach.State):
 
@@ -464,19 +465,58 @@ class Temp(smach.State):
             print(count)
 
 
-        # if self.count < self.runner.get_length()-1:
-        #     print(self.count)
-        #     self.runner.step()
-        #     x = self.runner.x
-        #     dx = self.runner.dx
-        #     ddx = self.runner.ddx
-        #     q = np.append(x, [0.0])
-        #     qd = np.append(dx, [0.0])
-        #     qdd = np.append( self.us[self.count], [0.0])
-        #     self.send(q, qd, qdd, "Temp", [self.count])
-        #     self.rate.sleep()
-        #     self.count += 1
-        #     return "Temping"
-        # else:
-        #     self.count = 0
-        #    return "Temped"
+
+class StairDMP(smach.State):
+
+    def __init__(self, model,outcomes=["stepping", "stepped"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self._model = model
+        self.runnerZ = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeZ_all.pickle")  # make_toeZ([file1, file2], hills3, nb_states, "toe_IK")
+        self.runnerX = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeY_all.pickle")  # make_toeY([file1, file2], hills3, nb_states, "toe_IK")
+        self.rate = rospy.Rate(100)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
+
+    def execute(self, userdata):
+
+        count = self.count
+
+        if count == 0:
+            start = []
+            for q in self._model.q[0:6]:
+                start.append(np.array([q]))
+
+            self.runnerZ.update_start(0)
+            self.runnerZ.update_goal(round(y[1]))
+
+            self.runnerX.update_start(fk_x[-1])
+            self.runnerX.update_goal(my_model.lengths["foot_length"])
+
+            print(start)
+            print(self.runner.x)
+            self.runner.update_start(start)
+
+        if count < self.runner.get_length():
+
+            self.runner.step()
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
+            self.msg.q = q
+            self.msg.qd = qd
+            self.msg.qdd = qdd
+            self.msg.controller = "Dyn"
+            self.pub.publish(self.msg)
+            #self.send(q, qd, qdd,"Dyn",[])
+            self.count += 1
+            self.rate.sleep()
+            return "stepping"
+        else:
+            self.count = 0
+            return "stepped"
