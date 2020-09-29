@@ -8,7 +8,7 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 from std_msgs.msg import Float32MultiArray
 from Model import Model
 from std_msgs.msg import Empty,String
-
+import matplotlib.pyplot as plt
 from ambf_walker.srv import DesiredJointsCmdRequest, DesiredJointsCmd
 from ilqr.controller import RecedingHorizonController
 from ilqr.cost import PathQsRCost
@@ -468,55 +468,79 @@ class Temp(smach.State):
 
 class StairDMP(smach.State):
 
-    def __init__(self, model,outcomes=["stepping", "stepped"]):
+    def __init__(self, model,outcomes=["stairing", "staired"]):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.wait_for_service('joint_cmd')
         self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
         self.runnerZ = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeZ_all.pickle")  # make_toeZ([file1, file2], hills3, nb_states, "toe_IK")
-        self.runnerX = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeY_all.pickle")  # make_toeY([file1, file2], hills3, nb_states, "toe_IK")
-        self.rate = rospy.Rate(100)
+        self.runnerY = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeY_all.pickle")  # make_toeY([file1, file2], hills3, nb_states, "toe_IK")
+        self.rate = rospy.Rate(10)
         self.msg = DesiredJoints()
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
+        self.init_joint_angles = []
+        self.hip = []
+        self.knee = []
 
     def execute(self, userdata):
 
-        count = self.count
 
-        if count == 0:
-            start = []
-            for q in self._model.q[0:6]:
-                start.append(np.array([q]))
+        if self.count == 0:
+            self.init_joint_angles = self._model.q
 
             self.runnerZ.update_start(0)
-            self.runnerZ.update_goal(round(y[1]))
+            self.runnerZ.update_goal(192)
 
-            self.runnerX.update_start(fk_x[-1])
-            self.runnerX.update_goal(my_model.lengths["foot_length"])
+            self.runnerY.update_start(-225.0)
+            self.runnerY.update_goal(258.0)
 
-            print(start)
-            print(self.runner.x)
-            self.runner.update_start(start)
 
-        if count < self.runner.get_length():
+        if self.count < self.runnerY.get_length()-2:
 
-            self.runner.step()
-            x = self.runner.x
-            dx = self.runner.dx
-            ddx = self.runner.ddx
-            q = np.append(x, [0.0])
-            qd = np.append(dx, [0.0])
-            qdd = np.append(ddx, [0.0])
+            self.runnerZ.step()
+            self.runnerY.step()
+            x = self.runnerZ.x[0].item()
+            dx = self.runnerZ.dx
+            ddx = self.runnerZ.ddx
+
+            y = self.runnerY.x[0].item()
+            dt = self.runnerY.dx
+            ddy = self.runnerY.ddx
+
+            joint_angle = self._model.leg_inverse_kinimatics([y, x], hip_location=[-483.4, 960.67])
+
+            q = np.array([self.init_joint_angles[0],
+                          self.init_joint_angles[1],
+                          self.init_joint_angles[2],
+                          joint_angle[0].item(),
+                          joint_angle[1].item(),
+                          joint_angle[2].item(),
+                          0.0])
+
+            self.hip.append(joint_angle[0])
+            self.knee.append(joint_angle[1])
+            qd = np.array([0.0]*7)
+            qdd = np.array([0.0]*7)
+            # q[3] = 0# 1.50971 - 0.5*3.14
+            # q[4] =  -q[4] # 0# 0.523599
+            # q[5] = 0.0
+            #self._model.handle.set_multiple_joint_pos(q, [0,1,2,3,4,5,6])
+            self.count += 1
             self.msg.q = q
             self.msg.qd = qd
             self.msg.qdd = qdd
             self.msg.controller = "Dyn"
-            self.pub.publish(self.msg)
-            #self.send(q, qd, qdd,"Dyn",[])
-            self.count += 1
+            #self.pub.publish(self.msg)
+            self.send(q, qd, qdd,"Dyn",[])
+            # self.count += 1
             self.rate.sleep()
-            return "stepping"
+            return "stairing"
         else:
             self.count = 0
-            return "stepped"
+            fig, axs = plt.subplots(2, sharex=True)
+            axs[0].plot( np.rad2deg( self.hip))
+            axs[1].plot( np.rad2deg( self.knee))
+            #plt.plot(self.Zpoints)
+            plt.show()
+            return "staired"

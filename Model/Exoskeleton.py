@@ -23,6 +23,7 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 class Exoskeleton(Model.Model):
 
     def __init__(self, client, joints, mass, height):
+
         super(Exoskeleton, self).__init__(client, joint_names=joints)
         self._handle = self._client.get_obj_handle('Hip')
         # Update to current
@@ -331,3 +332,24 @@ class Exoskeleton(Model.Model):
         left_foot_sensors = [self._left_foot_sensor1, self._left_foot_sensor2, self._left_foot_sensor3]
         right_foot_sensors = [self._right_foot_sensor1, self._right_foot_sensor2, self._right_foot_sensor3]
         return left_foot_sensors, right_foot_sensors
+
+
+    def leg_inverse_kinimatics(self, toe, hip_location):
+
+        l1 = 416.5
+        l2 = 477.87
+        l3 = 66.3
+        l4 = 258.4
+
+        x = toe[0] - hip_location[0] - abs(l4)
+        y = toe[1] - hip_location[1] + abs(l3)
+
+        num = x*x + y*y - l1**2 - l2**2
+        dem = 2*l1*l2
+
+        q2 = np.arctan2(-np.sqrt(1 - (num / dem)**2), (num / dem))
+        q2 = np.nan_to_num(q2)
+        q1 = -(np.nan_to_num(np.arctan2(y, x) - np.arctan2(l2*np.sin(q2), l1 + l2*np.cos(q2))) + 0.5*np.pi)
+        q3 = np.nan_to_num(2*np.pi - q1 - q2)
+
+        return [q1, -q2, q3]
