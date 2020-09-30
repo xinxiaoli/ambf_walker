@@ -480,8 +480,6 @@ class StairDMP(smach.State):
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
         self.init_joint_angles = []
-        self.hip = []
-        self.knee = []
 
     def execute(self, userdata):
 
@@ -496,31 +494,56 @@ class StairDMP(smach.State):
             self.runnerY.update_goal(258.0)
 
 
+            self.hip_angles = []
+            self.knee_angles = []
+            self.ankle_angles = []
+
+            pathZ = self.runnerZ.run()
+            pathY = self.runnerY.run()
+
+            for y, x in zip(pathZ, pathY):
+                joint_angle = self._model.leg_inverse_kinimatics([y, x], hip_location=[-483.4, 960.67])
+                self.hip_angles.append(joint_angle[0][0])
+                self.knee_angles.append(joint_angle[1][0])
+                self.ankle_angles.append(joint_angle[2][0])
+
+
+            self.hip_vel = np.diff(self.hip_angles)
+            self.knee_vel = np.diff(self.knee_angles)
+            self.ankle_vel = np.diff(self.ankle_angles)
+
         if self.count < self.runnerY.get_length()-2:
 
-            self.runnerZ.step()
-            self.runnerY.step()
-            x = self.runnerZ.x[0].item()
-            dx = self.runnerZ.dx
-            ddx = self.runnerZ.ddx
-
-            y = self.runnerY.x[0].item()
-            dt = self.runnerY.dx
-            ddy = self.runnerY.ddx
-
-            joint_angle = self._model.leg_inverse_kinimatics([y, x], hip_location=[-483.4, 960.67])
+            # self.runnerZ.step()
+            # self.runnerY.step()
+            # x = self.runnerZ.x[0].item()
+            # dx = self.runnerZ.dx
+            # ddx = self.runnerZ.ddx
+            #
+            # y = self.runnerY.x[0].item()
+            # dt = self.runnerY.dx
+            # ddy = self.runnerY.ddx
+            # x = self.pathZ[self.count][0]
+            # y = self.pathY[self.count][0]
+            # joint_angle = self._model.leg_inverse_kinimatics([y, x], hip_location=[-483.4, 960.67])
 
             q = np.array([self.init_joint_angles[0],
                           self.init_joint_angles[1],
                           self.init_joint_angles[2],
-                          joint_angle[0].item(),
-                          joint_angle[1].item(),
-                          joint_angle[2].item(),
+                          self.hip_angles[self.count],
+                          self.knee_angles[self.count],
+                          self.ankle_angles[self.count],
                           0.0])
 
-            self.hip.append(joint_angle[0])
-            self.knee.append(joint_angle[1])
-            qd = np.array([0.0]*7)
+            # qd = np.array([self.init_joint_angles[0],
+            #               self.init_joint_angles[1],
+            #               self.init_joint_angles[2],
+            #               self.hip_vel[self.count],
+            #               self.knee_vel[self.count],
+            #               self.ankle_vel[self.count],
+            #               0.0])
+
+            # qd = np.array([0.0]*7)
             qdd = np.array([0.0]*7)
             # q[3] = 0# 1.50971 - 0.5*3.14
             # q[4] =  -q[4] # 0# 0.523599
@@ -533,14 +556,12 @@ class StairDMP(smach.State):
             self.msg.controller = "Dyn"
             #self.pub.publish(self.msg)
             self.send(q, qd, qdd,"Dyn",[])
-            # self.count += 1
+            self.count += 1
             self.rate.sleep()
             return "stairing"
         else:
             self.count = 0
-            fig, axs = plt.subplots(2, sharex=True)
-            axs[0].plot( np.rad2deg( self.hip))
-            axs[1].plot( np.rad2deg( self.knee))
+
             #plt.plot(self.Zpoints)
             plt.show()
             return "staired"
