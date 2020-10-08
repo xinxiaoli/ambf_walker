@@ -13,9 +13,9 @@ from sensor_msgs.msg import JointState
 
 class Model(object):
 
-    def __init__(self, client, joint_names, name ):
+    def __init__(self, client, joint_names ):
 
-        self.name = name
+
         self._client = client
         self._q = np.array([])
         self._qd = np.array([])
@@ -26,7 +26,7 @@ class Model(object):
         self._selected_joint_names = joint_names
         self._updater = Thread(target=self.update)
         self._enable_control = False
-        self.sub_torque = rospy.Subscriber(self.name + "_joint_torque", JointState, self.torque_cb)
+        self.sub_torque = rospy.Subscriber("joint_torque", JointState, self.torque_cb)
         self.q_pub = rospy.Publisher("q", Float32MultiArray, queue_size=1)
 
     def torque_cb(self, tau):

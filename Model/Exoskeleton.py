@@ -299,6 +299,9 @@ class Exoskeleton(Model.Model):
     def get_runner(self):
         return TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/gotozero.pickle")
 
+    def get_walker(self):
+        return TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/walk.pickle")
+
     def linearize(self):
         pass
 

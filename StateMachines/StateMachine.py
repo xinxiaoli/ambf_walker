@@ -16,14 +16,15 @@ class ExoStateMachine(object):
                                     transitions={'Initializing': 'Initialize',
                                                   'Initialized': 'Main'})
 
-            smach.StateMachine.add('Main', Main(model, ["Poly", "DMP", "Lower", "MPC2", "LQR", "Temp", "stairDMP"]),
+            smach.StateMachine.add('Main', Main(model, ["Poly", "DMP", "Lower", "MPC2", "LQR", "Temp", "stairDMP", "walk" ] ),
                                    transitions={'Poly': 'Listening',
                                                 'DMP': 'DMP',
                                                 'Lower':'LowerBody',
                                                 'MPC2':'MPC2',
                                                 "LQR":"LQR",
                                                 "Temp":"Temp",
-                                                "stairDMP":"stairDMP"})
+                                                "stairDMP":"stairDMP",
+                                                "walk": "walk"})
 
             smach.StateMachine.add('LowerBody', LowerBody(model),
                                    transitions={'Lowering': 'LowerBody',
@@ -62,6 +63,11 @@ class ExoStateMachine(object):
             smach.StateMachine.add('stairDMP', StairDMP(model),
                                    transitions={'stairing': 'stairDMP',
                                                 'staired': 'Main'},
+                                   remapping={'q': 'q'})
+
+            smach.StateMachine.add('walk', Walk(model),
+                                   transitions={'walking': 'walk',
+                                                'walked': 'Main'},
                                    remapping={'q': 'q'})
 
         outcome = sm.execute()
