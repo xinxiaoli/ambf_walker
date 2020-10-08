@@ -39,7 +39,7 @@ class DynController(ControllerBase.BaseController):
         aq = np.zeros(len(q))
         if q is not None and qd is not None:
             e = q - self._model.q
-            ed = qd - self._model.qd
+            ed = qd #- self._model.qd
             aq = self.pdController.calc_tau(e, ed)
             aq += qdd
         tau = self._model.calculate_dynamics(aq)

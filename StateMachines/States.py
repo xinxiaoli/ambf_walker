@@ -15,6 +15,8 @@ from ilqr.cost import PathQsRCost
 from ilqr import iLQR
 from ilqr.dynamics import FiniteDiffDynamics
 from GaitAnaylsisToolkit.LearningTools.Runner import GMMRunner
+import numpy.polynomial.polynomial as poly
+
 
 class Initialize(smach.State):
 
@@ -475,14 +477,19 @@ class StairDMP(smach.State):
         self._model = model
         self.runnerZ = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeZ_all.pickle")  # make_toeZ([file1, file2], hills3, nb_states, "toe_IK")
         self.runnerY = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeY_all.pickle")  # make_toeY([file1, file2], hills3, nb_states, "toe_IK")
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(100)
         self.msg = DesiredJoints()
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
         self.init_joint_angles = []
 
-    def execute(self, userdata):
+    def smooth_curve(self, data, t, order):
 
+        coefs = poly.polyfit(t, data, order)
+        ffit = poly.Polynomial(coefs)  # instead of np.poly1d
+        return ffit(t)
+
+    def execute(self, userdata):
 
         if self.count == 0:
             self.init_joint_angles = self._model.q
@@ -507,10 +514,43 @@ class StairDMP(smach.State):
                 self.knee_angles.append(joint_angle[1][0])
                 self.ankle_angles.append(joint_angle[2][0])
 
+            t = np.linspace(0, 100, len(self.knee_angles))
 
-            self.hip_vel = np.diff(self.hip_angles)
-            self.knee_vel = np.diff(self.knee_angles)
-            self.ankle_vel = np.diff(self.ankle_angles)
+            self.hip_angles = self.smooth_curve(self.hip_angles, t, 6)
+            self.knee_angles = self.smooth_curve(self.knee_angles, t, 6)
+            self.ankle_angles = self.smooth_curve(self.ankle_angles, t, 6)
+
+            self.hip_vel = []
+            self.knee_vel = []
+            self.ankle_vel = []
+
+            tf = len(self.hip_angles)
+            V_hip = 2.0
+            V_knee = 1.0
+            V_ankle = 0.5
+            alpha = 5.0
+            for t in range(tf):
+
+                if  0 <= t and  t <= int(tf/alpha):
+                    self.hip_vel.append((alpha*V_hip*t)/tf)
+                    self.knee_vel.append((alpha*V_knee*t)/tf)
+                    self.ankle_vel.append((alpha*V_knee*t)/tf)
+
+                if int(tf/alpha) < t and  t <= int((alpha*tf - tf )/alpha):
+                    self.hip_vel.append(V_hip)
+                    self.knee_vel.append(V_knee)
+                    self.ankle_vel.append(V_knee)
+
+                if int((alpha*tf - tf )/alpha ) < t and t < tf:
+                    self.hip_vel.append((-alpha * V_hip * t) / tf + alpha*V_hip)
+                    self.knee_vel.append((-alpha * V_knee * t) / tf + alpha*V_knee)
+                    self.ankle_vel.append((-alpha * V_knee * t) / tf + alpha*V_ankle)
+            #
+            self.hip_vel.append(0.0)
+            self.knee_vel.append(0.0)
+            self.ankle_vel.append(0.0)
+            plt.plot(self.knee_vel)
+            plt.show()
 
         if self.count < self.runnerY.get_length()-2:
 
@@ -535,13 +575,21 @@ class StairDMP(smach.State):
                           self.ankle_angles[self.count],
                           0.0])
 
-            # qd = np.array([self.init_joint_angles[0],
-            #               self.init_joint_angles[1],
-            #               self.init_joint_angles[2],
-            #               self.hip_vel[self.count],
-            #               self.knee_vel[self.count],
-            #               self.ankle_vel[self.count],
-            #               0.0])
+            qd = np.array([self.init_joint_angles[0],
+                           self.init_joint_angles[1],
+                           self.init_joint_angles[2],
+                           self.hip_vel[self.count],
+                           self.knee_vel[self.count],
+                           self.ankle_vel[self.count],
+                           0.0])
+
+            # qdd = np.array([0.0,
+            #                 0.0,
+            #                 0.0,
+            #                 self.hip_acl[self.count],
+            #                 self.knee_acl[self.count],
+            #                 self.ankle_acl[self.count],
+            #                 0.0])
 
             # qd = np.array([0.0]*7)
             qdd = np.array([0.0]*7)
@@ -554,8 +602,8 @@ class StairDMP(smach.State):
             self.msg.qd = qd
             self.msg.qdd = qdd
             self.msg.controller = "Dyn"
-            #self.pub.publish(self.msg)
-            self.send(q, qd, qdd,"Dyn",[])
+            self.pub.publish(self.msg)
+            #self.send(q, qd, qdd, "Dyn", [])
             self.count += 1
             self.rate.sleep()
             return "stairing"

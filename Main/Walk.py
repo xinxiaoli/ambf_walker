@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 import sys
 # from os import sys, path
@@ -8,7 +9,7 @@ from Controller import ControllerNode
 from Model import Exoskeleton
 import rospy
 from ambf_client import Client
-from Controller import DynController, MPCController, TempController
+from Controller import DynController
 
 Kp = np.zeros((7, 7))
 Kd = np.zeros((7, 7))
@@ -16,7 +17,7 @@ Kd = np.zeros((7, 7))
 Kp_hip = 100.0
 Kd_hip = 0.5
 
-Kp_knee = 100.0
+Kp_knee = 125.0
 Kd_knee = 1.0
 
 Kp_ankle = 100.0
@@ -40,18 +41,18 @@ Kd[5, 5] = Kd_ankle
 _client = Client()
 _client.connect()
 rate = rospy.Rate(1000)
+# joints = ['Hip-RobLeftThigh', 'RobLeftThigh-RobLeftShank', 'RobLeftShank-RobLeftFoot', 'Hip-RobRightThigh',
+#           'RobRightThigh-RobRightShank', 'RobRightShank-RobRightFoot', 'Hip-Crutches']
+
+#joints = ['Hip-Leftthigh', 'Leftthigh-Leftshank', 'Leftshank-Leftfoot', 'Hip-Rightthigh', 'Rightthigh-Rightshank', 'Rightshank-Rightfoot', 'Hip-Cylinder']
 
 joints = ['Hip-RobLeftThigh', 'RobLeftThigh-RobLeftShank', 'RobLeftShank-RobLeftFoot',
           'Hip-RobRightThigh', 'RobRightThigh-RobRightShank', 'RobRightShank-RobRightFoot',  'Hip-Crutches']
 
-
-#joints = ['Hip-Leftthigh', 'Leftthigh-Leftshank', 'Leftshank-Leftfoot', 'Hip-Rightthigh', 'Rightthigh-Rightshank', 'Rightshank-Rightfoot', 'Hip-Cylinder']
-
-
 LARRE = Exoskeleton.Exoskeleton(_client, joints, 56, 1.56)
 Dyn = DynController.DynController(LARRE, Kp, Kd)
 
-mpc = MPCController.MPCController(LARRE, LARRE.get_runner())
+#mpc = MPController.MPController(LARRE, LARRE.get_runner())
 
 
 # lqr = LQRController.LQRController(LARRE, LARRE.get_runner())
@@ -59,11 +60,7 @@ mpc = MPCController.MPCController(LARRE, LARRE.get_runner())
 #                "LQR":lqr}
 
 # lqr = LQRController.LQRController(LARRE, LARRE.get_runner())
-
-temp = TempController.TempController(LARRE)
-controllers = {'Dyn': Dyn,
-                "MPC": mpc,
-               "Temp": temp}
+controllers = {'Dyn': Dyn}
 
 cnrl = ControllerNode.ControllerNode(LARRE, controllers)
 
