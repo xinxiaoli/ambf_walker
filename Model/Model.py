@@ -13,7 +13,8 @@ from sensor_msgs.msg import JointState
 
 class Model(object):
 
-    def __init__(self, client, joint_names=[]):
+    def __init__(self, client, joint_names ):
+
 
         self._client = client
         self._q = np.array([])

@@ -37,6 +37,6 @@ class TempController(ControllerBase.BaseController):
         """
 
         tau = qdd
-        return tau
+        return tau + self._model.grav(q)
 
 
