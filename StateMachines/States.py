@@ -8,8 +8,14 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 from std_msgs.msg import Float32MultiArray
 from Model import Model
 from std_msgs.msg import Empty,String
-
+import matplotlib.pyplot as plt
 from ambf_walker.srv import DesiredJointsCmdRequest, DesiredJointsCmd
+from ilqr.controller import RecedingHorizonController
+from ilqr.cost import PathQsRCost
+from ilqr import iLQR
+from ilqr.dynamics import FiniteDiffDynamics
+from GaitAnaylsisToolkit.LearningTools.Runner import GMMRunner
+import numpy.polynomial.polynomial as poly
 
 
 class Initialize(smach.State):
@@ -142,6 +148,53 @@ class DMP(smach.State):
             self.count = 0
             return "stepped"
 
+
+class Walk(smach.State):
+
+    def __init__(self, model,outcomes=["walking", "walked"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self._model = model
+        self.runner = self._model.get_walker()
+        self.rate = rospy.Rate(10)
+        self.msg = DesiredJoints()
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
+
+    def execute(self, userdata):
+
+        count = self.count
+
+        if count == 0:
+            start = []
+            for q in self._model.q[0:6]:
+                start.append(np.array([q]))
+
+            self.runner.update_start(start)
+
+        if count < self.runner.get_length():
+
+            self.runner.step()
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
+            self.msg.q = q
+            self.msg.qd = qd
+            self.msg.qdd = qdd
+            self.msg.controller = "Dyn"
+            self.pub.publish(self.msg)
+            #self.send(q, qd, qdd,"Dyn",[])
+            self.count += 1
+            self.rate.sleep()
+            return "walking"
+        else:
+            self.count = 0
+            self.runner.reset()
+            return "walking"
 
 class GoTo(smach.State):
 
@@ -328,7 +381,7 @@ class MPC(smach.State):
 
 class MPC2(smach.State):
 
-    def __init__(self, model, outcomes=["MPCing", "MPCed"]):
+    def __init__(self, model, outcomes=["MPC2ing", "MPC2ed"]):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.wait_for_service('joint_cmd')
         self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
@@ -339,6 +392,65 @@ class MPC2(smach.State):
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
 
+    def execute(self, userdata):
+
+        msg = DesiredJoints()
+        msg.controller = "MPC"
+
+        if self.count < self.runner.get_length():
+            x = self.runner.x
+            dx = self.runner.dx
+            ddx = self.runner.ddx
+            q = np.append(x, [0.0])
+            qd = np.append(dx, [0.0])
+            qdd = np.append(ddx, [0.0])
+            self.send(q, qd, qdd, "MPC", [self.count])
+            return "MPC2ing"
+        else:
+            return "MPC2ed"
+
+            pass
+
+class LQR(smach.State):
+
+    def __init__(self, model, outcomes=["LQRing", "LQRed"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self._model = model
+        self.rate = rospy.Rate(100)
+        file = "/home/nathanielgoldfarb/linearize_model/test.npy"
+        with open(file, 'rb') as f:
+            self.us2 = np.load(f)
+        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
+        self.count = 0
+
+    def execute(self, userdata):
+
+        if self.count < 200:
+            q = np.array(7*[0.0])
+            qd = np.array(7*[0.0])
+            qdd = np.append(self.us2[self.count], [0.0])
+            self.send(q, qd, qdd, "Temp", [self.count])
+            self.rate.sleep()
+            self.count += 1
+            return "LQRing"
+        else:
+            return "LQRed"
+
+
+class Temp(smach.State):
+
+    def __init__(self, model, outcomes=["Temping", "Temped"]):
+        smach.State.__init__(self, outcomes=outcomes)
+        rospy.wait_for_service('joint_cmd')
+        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
+        self.runner = TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/Train/gotozero.pickle")
+        self._model = model
+        self.runner = model.get_runner()
+        self.rate = rospy.Rate(1000)
+        #self.setup()
+
     def setup(self):
 
         J_hist = []
@@ -348,7 +460,12 @@ class MPC2(smach.State):
             info = "converged" if converged else ("accepted" if accepted else "failed")
             print("iteration", iteration_count, info, J_opt)
 
+        max_bounds = 8.0
+        min_bounds = -8.0
         def f(x, u, i):
+            diff = (max_bounds - min_bounds) / 2.0
+            mean = (max_bounds + min_bounds) / 2.0
+            u = diff * np.tanh(u) + mean
             y = Model.runge_integrator(self._model.get_rbdl_model(), x, 0.01, u)
             return np.array(y)
 
@@ -362,7 +479,6 @@ class MPC2(smach.State):
             count += 1
             self.runner.step()
             u_path.append(self.runner.ddx.flatten().tolist())
-            self.x.append(self.runner.x.flatten())
             x = self.runner.x.flatten().tolist() + self.runner.dx.flatten().tolist()
             x_path.append(x)
 
@@ -386,93 +502,161 @@ class MPC2(smach.State):
         self.cntrl = RecedingHorizonController(x0, ilqr2)
 
     def execute(self, userdata):
+        count = 0
+        for xs2, us2 in self.cntrl.control(self.u_path):
+            q = np.array([0.0]*7)
+            qd = np.array([0.0]*7)
+            qdd = np.append(us2, [0.0])
+            print(qdd)
+            self.send(q, qd, qdd, "Temp", [count])
+            self.rate.sleep()
+            count += 1
+            print(count)
 
-        msg = DesiredJoints()
-        msg.controller = "MPC"
 
-        for  xs, us in self.cntrl(self.u_path):
-            pass
 
-class LQR(smach.State):
+class StairDMP(smach.State):
 
-    def __init__(self, model, outcomes=["LQRing", "LQRed"]):
+    def __init__(self, model,outcomes=["stairing", "staired"]):
         smach.State.__init__(self, outcomes=outcomes)
         rospy.wait_for_service('joint_cmd')
         self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
         self._model = model
-        self.runner = model.get_runner()
+        self.runnerZ = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeZ_all.pickle")  # make_toeZ([file1, file2], hills3, nb_states, "toe_IK")
+        self.runnerY = GMMRunner.GMMRunner("/home/nathanielgoldfarb/stair_traj_learning/Main/toeY_all.pickle")  # make_toeY([file1, file2], hills3, nb_states, "toe_IK")
         self.rate = rospy.Rate(100)
         self.msg = DesiredJoints()
         self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
         self.count = 0
+        self.init_joint_angles = []
+
+    def smooth_curve(self, data, t, order):
+
+        coefs = poly.polyfit(t, data, order)
+        ffit = poly.Polynomial(coefs)  # instead of np.poly1d
+        return ffit(t)
 
     def execute(self, userdata):
 
+        if self.count == 0:
+            self.init_joint_angles = self._model.q
 
-        if self.count < self.runner.get_length()-1:
+            self.runnerZ.update_start(0)
+            self.runnerZ.update_goal(192)
 
-            self.runner.step()
-            x = self.runner.x
-            dx = self.runner.dx
-            ddx = self.runner.ddx
-            q = np.append(x, [0.0])
-            qd = np.append(dx, [0.0])
-            qdd = np.append(ddx, [0.0])
-            msg = DesiredJoints()
-            # msg.q = q
-            # msg.qd = qd
-            # msg.qdd = qdd
-            # msg.controller = "LQR"
-            # msg.other = [self.count]
-            # self.pub.publish(msg)
+            self.runnerY.update_start(-225.0)
+            self.runnerY.update_goal(258.0)
 
-            self.send(q, qd, qdd, "LQR", [self.count])
-            self.rate.sleep()
+
+            self.hip_angles = []
+            self.knee_angles = []
+            self.ankle_angles = []
+
+            pathZ = self.runnerZ.run()
+            pathY = self.runnerY.run()
+
+            for y, x in zip(pathZ, pathY):
+                joint_angle = self._model.leg_inverse_kinimatics([y, x], hip_location=[-483.4, 960.67])
+                self.hip_angles.append(joint_angle[0][0])
+                self.knee_angles.append(joint_angle[1][0])
+                self.ankle_angles.append(joint_angle[2][0])
+
+            t = np.linspace(0, 100, len(self.knee_angles))
+
+            self.hip_angles = self.smooth_curve(self.hip_angles, t, 6)
+            self.knee_angles = self.smooth_curve(self.knee_angles, t, 6)
+            self.ankle_angles = self.smooth_curve(self.ankle_angles, t, 6)
+
+            self.hip_vel = []
+            self.knee_vel = []
+            self.ankle_vel = []
+
+            tf = len(self.hip_angles)
+            V_hip = 2.0
+            V_knee = 1.0
+            V_ankle = 0.5
+            alpha = 5.0
+            for t in range(tf):
+
+                if  0 <= t and  t <= int(tf/alpha):
+                    self.hip_vel.append((alpha*V_hip*t)/tf)
+                    self.knee_vel.append((alpha*V_knee*t)/tf)
+                    self.ankle_vel.append((alpha*V_knee*t)/tf)
+
+                if int(tf/alpha) < t and  t <= int((alpha*tf - tf )/alpha):
+                    self.hip_vel.append(V_hip)
+                    self.knee_vel.append(V_knee)
+                    self.ankle_vel.append(V_knee)
+
+                if int((alpha*tf - tf )/alpha ) < t and t < tf:
+                    self.hip_vel.append((-alpha * V_hip * t) / tf + alpha*V_hip)
+                    self.knee_vel.append((-alpha * V_knee * t) / tf + alpha*V_knee)
+                    self.ankle_vel.append((-alpha * V_knee * t) / tf + alpha*V_ankle)
+            #
+            self.hip_vel.append(0.0)
+            self.knee_vel.append(0.0)
+            self.ankle_vel.append(0.0)
+            plt.plot(self.knee_vel)
+            plt.show()
+
+        if self.count < self.runnerY.get_length()-2:
+
+            # self.runnerZ.step()
+            # self.runnerY.step()
+            # x = self.runnerZ.x[0].item()
+            # dx = self.runnerZ.dx
+            # ddx = self.runnerZ.ddx
+            #
+            # y = self.runnerY.x[0].item()
+            # dt = self.runnerY.dx
+            # ddy = self.runnerY.ddx
+            # x = self.pathZ[self.count][0]
+            # y = self.pathY[self.count][0]
+            # joint_angle = self._model.leg_inverse_kinimatics([y, x], hip_location=[-483.4, 960.67])
+
+            q = np.array([self.init_joint_angles[0],
+                          self.init_joint_angles[1],
+                          self.init_joint_angles[2],
+                          self.hip_angles[self.count],
+                          self.knee_angles[self.count],
+                          self.ankle_angles[self.count],
+                          0.0])
+
+            qd = np.array([self.init_joint_angles[0],
+                           self.init_joint_angles[1],
+                           self.init_joint_angles[2],
+                           self.hip_vel[self.count],
+                           self.knee_vel[self.count],
+                           self.ankle_vel[self.count],
+                           0.0])
+
+            # qdd = np.array([0.0,
+            #                 0.0,
+            #                 0.0,
+            #                 self.hip_acl[self.count],
+            #                 self.knee_acl[self.count],
+            #                 self.ankle_acl[self.count],
+            #                 0.0])
+
+            # qd = np.array([0.0]*7)
+            qdd = np.array([0.0]*7)
+            # q[3] = 0# 1.50971 - 0.5*3.14
+            # q[4] =  -q[4] # 0# 0.523599
+            # q[5] = 0.0
+            #self._model.handle.set_multiple_joint_pos(q, [0,1,2,3,4,5,6])
             self.count += 1
-            return "LQRing"
-        else:
-            # while 1:
-            #     q = [-0.7, 0.5, -0.2, -0.7, 0.5, -0.2, 0.0]
-            #     qd = [0.0]*7
-            #     qdd = [0.0]*7
-            #     self.send(q, qd, qdd, "Dyn", [self.count])
-            return "LQRed"
-
-
-class Temp(smach.State):
-
-    def __init__(self, model, outcomes=["Temping", "Temped"]):
-        smach.State.__init__(self, outcomes=outcomes)
-        rospy.wait_for_service('joint_cmd')
-        self.send = rospy.ServiceProxy('joint_cmd', DesiredJointsCmd)
-        self._model = model
-        self.runner = model.get_runner()
-        self.rate = rospy.Rate(100)
-        self.msg = DesiredJoints()
-        self.pub = rospy.Publisher("set_points", DesiredJoints, queue_size=1)
-        file = "/home/nathanielgoldfarb/linearize_model/test.npy"
-        with open(file, 'rb') as f:
-            self.us = np.load(f)
-
-        self.count = 0
-
-    def execute(self, userdata):
-
-
-        if self.count < self.runner.get_length()-1:
-            print(self.count)
-            self.runner.step()
-            x = self.runner.x
-            dx = self.runner.dx
-            ddx = self.runner.ddx
-            q = np.append(x, [0.0])
-            qd = np.append(dx, [0.0])
-            qdd = np.append( self.us[self.count], [0.0])
-            msg = DesiredJoints()
-            self.send(q, qd, qdd, "Temp", [self.count])
-            self.rate.sleep()
+            self.msg.q = q
+            self.msg.qd = qd
+            self.msg.qdd = qdd
+            self.msg.controller = "Dyn"
+            self.pub.publish(self.msg)
+            #self.send(q, qd, qdd, "Dyn", [])
             self.count += 1
-            return "Temping"
+            self.rate.sleep()
+            return "stairing"
         else:
             self.count = 0
-            return "Temped"
+
+            #plt.plot(self.Zpoints)
+            plt.show()
+            return "staired"

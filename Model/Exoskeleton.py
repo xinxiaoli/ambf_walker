@@ -23,6 +23,7 @@ from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 class Exoskeleton(Model.Model):
 
     def __init__(self, client, joints, mass, height):
+
         super(Exoskeleton, self).__init__(client, joint_names=joints)
         self._handle = self._client.get_obj_handle('Hip')
         # Update to current
@@ -160,6 +161,7 @@ class Exoskeleton(Model.Model):
         mass["right_foot"] = 0.86
         mass["left_foot"] = 0.86
         parent_dist = {}
+
         parent_dist["hip"] = np.array([0.0, 0.0, 0.0])
 
         parent_dist["left_thigh"] = np.array([0.237, -0.124, -0.144])
@@ -199,7 +201,7 @@ class Exoskeleton(Model.Model):
         xtrans.E = np.eye(3)
 
         self.hip = model.AddBody(0, xtrans, rbdl.Joint.fromJointType("JointTypeFixed"), hip_body,"hip")
-        joint_rot_z =  rbdl.Joint.fromJointType("JointTypeRevoluteX")
+        joint_rot_z = rbdl.Joint.fromJointType("JointTypeRevoluteX")
 
         xtrans.r = parent_dist["left_thigh"]
         self.left_thigh = model.AddBody(self.hip, xtrans, joint_rot_z, bodies["left_thigh"], "left_thigh")
@@ -257,8 +259,7 @@ class Exoskeleton(Model.Model):
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.left_foot, point_local)
         fk["left_ankle"] = Point.Point(data[0], data[1], data[2])
 
-        data = rbdl.CalcBodyToBaseCoordinates\
-            (self._model, self.q, self.right_thigh, point_local)
+        data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_thigh, point_local)
         fk["right_hip"] = Point.Point(data[0], data[1], data[2])
         data = rbdl.CalcBodyToBaseCoordinates(self._model, self.q, self.right_shank, point_local)
         fk["right_knee"] = Point.Point(data[0], data[1], data[2])
@@ -298,6 +299,9 @@ class Exoskeleton(Model.Model):
     def get_runner(self):
         return TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/gotozero.pickle")
 
+    def get_walker(self):
+        return TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/walk.pickle")
+
     def linearize(self):
         pass
 
@@ -331,3 +335,24 @@ class Exoskeleton(Model.Model):
         left_foot_sensors = [self._left_foot_sensor1, self._left_foot_sensor2, self._left_foot_sensor3]
         right_foot_sensors = [self._right_foot_sensor1, self._right_foot_sensor2, self._right_foot_sensor3]
         return left_foot_sensors, right_foot_sensors
+
+
+    def leg_inverse_kinimatics(self, toe, hip_location):
+
+        l1 = 416.5
+        l2 = 477.87
+        l3 = 66.3
+        l4 = 258.4
+
+        x = toe[0] - hip_location[0] - abs(l4)
+        y = toe[1] - hip_location[1] + abs(l3)
+
+        num = x*x + y*y - l1**2 - l2**2
+        dem = 2*l1*l2
+
+        q2 = np.arctan2(-np.sqrt(1 - (num / dem)**2), (num / dem))
+        q2 = np.nan_to_num(q2)
+        q1 = -(np.nan_to_num(np.arctan2(y, x) - np.arctan2(l2*np.sin(q2), l1 + l2*np.cos(q2))) + 0.5*np.pi)
+        q3 = np.nan_to_num(2*np.pi - q1 - q2)
+
+        return [q1, -q2, q3]

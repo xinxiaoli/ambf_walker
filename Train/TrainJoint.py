@@ -24,7 +24,7 @@ def get_stair_ranges(file, side="R"):
         m = trial.vicon.markers.get_marker("LTOE")
 
     z = []
-    for i in xrange(len(m)):
+    for i in range(len(m)):
         z.append(m[i].z)
 
     N = 10
