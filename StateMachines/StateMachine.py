@@ -55,10 +55,6 @@ class ExoStateMachine(object):
                                                 'Followed': 'Main'},
                                    remapping={'q': 'q'})
 
-            smach.StateMachine.add('Temp', Temp(model),
-                                   transitions={'Temping': 'Temp',
-                                                'Temped': 'Main'},
-                                   remapping={'q': 'q'})
 
             smach.StateMachine.add('stairDMP', StairDMP(model),
                                    transitions={'stairing': 'stairDMP',

@@ -2,7 +2,7 @@
 This should be moved to a separate repo later
 """
 
-
+# noinspection PyUnresolvedReferences
 import abc
 import numpy as np
 import rbdl
@@ -10,15 +10,19 @@ import Model
 import time
 import message_filters
 from GaitCore.Core import Point
+# noinspection PyUnresolvedReferences
 from GaitCore.Core import utilities
+# noinspection PyUnresolvedReferences
 from std_msgs.msg import Float32MultiArray
+# noinspection PyUnresolvedReferences
 from threading import Thread
 from . import Model
 from GaitCore.Bio import Leg, Joint
+# noinspection PyUnresolvedReferences
 import rospy
 from ambf_msgs.msg import RigidBodyState
-from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 
+from GaitAnaylsisToolkit.LearningTools.Runner import TPGMMRunner
 
 class Exoskeleton(Model.Model):
 
@@ -297,7 +301,7 @@ class Exoskeleton(Model.Model):
         return hip, knee, ankle
 
     def get_runner(self):
-        return TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/gotozero.pickle")
+        return TPGMMRunner.TPGMMRunner("/home/xinxiaoli/catkin_ws/src/ambf_walker/config/gotozero.pickle")
 
     def get_walker(self):
         return TPGMMRunner.TPGMMRunner("/home/nathanielgoldfarb/catkin_ws/src/ambf_walker/config/walk.pickle")
